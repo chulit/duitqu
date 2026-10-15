@@ -4,6 +4,7 @@ import 'package:duitqu/src/data/repositories/drift_account_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_category_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_transaction_repository.dart';
 import 'package:duitqu/src/domain/entities/account.dart';
+import 'package:duitqu/src/domain/entities/transaction.dart';
 import 'package:duitqu/src/domain/repositories/transaction_repository.dart';
 import 'package:duitqu/src/domain/services/transfer_service.dart';
 import 'package:duitqu/src/presentation/quick_add_defaults.dart';
@@ -59,8 +60,9 @@ void main() {
     await tester.tap(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
 
-    // Muncul di riwayat dengan format Rupiah.
-    expect(find.textContaining('Rp 75.000'), findsOneWidget);
+    // Muncul di riwayat dengan format Rupiah, dan di kartu ringkasan.
+    expect(find.text('−Rp 75.000'), findsOneWidget); // baris riwayat
+    expect(find.text('Rp 75.000'), findsOneWidget); // ringkasan Keluar
     expect(find.textContaining('Belum ada transaksi'), findsNothing);
 
     await db.close();
@@ -239,6 +241,104 @@ void main() {
     expect(find.text('Transfer'), findsOneWidget);
     expect(find.text('−Rp 2.500'), findsOneWidget);
     expect(find.textContaining('Biaya Admin'), findsOneWidget);
+
+    await db.close();
+  });
+
+  testWidgets('kartu ringkasan bulanan + filter akun', (tester) async {
+    final db = schema.AppDatabase(NativeDatabase.memory());
+    final accountRepo = DriftAccountRepository(db);
+    final categoryRepo = DriftCategoryRepository(db);
+    final txRepo = DriftTransactionRepository(db);
+    final transferService = TransferService(txRepo, categoryRepo);
+    await categoryRepo.seedDefaults();
+    final bcaId = await accountRepo.save(
+        const Account(name: 'BCA', type: AccountType.bank));
+    final cashId = await accountRepo.save(
+        const Account(name: 'Cash', type: AccountType.cash));
+    final cats = await categoryRepo.defaults();
+    final makanId =
+        cats.singleWhere((c) => c.name == 'Makan & Minum').id!;
+    final gajiId = cats.singleWhere((c) => c.name == 'Gaji').id!;
+    final transportId =
+        cats.singleWhere((c) => c.name == 'Transport').id!;
+
+    final now = DateTime.now();
+    Future<void> seedTx({
+      TransactionType type = TransactionType.expense,
+      required int amount,
+      required int accountId,
+      int? toAccountId,
+      int? categoryId,
+    }) =>
+        txRepo.save(Transaction(
+          type: type,
+          amount: amount,
+          categoryId: categoryId,
+          accountId: accountId,
+          toAccountId: toAccountId,
+          date: now,
+          createdAt: now,
+        ));
+
+    await seedTx(
+        type: TransactionType.income,
+        amount: 5000000,
+        accountId: bcaId,
+        categoryId: gajiId);
+    await seedTx(amount: 1500000, accountId: bcaId, categoryId: makanId);
+    await seedTx(
+        amount: 500000, accountId: cashId, categoryId: transportId);
+    // Transfer tidak boleh masuk ringkasan.
+    await transferService.saveTransfer(Transaction(
+      type: TransactionType.transfer,
+      amount: 2000000,
+      accountId: bcaId,
+      toAccountId: cashId,
+      date: now,
+      createdAt: now,
+    ));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeScreen(
+          txRepo: txRepo,
+          accountRepo: accountRepo,
+          categoryRepo: categoryRepo,
+          transferService: transferService,
+          defaults: QuickAddDefaults(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Kartu ringkasan: Masuk 5jt, Keluar 2jt, Selisih +3jt.
+    // (di-scope ke Card agar tidak tertukar dengan baris transfer)
+    final card = find.byType(Card);
+    expect(
+        find.descendant(of: card, matching: find.text('Rp 5.000.000')),
+        findsOneWidget);
+    expect(
+        find.descendant(of: card, matching: find.text('Rp 2.000.000')),
+        findsOneWidget);
+    expect(
+        find.descendant(of: card, matching: find.text('+Rp 3.000.000')),
+        findsOneWidget);
+
+    // Filter akun Cash -> hanya 1 transaksi tampil.
+    await tester.tap(find.byIcon(Icons.filter_list));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Semua akun'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cash').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Terapkan'));
+    await tester.pumpAndSettle();
+    // Filter Cash menampilkan expense Cash + transfer masuk ke Cash.
+    expect(find.text('−Rp 500.000'), findsOneWidget);
+    expect(find.text('Transfer'), findsOneWidget); // baris transfer
+    expect(find.text('−Rp 1.500.000'), findsNothing);
+    expect(find.textContaining('2 transaksi ditampilkan'), findsOneWidget);
 
     await db.close();
   });

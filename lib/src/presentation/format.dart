@@ -19,3 +19,12 @@ String formatTanggal(DateTime d) {
   ];
   return '${d.day} ${bulan[d.month - 1]} ${d.year}';
 }
+
+/// Format bulan Indonesia panjang. Contoh: Oktober 2026
+String formatBulan(DateTime d) {
+  const bulan = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  return '${bulan[d.month - 1]} ${d.year}';
+}

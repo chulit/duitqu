@@ -6,6 +6,7 @@ import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/summary_service.dart';
 import '../../domain/services/transfer_service.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
@@ -34,9 +35,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _summaryService = SummaryService();
+
   late final Future<void> _init;
   final _categories = <int, Category>{};
   final _accounts = <int, Account>{};
+
+  DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+  int? _filterAccountId;
+  int? _filterCategoryId;
+  bool _showSearch = false;
+  final _searchCtrl = TextEditingController();
+  String _search = '';
 
   @override
   void initState() {
@@ -53,6 +63,119 @@ class _HomeScreenState extends State<HomeScreen> {
     _accounts
       ..clear()
       ..addEntries(accs.where((a) => a.id != null).map((a) => MapEntry(a.id!, a)));
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _hasFilter =>
+      _filterAccountId != null || _filterCategoryId != null;
+
+  Future<void> _openFilter() async {
+    int? accountId = _filterAccountId;
+    int? categoryId = _filterCategoryId;
+    await showModalBottomSheet(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Filter riwayat',
+                  style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: accountId,
+                decoration: const InputDecoration(
+                  labelText: 'Akun',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                      value: null, child: Text('Semua akun')),
+                  for (final a in _accounts.values)
+                    DropdownMenuItem(
+                        value: a.id, child: Text(a.name)),
+                ],
+                onChanged: (v) => setSheetState(() => accountId = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                initialValue: categoryId,
+                decoration: const InputDecoration(
+                  labelText: 'Kategori',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                      value: null, child: Text('Semua kategori')),
+                  for (final c in _categories.values)
+                    DropdownMenuItem(
+                        value: c.id, child: Text(c.name)),
+                ],
+                onChanged: (v) => setSheetState(() => categoryId = v),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _filterAccountId = null;
+                        _filterCategoryId = null;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Reset'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: () {
+                      setState(() {
+                        _filterAccountId = accountId;
+                        _filterCategoryId = categoryId;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Terapkan'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  DateTime get _monthStart => DateTime(_month.year, _month.month);
+  DateTime get _monthEnd =>
+      DateTime(_month.year, _month.month + 1).subtract(
+        const Duration(milliseconds: 1),
+      );
+
+  List<Transaction> _applyFilters(List<Transaction> txs) {
+    var out = txs;
+    if (_filterAccountId != null) {
+      out = out
+          .where((t) =>
+              t.accountId == _filterAccountId ||
+              t.toAccountId == _filterAccountId)
+          .toList();
+    }
+    if (_filterCategoryId != null) {
+      out =
+          out.where((t) => t.categoryId == _filterCategoryId).toList();
+    }
+    if (_search.isNotEmpty) {
+      out = _summaryService.search(out, _search);
+    }
+    return out;
   }
 
   Future<void> _openAdd([Transaction? existing]) async {
@@ -147,7 +270,42 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('DuitQu')),
+      appBar: AppBar(
+        title: const Text('DuitQu'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => setState(() {
+              _showSearch = !_showSearch;
+              if (!_showSearch) {
+                _search = '';
+                _searchCtrl.clear();
+              }
+            }),
+          ),
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: _openFilter,
+              ),
+              if (_hasFilter)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
       body: FutureBuilder(
         future: _init,
         builder: (context, snapshot) {
@@ -155,62 +313,125 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           return StreamBuilder<List<Transaction>>(
-            stream: widget.txRepo.watch(const TransactionQuery()),
+            stream: widget.txRepo.watch(TransactionQuery(
+              dateFrom: _monthStart,
+              dateTo: _monthEnd,
+            )),
             builder: (context, snapshot) {
-              final txs = snapshot.data ?? [];
-              if (txs.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'Belum ada transaksi.\nKetuk + untuk mencatat.',
-                    textAlign: TextAlign.center,
+              final monthTxs = snapshot.data ?? [];
+              final summary = _summaryService.summarize(monthTxs);
+              final txs = _applyFilters(monthTxs);
+              return Column(
+                children: [
+                  _SummaryCard(
+                    month: _month,
+                    income: summary.income,
+                    expense: summary.expense,
+                    net: summary.net,
+                    onPrev: () => setState(() {
+                      _month = DateTime(_month.year, _month.month - 1);
+                    }),
+                    onNext: () => setState(() {
+                      _month = DateTime(_month.year, _month.month + 1);
+                    }),
                   ),
-                );
-              }
-              return ListView.separated(
-                itemCount: txs.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final tx = txs[i];
-                  final cat = tx.categoryId == null
-                      ? null
-                      : _categories[tx.categoryId];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: cat == null
-                          ? Theme.of(context).colorScheme.surfaceContainerHighest
-                          : Color(cat.color).withValues(alpha: 0.15),
-                      child: Text(
-                        (cat?.name ?? 'T').characters.first.toUpperCase(),
-                        style: TextStyle(
-                          color: cat == null
-                              ? null
-                              : Color(cat.color),
-                          fontWeight: FontWeight.bold,
+                  if (_showSearch)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          hintText: 'Cari catatan, merchant, barang…',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (v) =>
+                            setState(() => _search = v),
+                      ),
+                    ),
+                  if (_hasFilter || _search.isNotEmpty)
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${txs.length} transaksi ditampilkan',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall,
                         ),
                       ),
                     ),
-                    title: Text(_titleOf(tx)),
-                    subtitle: Text(_subtitleOf(tx)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _amountText(tx),
-                          style: DuitQuTheme.amountStyle(
-                            context,
-                            15,
-                            color: _amountColor(context, tx),
+                  Expanded(
+                    child: txs.isEmpty
+                        ? Center(
+                            child: Text(
+                              monthTxs.isEmpty
+                                  ? 'Belum ada transaksi.\nKetuk + untuk mencatat.'
+                                  : 'Tidak ada yang cocok dengan filter.',
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: txs.length,
+                            separatorBuilder: (_, _) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, i) {
+                              final tx = txs[i];
+                              final cat = tx.categoryId == null
+                                  ? null
+                                  : _categories[tx.categoryId];
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: cat == null
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                      : Color(cat.color)
+                                          .withValues(alpha: 0.15),
+                                  child: Text(
+                                    (cat?.name ?? 'T')
+                                        .characters
+                                        .first
+                                        .toUpperCase(),
+                                    style: TextStyle(
+                                      color: cat == null
+                                          ? null
+                                          : Color(cat.color),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(_titleOf(tx)),
+                                subtitle: Text(_subtitleOf(tx)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _amountText(tx),
+                                      style: DuitQuTheme.amountStyle(
+                                        context,
+                                        15,
+                                        color: _amountColor(context, tx),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                          Icons.delete_outline),
+                                      onPressed: () =>
+                                          _confirmDelete(tx),
+                                    ),
+                                  ],
+                                ),
+                                onTap: () => _openAdd(tx),
+                              );
+                            },
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => _confirmDelete(tx),
-                        ),
-                      ],
-                    ),
-                    onTap: () => _openAdd(tx),
-                  );
-                },
+                  ),
+                ],
               );
             },
           );
@@ -220,6 +441,111 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => _openAdd(),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+}
+
+/// Kartu ringkasan bulan: pemasukan, pengeluaran, selisih.
+class _SummaryCard extends StatelessWidget {
+  final DateTime month;
+  final int income;
+  final int expense;
+  final int net;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+
+  const _SummaryCard({
+    required this.month,
+    required this.income,
+    required this.expense,
+    required this.net,
+    required this.onPrev,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: onPrev,
+                ),
+                Text(
+                  formatBulan(month),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: onNext,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _SummaryItem(
+                  label: 'Masuk',
+                  amount: income,
+                  color: DuitQuTheme.emerald,
+                ),
+                _SummaryItem(
+                  label: 'Keluar',
+                  amount: expense,
+                  color: DuitQuTheme.terracotta,
+                ),
+                _SummaryItem(
+                  label: 'Selisih',
+                  amount: net,
+                  color: net >= 0
+                      ? DuitQuTheme.emerald
+                      : DuitQuTheme.terracotta,
+                  signed: true,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  final String label;
+  final int amount;
+  final Color color;
+  final bool signed;
+
+  const _SummaryItem({
+    required this.label,
+    required this.amount,
+    required this.color,
+    this.signed = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = signed && amount > 0
+        ? '+${formatRupiah(amount)}'
+        : formatRupiah(amount);
+    return Column(
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(
+          text,
+          style: DuitQuTheme.amountStyle(context, 16, color: color),
+        ),
+      ],
     );
   }
 }
