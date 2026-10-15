@@ -47,6 +47,19 @@ class Transactions extends Table {
   IntColumn get date => integer()(); // epoch millis
   TextColumn get note => text().nullable()();
   IntColumn get createdAt => integer().named('created_at')();
+  // --- v2: pelacakan sumber (tiket 02) ---
+  /// Asal transaksi: manual | chat | android_notification | receipt_scan | statement_import.
+  TextColumn get origin => text().withDefault(const Constant('manual'))();
+
+  /// ID kandidat sumber bila berasal dari auto-catat.
+  IntColumn get sourceCandidateId => integer()
+      .named('source_candidate_id')
+      .nullable()
+      .references(TransactionCandidates, #id)();
+
+  /// Grup transfer: kedua sisi transfer berbagi nilai ini.
+  TextColumn get transferGroupId =>
+      text().named('transfer_group_id').nullable()();
 }
 
 /// Rincian produk dalam satu transaksi belanja (struk). Opsional.
@@ -96,7 +109,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +119,11 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.createTable(transactionCandidates);
+      }
+      if (from < 3) {
+        await m.addColumn(transactions, transactions.origin);
+        await m.addColumn(transactions, transactions.sourceCandidateId);
+        await m.addColumn(transactions, transactions.transferGroupId);
       }
     },
   );

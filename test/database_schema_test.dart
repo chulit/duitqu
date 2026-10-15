@@ -27,6 +27,13 @@ void main() {
       expect(db.transactionItems.qty.name, 'qty');
       expect(db.transactionItems.transactionId.name, 'transaction_id');
     });
+
+    test('kolom pelacakan sumber v2 tersedia', () {
+      final db = AppDatabase();
+      expect(db.transactions.origin.name, 'origin');
+      expect(db.transactions.sourceCandidateId.name, 'source_candidate_id');
+      expect(db.transactions.transferGroupId.name, 'transfer_group_id');
+    });
   });
 
   group('domain entities (pure Dart)', () {
