@@ -9,7 +9,7 @@ import 'src/data/repositories/drift_transaction_repository.dart';
 import 'src/domain/services/transfer_service.dart';
 import 'src/presentation/l10n/app_localizations.dart';
 import 'src/presentation/quick_add_defaults.dart';
-import 'src/presentation/screens/home_screen.dart';
+import 'src/presentation/screens/app_shell.dart';
 import 'src/presentation/theme.dart';
 
 Future<void> main() async {
@@ -23,13 +23,15 @@ Future<void> main() async {
   final backup = BackupService(db);
   await categoryRepo.seedDefaults();
 
-  runApp(DuitQuApp(
-    txRepo: txRepo,
-    accountRepo: accountRepo,
-    categoryRepo: categoryRepo,
-    transferService: transferService,
-    backup: backup,
-  ));
+  runApp(
+    DuitQuApp(
+      txRepo: txRepo,
+      accountRepo: accountRepo,
+      categoryRepo: categoryRepo,
+      transferService: transferService,
+      backup: backup,
+    ),
+  );
 }
 
 class DuitQuApp extends StatelessWidget {
@@ -61,7 +63,7 @@ class DuitQuApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: HomeScreen(
+      home: AppShell(
         txRepo: txRepo,
         accountRepo: accountRepo,
         categoryRepo: categoryRepo,
