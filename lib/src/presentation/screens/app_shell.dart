@@ -4,6 +4,7 @@ import '../../data/backup_service.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/repositories/candidate_repository.dart';
 import '../../domain/services/transfer_service.dart';
 import '../quick_add_defaults.dart';
 import '../widgets/chat_sheet.dart';
@@ -21,6 +22,7 @@ class AppShell extends StatefulWidget {
   final TransactionRepository txRepo;
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
+  final CandidateRepository candidateRepo;
   final TransferService transferService;
   final BackupService backup;
   final QuickAddDefaults defaults;
@@ -30,6 +32,7 @@ class AppShell extends StatefulWidget {
     required this.txRepo,
     required this.accountRepo,
     required this.categoryRepo,
+    required this.candidateRepo,
     required this.transferService,
     required this.backup,
     required this.defaults,
@@ -72,7 +75,12 @@ class _AppShellState extends State<AppShell> {
   void _openInbox() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const InboxScreen()),
+      MaterialPageRoute(
+        builder: (_) => InboxScreen(
+          candidateRepo: widget.candidateRepo,
+          txRepo: widget.txRepo,
+        ),
+      ),
     );
   }
 

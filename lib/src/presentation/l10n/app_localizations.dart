@@ -176,6 +176,11 @@ class AppLocalizations {
       ? 'Belum ada yang perlu dikonfirmasi.\nTransaksi dari notifikasi akan muncul di sini.'
       : 'Nothing to review yet.\nTransactions from notifications will appear here.';
   String get justNow => _id ? 'Baru saja' : 'Just now';
+  String minutesAgo(int m) => _id ? '$m mnt lalu' : '$m min ago';
+  String hoursAgo(int h) => _id ? '$h jam lalu' : '$h hr ago';
+  String daysAgo(int d) => _id ? '$d hari lalu' : '$d days ago';
+  String get unknownMerchant => _id ? 'Transaksi' : 'Transaction';
+  String get markDuplicate => _id ? 'Duplikat' : 'Duplicate';
 
   // -- mockup: profil --
   String get profileTitle => _id ? 'Profil & Lainnya' : 'Profile & More';

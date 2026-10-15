@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:duitqu/src/data/backup_service.dart';
 import 'package:duitqu/src/data/database.dart' as schema;
 import 'package:duitqu/src/data/repositories/drift_account_repository.dart';
+import 'package:duitqu/src/data/repositories/drift_candidate_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_category_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_transaction_repository.dart';
 import 'package:duitqu/src/domain/entities/account.dart';
@@ -44,6 +45,7 @@ Future<Harness> pumpApp(WidgetTester tester) async {
         txRepo: txRepo,
         accountRepo: accountRepo,
         categoryRepo: categoryRepo,
+        candidateRepo: DriftCandidateRepository(db),
         transferService: transferService,
         defaults: QuickAddDefaults(),
         backup: BackupService(db),

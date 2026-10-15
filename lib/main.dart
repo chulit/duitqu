@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'src/data/backup_service.dart';
 import 'src/data/database.dart';
 import 'src/data/repositories/drift_account_repository.dart';
+import 'src/data/repositories/drift_candidate_repository.dart';
 import 'src/data/repositories/drift_category_repository.dart';
 import 'src/data/repositories/drift_transaction_repository.dart';
 import 'src/domain/services/transfer_service.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
   final accountRepo = DriftAccountRepository(db);
   final categoryRepo = DriftCategoryRepository(db);
   final txRepo = DriftTransactionRepository(db);
+  final candidateRepo = DriftCandidateRepository(db);
   final transferService = TransferService(txRepo, categoryRepo);
   final backup = BackupService(db);
   await categoryRepo.seedDefaults();
@@ -28,6 +30,7 @@ Future<void> main() async {
       txRepo: txRepo,
       accountRepo: accountRepo,
       categoryRepo: categoryRepo,
+      candidateRepo: candidateRepo,
       transferService: transferService,
       backup: backup,
     ),
@@ -38,6 +41,7 @@ class DuitQuApp extends StatelessWidget {
   final DriftTransactionRepository txRepo;
   final DriftAccountRepository accountRepo;
   final DriftCategoryRepository categoryRepo;
+  final DriftCandidateRepository candidateRepo;
   final TransferService transferService;
   final BackupService backup;
 
@@ -46,6 +50,7 @@ class DuitQuApp extends StatelessWidget {
     required this.txRepo,
     required this.accountRepo,
     required this.categoryRepo,
+    required this.candidateRepo,
     required this.transferService,
     required this.backup,
   });
@@ -67,6 +72,7 @@ class DuitQuApp extends StatelessWidget {
         txRepo: txRepo,
         accountRepo: accountRepo,
         categoryRepo: categoryRepo,
+        candidateRepo: candidateRepo,
         transferService: transferService,
         backup: backup,
         defaults: QuickAddDefaults(),
