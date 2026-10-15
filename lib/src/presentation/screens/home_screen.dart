@@ -113,6 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final acc = _accounts[tx.accountId]?.name;
       if (acc != null) parts.add(acc);
     }
+    if (tx.items.isNotEmpty) {
+      parts.add('${tx.items.length} item');
+    }
     parts.add(formatTanggal(tx.date));
     return parts.join(' • ');
   }

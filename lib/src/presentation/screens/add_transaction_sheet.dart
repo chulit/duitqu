@@ -9,11 +9,24 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
+import '../theme.dart';
+
+/// Satu baris item belanja pada form (draft yang bisa diedit).
+class _ItemDraft {
+  final nameCtrl = TextEditingController();
+  final priceCtrl = TextEditingController();
+  final qtyCtrl = TextEditingController(text: '1');
+
+  void dispose() {
+    nameCtrl.dispose();
+    priceCtrl.dispose();
+    qtyCtrl.dispose();
+  }
+}
 
 /// Bottom sheet catat kilat: maksimal 2 tap dari layar utama.
 /// Dipakai untuk tambah baru maupun edit ([existing]).
-class AddTransactionSheet extends StatefulWidget {
-  final TransactionRepository txRepo;
+class AddTransactionSheet extends StatefulWidget {  final TransactionRepository txRepo;
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
   final QuickAddDefaults defaults;
@@ -41,6 +54,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   DateTime _date = DateTime.now();
   String _merchant = '';
   final _noteCtrl = TextEditingController();
+  final _itemDrafts = <_ItemDraft>[];
   String? _error;
 
   List<Account> _accounts = const [];
@@ -63,6 +77,13 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _date = ex.date;
       _merchant = ex.merchant ?? '';
       _noteCtrl.text = ex.note ?? '';
+      for (final item in ex.items) {
+        final d = _ItemDraft();
+        d.nameCtrl.text = item.name;
+        d.priceCtrl.text = item.price.toString();
+        d.qtyCtrl.text = item.qty.toString();
+        _itemDrafts.add(d);
+      }
     } else {
       _type = widget.defaults.lastType;
       _categoryId = widget.defaults.lastCategoryId;
@@ -90,7 +111,23 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   void dispose() {
     _amountCtrl.dispose();
     _noteCtrl.dispose();
+    for (final d in _itemDrafts) {
+      d.dispose();
+    }
     super.dispose();
+  }
+
+  /// Total otomatis dari item. Dipakai sebagai nominal saat ada item.
+  int get _itemsTotal => _itemDrafts.fold<int>(0, (sum, d) {
+        final price = int.tryParse(d.priceCtrl.text.trim()) ?? 0;
+        final qty = int.tryParse(d.qtyCtrl.text.trim()) ?? 0;
+        return sum + price * qty;
+      });
+
+  void _syncAmountFromItems() {
+    if (_itemDrafts.isNotEmpty) {
+      _amountCtrl.text = _itemsTotal.toString();
+    }
   }
 
   Future<void> _pickDate() async {
@@ -105,7 +142,36 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   Future<void> _save() async {
     setState(() => _error = null);
-    final amount = int.tryParse(_amountCtrl.text.trim()) ?? 0;
+
+    // Kumpulkan item: baris yang sepenuhnya kosong dilewati,
+    // baris yang terisi sebagian divalidasi.
+    final items = <TransactionItem>[];
+    for (var i = 0; i < _itemDrafts.length; i++) {
+      final d = _itemDrafts[i];
+      final name = d.nameCtrl.text.trim();
+      final priceText = d.priceCtrl.text.trim();
+      final qtyText = d.qtyCtrl.text.trim();
+      if (name.isEmpty && priceText.isEmpty && qtyText.isEmpty) continue;
+      final price = int.tryParse(priceText);
+      final qty = int.tryParse(qtyText);
+      if (name.isEmpty) {
+        setState(() => _error = 'Nama item baris ${i + 1} tidak boleh kosong.');
+        return;
+      }
+      if (price == null || price < 0) {
+        setState(() => _error = 'Harga item "$name" tidak valid.');
+        return;
+      }
+      if (qty == null || qty <= 0) {
+        setState(() => _error = 'Qty item "$name" harus lebih dari 0.');
+        return;
+      }
+      items.add(TransactionItem(name: name, price: price, qty: qty));
+    }
+
+    final amount = items.isEmpty
+        ? int.tryParse(_amountCtrl.text.trim()) ?? 0
+        : items.fold<int>(0, (s, it) => s + it.total);
     if (amount <= 0) {
       setState(() => _error = 'Nominal harus lebih dari 0.');
       return;
@@ -139,6 +205,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         date: _date,
         note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
         createdAt: ex?.createdAt ?? DateTime.now(),
+        items: items,
       ));
     } on ArgumentError catch (e) {
       setState(() => _error = e.message);
@@ -192,21 +259,33 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       ),
                     ],
                     selected: {_type},
-                    onSelectionChanged: (s) =>
-                        setState(() => _type = s.single),
+                    onSelectionChanged: (s) => setState(() {
+                      _type = s.single;
+                      if (_type == TransactionType.transfer &&
+                          _itemDrafts.isNotEmpty) {
+                        for (final d in _itemDrafts) {
+                          d.dispose();
+                        }
+                        _itemDrafts.clear();
+                        _amountCtrl.clear();
+                      }
+                    }),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     key: const Key('amountField'),
                     controller: _amountCtrl,
                     autofocus: !_isEdit,
+                    enabled: _itemDrafts.isEmpty,
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly
                     ],
-                    decoration: const InputDecoration(
-                      labelText: 'Nominal (Rp)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: _itemDrafts.isEmpty
+                          ? 'Nominal (Rp)'
+                          : 'Total otomatis dari item',
+                      border: const OutlineInputBorder(),
                       prefixText: 'Rp ',
                     ),
                   ),
@@ -324,6 +403,109 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  if (_type != TransactionType.transfer) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('Rincian item (opsional)'),
+                        const Spacer(),
+                        TextButton.icon(
+                          key: const Key('addItemButton'),
+                          onPressed: () => setState(() {
+                            _itemDrafts.add(_ItemDraft());
+                            _syncAmountFromItems();
+                          }),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Tambah item'),
+                        ),
+                      ],
+                    ),
+                    for (var i = 0; i < _itemDrafts.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: TextField(
+                                key: Key('itemName_$i'),
+                                controller: _itemDrafts[i].nameCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nama barang',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                key: Key('itemPrice_$i'),
+                                controller: _itemDrafts[i].priceCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                onChanged: (_) => setState(
+                                    _syncAmountFromItems),
+                                decoration: const InputDecoration(
+                                  labelText: 'Harga',
+                                  border: OutlineInputBorder(),
+                                  prefixText: 'Rp ',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 64,
+                              child: TextField(
+                                key: Key('itemQty_$i'),
+                                controller: _itemDrafts[i].qtyCtrl,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                onChanged: (_) => setState(
+                                    _syncAmountFromItems),
+                                decoration: const InputDecoration(
+                                  labelText: 'Qty',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              key: Key('itemDelete_$i'),
+                              icon: const Icon(Icons.remove_circle_outline),
+                              onPressed: () => setState(() {
+                                _itemDrafts.removeAt(i).dispose();
+                                if (_itemDrafts.isEmpty) {
+                                  _amountCtrl.clear();
+                                } else {
+                                  _syncAmountFromItems();
+                                }
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_itemDrafts.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'Total: ${formatRupiah(_itemsTotal)}',
+                            style: DuitQuTheme.amountStyle(
+                              context,
+                              16,
+                              color: _type == TransactionType.income
+                                  ? DuitQuTheme.emerald
+                                  : DuitQuTheme.terracotta,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                   if (_error != null) ...[
                     const SizedBox(height: 8),
                     Text(
