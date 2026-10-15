@@ -5,17 +5,18 @@ import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/transfer_service.dart';
-import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
-import 'accounts_screen.dart';
+import '../widgets/chat_sheet.dart';
+import '../widgets/floating_nav.dart';
 import 'add_transaction_sheet.dart';
+import 'all_transactions_screen.dart';
+import 'goals_screen.dart';
 import 'home_screen.dart';
-import 'more_screen.dart';
-import 'stats_screen.dart';
+import 'inbox_screen.dart';
+import 'insight_screen.dart';
+import 'profile_screen.dart';
 
-/// Kerangka aplikasi: bottom navigation 4 tab + FAB catat kilat.
-/// Semua tab berbagi repository yang sama; daftar transaksi reaktif
-/// lewat [TransactionRepository.watch] sehingga tidak perlu refresh manual.
+/// Kerangka aplikasi ala mockup: 4 tab + pil chat AI mengambang.
 class AppShell extends StatefulWidget {
   final TransactionRepository txRepo;
   final AccountRepository accountRepo;
@@ -41,8 +42,8 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
 
-  Future<void> _openAdd() async {
-    final saved = await showModalBottomSheet<bool>(
+  Future<void> _openAdd({QuickParse? prefill}) async {
+    final changed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -52,60 +53,71 @@ class _AppShellState extends State<AppShell> {
         categoryRepo: widget.categoryRepo,
         transferService: widget.transferService,
         defaults: widget.defaults,
+        initialAmount: prefill?.amount,
+        initialNote: prefill?.description,
       ),
     );
-    // Daftar reaktif via watch(); tidak perlu setState manual.
-    if (saved == true && mounted) setState(() {});
+    if (changed == true) setState(() {});
+  }
+
+  void _openChat() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ChatSheet(onSave: (parsed) => _openAdd(prefill: parsed)),
+    );
+  }
+
+  void _openInbox() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const InboxScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
+    final pages = [
+      HomeScreen(
+        txRepo: widget.txRepo,
+        accountRepo: widget.accountRepo,
+        categoryRepo: widget.categoryRepo,
+        transferService: widget.transferService,
+        defaults: widget.defaults,
+        onAdd: () => _openAdd(),
+        onOpenInbox: _openInbox,
+        onSeeAll: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AllTransactionsScreen(
+                txRepo: widget.txRepo,
+                accountRepo: widget.accountRepo,
+                categoryRepo: widget.categoryRepo,
+                transferService: widget.transferService,
+                defaults: widget.defaults,
+              ),
+            ),
+          );
+        },
+      ),
+      InsightScreen(txRepo: widget.txRepo, categoryRepo: widget.categoryRepo),
+      const GoalsScreen(),
+      ProfileScreen(
+        accountRepo: widget.accountRepo,
+        categoryRepo: widget.categoryRepo,
+        txRepo: widget.txRepo,
+        backup: widget.backup,
+      ),
+    ];
     return Scaffold(
-      body: IndexedStack(
-        index: _index,
-        children: [
-          HomeScreen(
-            txRepo: widget.txRepo,
-            accountRepo: widget.accountRepo,
-            categoryRepo: widget.categoryRepo,
-            transferService: widget.transferService,
-            defaults: widget.defaults,
-            onAdd: _openAdd,
-          ),
-          StatsScreen(txRepo: widget.txRepo, categoryRepo: widget.categoryRepo),
-          AccountsScreen(
-            accountRepo: widget.accountRepo,
-            txRepo: widget.txRepo,
-          ),
-          MoreScreen(categoryRepo: widget.categoryRepo, backup: widget.backup),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAdd,
-        child: const Icon(Icons.add_rounded, size: 28),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
+      extendBody: true,
+      body: IndexedStack(index: _index, children: pages),
+      bottomNavigationBar: FloatingNav(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home_rounded),
-            label: t.navHome,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.bar_chart_rounded),
-            label: t.navStats,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.wallet_rounded),
-            label: t.navAccounts,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.menu_rounded),
-            label: t.navMore,
-          ),
-        ],
+        onChatTap: _openChat,
       ),
     );
   }
