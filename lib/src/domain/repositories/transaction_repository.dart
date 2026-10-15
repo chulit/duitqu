@@ -34,4 +34,7 @@ abstract class TransactionRepository {
 
   /// Untuk UI reaktif.
   Stream<List<Transaction>> watch(TransactionQuery query);
+
+  /// Saran merchant unik untuk autocomplete, terbaru dulu.
+  Future<List<String>> merchantSuggestions();
 }
