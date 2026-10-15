@@ -1,6 +1,15 @@
 /// Jenis transaksi. Transfer bukan pengeluaran (lihat ADR 0002).
 enum TransactionType { income, expense, transfer }
 
+/// Asal transaksi (spec v2, tiket 02).
+enum TransactionOrigin {
+  manual,
+  chat,
+  androidNotification,
+  receiptScan,
+  statementImport,
+}
+
 /// Satu kejadian uang. Pure Dart — tanpa dependensi framework/database.
 ///
 /// Invariant: bila [items] tidak kosong,
@@ -11,6 +20,7 @@ class Transaction {
   final int amount; // satuan terkecil mata uang
   final int? categoryId;
   final int accountId;
+
   /// Akun tujuan — hanya untuk transfer.
   final int? toAccountId;
   final String? merchant;
@@ -18,6 +28,15 @@ class Transaction {
   final String? note;
   final DateTime createdAt;
   final List<TransactionItem> items;
+
+  /// Asal transaksi — untuk pelacakan sumber (v2).
+  final TransactionOrigin origin;
+
+  /// ID kandidat sumber bila berasal dari auto-catat.
+  final int? sourceCandidateId;
+
+  /// Grup transfer: kedua sisi transfer berbagi nilai ini.
+  final String? transferGroupId;
 
   const Transaction({
     this.id,
@@ -31,6 +50,9 @@ class Transaction {
     this.note,
     required this.createdAt,
     this.items = const [],
+    this.origin = TransactionOrigin.manual,
+    this.sourceCandidateId,
+    this.transferGroupId,
   });
 }
 

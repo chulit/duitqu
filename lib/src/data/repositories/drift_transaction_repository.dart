@@ -24,7 +24,9 @@ class DriftTransactionRepository implements TransactionRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
       final int id;
       if (t.id == null) {
-        id = await _db.into(_db.transactions).insert(
+        id = await _db
+            .into(_db.transactions)
+            .insert(
               db.TransactionsCompanion.insert(
                 type: t.type.name,
                 amount: amount,
@@ -35,13 +37,16 @@ class DriftTransactionRepository implements TransactionRepository {
                 date: t.date.millisecondsSinceEpoch,
                 note: Value(t.note),
                 createdAt: now,
+                origin: Value(t.origin.name),
+                sourceCandidateId: Value(t.sourceCandidateId),
+                transferGroupId: Value(t.transferGroupId),
               ),
             );
       } else {
         id = t.id!;
-        await (_db.update(_db.transactions)
-              ..where((tbl) => tbl.id.equals(id)))
-            .write(
+        await (_db.update(
+          _db.transactions,
+        )..where((tbl) => tbl.id.equals(id))).write(
           db.TransactionsCompanion(
             type: Value(t.type.name),
             amount: Value(amount),
@@ -51,14 +56,19 @@ class DriftTransactionRepository implements TransactionRepository {
             merchant: Value(t.merchant),
             date: Value(t.date.millisecondsSinceEpoch),
             note: Value(t.note),
+            origin: Value(t.origin.name),
+            sourceCandidateId: Value(t.sourceCandidateId),
+            transferGroupId: Value(t.transferGroupId),
           ),
         );
-        await (_db.delete(_db.transactionItems)
-              ..where((tbl) => tbl.transactionId.equals(id)))
-            .go();
+        await (_db.delete(
+          _db.transactionItems,
+        )..where((tbl) => tbl.transactionId.equals(id))).go();
       }
       for (final item in t.items) {
-        await _db.into(_db.transactionItems).insert(
+        await _db
+            .into(_db.transactionItems)
+            .insert(
               db.TransactionItemsCompanion.insert(
                 transactionId: id,
                 name: item.name,
@@ -74,12 +84,12 @@ class DriftTransactionRepository implements TransactionRepository {
   @override
   Future<void> delete(int id) async {
     await _db.transaction(() async {
-      await (_db.delete(_db.transactionItems)
-            ..where((tbl) => tbl.transactionId.equals(id)))
-          .go();
-      await (_db.delete(_db.transactions)
-            ..where((tbl) => tbl.id.equals(id)))
-          .go();
+      await (_db.delete(
+        _db.transactionItems,
+      )..where((tbl) => tbl.transactionId.equals(id))).go();
+      await (_db.delete(
+        _db.transactions,
+      )..where((tbl) => tbl.id.equals(id))).go();
     });
   }
 
@@ -104,10 +114,11 @@ class DriftTransactionRepository implements TransactionRepository {
   /// Saran merchant untuk autocomplete: unik, terbaru dulu.
   @override
   Future<List<String>> merchantSuggestions() async {
-    final rows = await (_db.select(_db.transactions)
-          ..where((t) => t.merchant.isNotNull())
-          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
-        .get();
+    final rows =
+        await (_db.select(_db.transactions)
+              ..where((t) => t.merchant.isNotNull())
+              ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+            .get();
     final seen = <String>{};
     final out = <String>[];
     for (final r in rows) {
@@ -169,33 +180,35 @@ class DriftTransactionRepository implements TransactionRepository {
       query.where((t) => t.merchant.equals(q.merchant!));
     }
     if (q.dateFrom != null) {
-      query.where((t) =>
-          t.date.isBiggerOrEqualValue(q.dateFrom!.millisecondsSinceEpoch));
+      query.where(
+        (t) => t.date.isBiggerOrEqualValue(q.dateFrom!.millisecondsSinceEpoch),
+      );
     }
     if (q.dateTo != null) {
-      query.where((t) =>
-          t.date.isSmallerOrEqualValue(q.dateTo!.millisecondsSinceEpoch));
+      query.where(
+        (t) => t.date.isSmallerOrEqualValue(q.dateTo!.millisecondsSinceEpoch),
+      );
     }
     return query;
   }
 
-  Future<List<domain.Transaction>> _withItems(
-    List<db.Transaction> rows,
-  ) async {
+  Future<List<domain.Transaction>> _withItems(List<db.Transaction> rows) async {
     if (rows.isEmpty) return [];
     final ids = rows.map((r) => r.id).toList();
-    final itemRows = await (_db.select(_db.transactionItems)
-          ..where((i) => i.transactionId.isIn(ids)))
-        .get();
+    final itemRows = await (_db.select(
+      _db.transactionItems,
+    )..where((i) => i.transactionId.isIn(ids))).get();
     final byTx = <int, List<domain.TransactionItem>>{};
     for (final ir in itemRows) {
-      (byTx[ir.transactionId] ??= []).add(domain.TransactionItem(
-        id: ir.id,
-        transactionId: ir.transactionId,
-        name: ir.name,
-        price: ir.price,
-        qty: ir.qty,
-      ));
+      (byTx[ir.transactionId] ??= []).add(
+        domain.TransactionItem(
+          id: ir.id,
+          transactionId: ir.transactionId,
+          name: ir.name,
+          price: ir.price,
+          qty: ir.qty,
+        ),
+      );
     }
     return [for (final r in rows) _toDomain(r, byTx[r.id] ?? const [])];
   }
@@ -203,47 +216,52 @@ class DriftTransactionRepository implements TransactionRepository {
   /// Pencarian teks: catatan/merchant cocok LIKE, atau nama item cocok.
   Future<List<domain.Transaction>> search(String text) async {
     final s = '%${text.trim()}%';
-    final direct = await (_db.select(_db.transactions)
-          ..where((t) => t.note.like(s) | t.merchant.like(s))
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.date),
-            (t) => OrderingTerm.desc(t.id),
-          ]))
-        .get();
-    final itemTxIds = await (_db.select(_db.transactionItems)
-          ..where((i) => i.name.like(s)))
-        .get()
-        .then((rs) => rs.map((r) => r.transactionId).toSet());
+    final direct =
+        await (_db.select(_db.transactions)
+              ..where((t) => t.note.like(s) | t.merchant.like(s))
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.date),
+                (t) => OrderingTerm.desc(t.id),
+              ]))
+            .get();
+    final itemTxIds =
+        await (_db.select(_db.transactionItems)..where((i) => i.name.like(s)))
+            .get()
+            .then((rs) => rs.map((r) => r.transactionId).toSet());
     final viaItems = itemTxIds.isEmpty
         ? <db.Transaction>[]
-        : await (_db.select(_db.transactions)
-              ..where((t) => t.id.isIn(itemTxIds)))
-            .get();
+        : await (_db.select(
+            _db.transactions,
+          )..where((t) => t.id.isIn(itemTxIds))).get();
     final merged = <int, db.Transaction>{};
     for (final r in [...direct, ...viaItems]) {
       merged[r.id] = r;
     }
     final sorted = merged.values.toList()
-      ..sort((a, b) =>
-          b.date != a.date ? b.date.compareTo(a.date) : b.id.compareTo(a.id));
+      ..sort(
+        (a, b) =>
+            b.date != a.date ? b.date.compareTo(a.date) : b.id.compareTo(a.id),
+      );
     return _withItems(sorted);
   }
 
   domain.Transaction _toDomain(
     db.Transaction r,
     List<domain.TransactionItem> items,
-  ) =>
-      domain.Transaction(
-        id: r.id,
-        type: domain.TransactionType.values.byName(r.type),
-        amount: r.amount,
-        categoryId: r.categoryId,
-        accountId: r.accountId,
-        toAccountId: r.toAccountId,
-        merchant: r.merchant,
-        date: DateTime.fromMillisecondsSinceEpoch(r.date),
-        note: r.note,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(r.createdAt),
-        items: items,
-      );
+  ) => domain.Transaction(
+    id: r.id,
+    type: domain.TransactionType.values.byName(r.type),
+    amount: r.amount,
+    categoryId: r.categoryId,
+    accountId: r.accountId,
+    toAccountId: r.toAccountId,
+    merchant: r.merchant,
+    date: DateTime.fromMillisecondsSinceEpoch(r.date),
+    note: r.note,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(r.createdAt),
+    items: items,
+    origin: domain.TransactionOrigin.values.byName(r.origin),
+    sourceCandidateId: r.sourceCandidateId,
+    transferGroupId: r.transferGroupId,
+  );
 }
