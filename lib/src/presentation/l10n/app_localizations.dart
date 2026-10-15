@@ -188,6 +188,30 @@ class AppLocalizations {
   String get securityAndPrivacy =>
       _id ? 'Keamanan & Privasi' : 'Security & Privacy';
   String get settings => _id ? 'Pengaturan' : 'Settings';
+  String get autoRecordSettings =>
+      _id ? 'Pengaturan Auto-Catat' : 'Auto-Record Settings';
+  String get autoRecordEnabled => _id ? 'Aktifkan auto-catat' : 'Enable auto-record';
+  String get autoRecordEnabledDesc => _id
+      ? 'Bila mati, semua hasil tangkapan masuk inbox untuk dicek manual.'
+      : 'When off, all captured items go to the inbox for manual review.';
+  String get autoRecordSources =>
+      _id ? 'Sumber yang boleh auto-catat' : 'Sources allowed to auto-record';
+  String confidenceThreshold(int pct) => _id
+      ? 'Batas kepercayaan: $pct%'
+      : 'Confidence threshold: $pct%';
+  String get confidenceThresholdDesc => _id
+      ? 'Hasil parsing di bawah batas ini masuk inbox, bukan langsung tersimpan.'
+      : 'Parse results below this go to the inbox instead of saving directly.';
+  String get policyHowItWorks => _id ? 'Cara kerja' : 'How it works';
+  String get policyExplanation => _id
+      ? 'Kandidat langsung tersimpan hanya bila: sumber diizinkan, tipe dikenali, nominal valid, akun pasti, bukan duplikat, dan kepercayaan parsing cukup. Selain itu masuk Inbox untuk kamu cek dulu.'
+      : 'A candidate saves directly only when: the source is allowed, the type is recognized, the amount is valid, the account is certain, it is not a duplicate, and parse confidence is high enough. Otherwise it goes to the Inbox for you to review.';
+  String get sourceManual => _id ? 'Input manual' : 'Manual input';
+  String get sourceChat => _id ? 'Chat' : 'Chat';
+  String get sourceNotification =>
+      _id ? 'Notifikasi Android' : 'Android notifications';
+  String get sourceReceipt => _id ? 'Pindai struk' : 'Receipt scan';
+  String get sourceStatement => _id ? 'Impor mutasi' : 'Statement import';
   String get helpAndFeedback => _id ? 'Bantuan & Saran' : 'Help & Feedback';
   String get active => _id ? 'Aktif' : 'Active';
   String get comingSoon => _id ? 'Segera hadir di v4' : 'Coming in v4';

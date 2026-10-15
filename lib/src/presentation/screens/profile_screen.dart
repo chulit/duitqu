@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/backup_service.dart';
+import 'auto_record_settings_screen.dart';
 import 'sync_screen.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
@@ -324,7 +325,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.settings_outlined,
                 iconColor: scheme.onSurfaceVariant,
                 label: t.settings,
-                onTap: _comingSoon,
+                onTap: () => _push(const AutoRecordSettingsScreen()),
               ),
               _MenuRow(
                 icon: Icons.help_outline_rounded,
