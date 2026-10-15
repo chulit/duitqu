@@ -15,6 +15,7 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/summary_service.dart';
 import '../../domain/services/transfer_service.dart';
 import '../backup_sheet.dart';
+import '../l10n/app_localizations.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
@@ -95,18 +96,19 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Filter riwayat',
+              Text(AppLocalizations.of(context).filterTitle,
                   style: Theme.of(ctx).textTheme.titleLarge),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: accountId,
-                decoration: const InputDecoration(
-                  labelText: 'Akun',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).accountLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(
-                      value: null, child: Text('Semua akun')),
+                  DropdownMenuItem(
+                      value: null,
+                      child: Text(AppLocalizations.of(context).allAccounts)),
                   for (final a in _accounts.values)
                     DropdownMenuItem(
                         value: a.id, child: Text(a.name)),
@@ -116,13 +118,15 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: categoryId,
-                decoration: const InputDecoration(
-                  labelText: 'Kategori',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context).categoryLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(
-                      value: null, child: Text('Semua kategori')),
+                  DropdownMenuItem(
+                      value: null,
+                      child:
+                          Text(AppLocalizations.of(context).allCategories)),
                   for (final c in _categories.values)
                     DropdownMenuItem(
                         value: c.id, child: Text(c.name)),
@@ -140,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                       Navigator.pop(ctx);
                     },
-                    child: const Text('Reset'),
+                    child: Text(AppLocalizations.of(context).reset),
                   ),
                   const Spacer(),
                   FilledButton(
@@ -151,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                       Navigator.pop(ctx);
                     },
-                    child: const Text('Terapkan'),
+                    child: Text(AppLocalizations.of(context).apply),
                   ),
                 ],
               ),
@@ -223,7 +227,9 @@ class _HomeScreenState extends State<HomeScreen> {
       await SharePlus.instance.share(
         ShareParams(files: [XFile(file.path)], text: 'Backup DuitQu'));
     } catch (e) {
-      if (mounted) _showBackupError('Gagal mengekspor: $e');
+      if (mounted) {
+        _showBackupError(AppLocalizations.of(context).exportFailed(e));
+      }
     }
   }
 
@@ -243,9 +249,13 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       if (mounted) _showImportReport(report);
     } on BackupFormatException catch (e) {
-      if (mounted) _showBackupError(e.message);
+      if (mounted) {
+        _showBackupError(AppLocalizations.of(context).backupFormatMessage(e.code));
+      }
     } catch (e) {
-      if (mounted) _showBackupError('Gagal mengimpor: $e');
+      if (mounted) {
+        _showBackupError(AppLocalizations.of(context).importFailed(e));
+      }
     }
   }
 
@@ -253,12 +263,12 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Backup gagal'),
+        title: Text(AppLocalizations.of(context).backupFailed),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text(AppLocalizations.of(context).close),
           ),
         ],
       ),
@@ -266,32 +276,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showImportReport(ImportReport report) {
+    final t = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Impor selesai'),
+        title: Text(t.importDone),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Berhasil diimpor: ${report.accounts} akun, '
-                '${report.categories} kategori, '
-                '${report.transactions} transaksi, '
-                '${report.items} item.',
+                t.importSummary(report.accounts, report.categories,
+                    report.transactions, report.items),
               ),
               if (report.skipped.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
-                  '${report.skipped.length} baris dilewati:',
+                  t.skippedRowsTitle(report.skipped.length),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 ...report.skipped.map(
                   (s) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('Baris ${s.row}: ${s.reason}'),
+                    child: Text(
+                        t.skippedRowLine(s.row, t.localizedSkippedReason(s))),
                   ),
                 ),
               ],
@@ -301,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tutup'),
+            child: Text(AppLocalizations.of(context).close),
           ),
         ],
       ),
@@ -312,18 +322,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus transaksi?'),
+        title: Text(AppLocalizations.of(context).deleteTransactionTitle),
         content: Text(
           '${_titleOf(tx)} • ${formatRupiah(tx.amount)}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
+            child: Text(AppLocalizations.of(context).delete),
           ),
         ],
       ),
@@ -336,7 +346,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String _titleOf(Transaction tx) {
     if (tx.merchant != null && tx.merchant!.isNotEmpty) return tx.merchant!;
     if (tx.note != null && tx.note!.isNotEmpty) return tx.note!;
-    if (tx.type == TransactionType.transfer) return 'Transfer';
+    if (tx.type == TransactionType.transfer) {
+      return AppLocalizations.of(context).transfer;
+    }
     final cat = tx.categoryId == null ? null : _categories[tx.categoryId];
     return cat?.name ?? 'Transaksi';
   }
@@ -357,16 +369,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (tx.items.isNotEmpty) {
       parts.add('${tx.items.length} item');
     }
-    parts.add(formatTanggal(tx.date));
+    parts.add(formatTanggal(tx.date, AppLocalizations.of(context)));
     return parts.join(' • ');
   }
 
   Color _amountColor(BuildContext context, Transaction tx) {
     switch (tx.type) {
       case TransactionType.income:
-        return DuitQuTheme.emerald;
+        return DuitQuTheme.incomeColor(context);
       case TransactionType.expense:
-        return DuitQuTheme.terracotta;
+        return DuitQuTheme.expenseColor(context);
       case TransactionType.transfer:
         return Theme.of(context).colorScheme.onSurfaceVariant;
     }
@@ -385,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DuitQu'),
+        title: Text(AppLocalizations.of(context).appTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -399,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.save_alt),
-            tooltip: 'Backup',
+            tooltip: AppLocalizations.of(context).backupTooltip,
             onPressed: _openBackup,
           ),
           Stack(
@@ -460,10 +472,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         controller: _searchCtrl,
                         autofocus: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Cari catatan, merchant, barang…',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context).searchHint,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
                         onChanged: (v) =>
@@ -489,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? Center(
                             child: Text(
                               monthTxs.isEmpty
-                                  ? 'Belum ada transaksi.\nKetuk + untuk mencatat.'
+                                  ? AppLocalizations.of(context).emptyHistory
                                   : 'Tidak ada yang cocok dengan filter.',
                               textAlign: TextAlign.center,
                             ),
@@ -598,7 +610,7 @@ class _SummaryCard extends StatelessWidget {
                   onPressed: onPrev,
                 ),
                 Text(
-                  formatBulan(month),
+                  formatBulan(month, AppLocalizations.of(context)),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 IconButton(
@@ -612,21 +624,21 @@ class _SummaryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SummaryItem(
-                  label: 'Masuk',
+                  label: AppLocalizations.of(context).income,
                   amount: income,
-                  color: DuitQuTheme.emerald,
+                  color: DuitQuTheme.incomeColor(context),
                 ),
                 _SummaryItem(
-                  label: 'Keluar',
+                  label: AppLocalizations.of(context).expense,
                   amount: expense,
-                  color: DuitQuTheme.terracotta,
+                  color: DuitQuTheme.expenseColor(context),
                 ),
                 _SummaryItem(
-                  label: 'Selisih',
+                  label: AppLocalizations.of(context).net,
                   amount: net,
                   color: net >= 0
-                      ? DuitQuTheme.emerald
-                      : DuitQuTheme.terracotta,
+                      ? DuitQuTheme.incomeColor(context)
+                      : DuitQuTheme.expenseColor(context),
                   signed: true,
                 ),
               ],

@@ -25,6 +25,18 @@ class DuitQuTheme {
         ),
       );
 
+  /// Warna nominal pemasukan — versi terang untuk mode gelap agar kontras.
+  static Color incomeColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF5ACB95)
+          : emerald;
+
+  /// Warna nominal pengeluaran — versi terang untuk mode gelap agar kontras.
+  static Color expenseColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFEE9A6B)
+          : terracotta;
+
   /// Gaya nominal: angka tabular agar mudah di-scan mata.
   static TextStyle amountStyle(
     BuildContext context,

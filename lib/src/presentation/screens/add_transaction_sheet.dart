@@ -9,6 +9,7 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/transfer_service.dart';
 import '../format.dart';
+import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
 
@@ -250,20 +251,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   ),
                   const SizedBox(height: 12),
                   SegmentedButton<TransactionType>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: TransactionType.expense,
-                        label: Text('Keluar'),
+                        label: Text(AppLocalizations.of(context).expense),
                         icon: Icon(Icons.arrow_upward),
                       ),
                       ButtonSegment(
                         value: TransactionType.income,
-                        label: Text('Masuk'),
+                        label: Text(AppLocalizations.of(context).income),
                         icon: Icon(Icons.arrow_downward),
                       ),
                       ButtonSegment(
                         value: TransactionType.transfer,
-                        label: Text('Transfer'),
+                        label: Text(AppLocalizations.of(context).transfer),
                         icon: Icon(Icons.swap_horiz),
                       ),
                     ],
@@ -292,15 +293,15 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ],
                     decoration: InputDecoration(
                       labelText: _itemDrafts.isEmpty
-                          ? 'Nominal (Rp)'
-                          : 'Total otomatis dari item',
+                          ? AppLocalizations.of(context).amountLabel
+                          : AppLocalizations.of(context).amountAutoLabel,
                       border: const OutlineInputBorder(),
                       prefixText: 'Rp ',
                     ),
                   ),
                   const SizedBox(height: 12),
                   if (_type != TransactionType.transfer) ...[
-                    const Text('Kategori'),
+                    Text(AppLocalizations.of(context).categoryLabel),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
@@ -324,8 +325,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           initialValue: _accountId,
                           decoration: InputDecoration(
                             labelText: _type == TransactionType.transfer
-                                ? 'Dari akun'
-                                : 'Akun',
+                                ? AppLocalizations.of(context).fromAccountLabel
+                                : AppLocalizations.of(context).accountLabel,
                             border: const OutlineInputBorder(),
                           ),
                           items: [
@@ -345,8 +346,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           child: DropdownButtonFormField<int>(
                             key: const Key('toAccountDropdown'),
                             initialValue: _toAccountId,
-                            decoration: const InputDecoration(
-                              labelText: 'Ke akun',
+                            decoration: InputDecoration(
+                              labelText:
+              AppLocalizations.of(context).toAccountLabel,
                               border: OutlineInputBorder(),
                             ),
                             items: [
@@ -373,10 +375,11 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly
                       ],
-                      decoration: const InputDecoration(
-                        labelText: 'Biaya admin (opsional)',
+                      decoration: InputDecoration(
+                        labelText:
+              AppLocalizations.of(context).adminFeeLabel,
                         helperText:
-                            'Otomatis tercatat sebagai pengeluaran "Biaya Admin".',
+                            AppLocalizations.of(context).adminFeeHint,
                         border: OutlineInputBorder(),
                         prefixText: 'Rp ',
                       ),
@@ -389,7 +392,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         child: OutlinedButton.icon(
                           onPressed: _pickDate,
                           icon: const Icon(Icons.calendar_today),
-                          label: Text(formatTanggal(_date)),
+                          label: Text(formatTanggal(
+                              _date, AppLocalizations.of(context))),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -414,8 +418,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               controller: ctrl,
                               focusNode: focus,
                               onChanged: (v) => _merchant = v,
-                              decoration: const InputDecoration(
-                                labelText: 'Merchant (opsional)',
+                              decoration: InputDecoration(
+                                labelText:
+              AppLocalizations.of(context).merchantLabel,
                                 border: OutlineInputBorder(),
                               ),
                             );
@@ -427,16 +432,16 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _noteCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Catatan (opsional)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).noteLabel,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   if (_type != TransactionType.transfer) ...[
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Text('Rincian item (opsional)'),
+                        Text(AppLocalizations.of(context).itemsSection),
                         const Spacer(),
                         TextButton.icon(
                           key: const Key('addItemButton'),
@@ -445,7 +450,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                             _syncAmountFromItems();
                           }),
                           icon: const Icon(Icons.add),
-                          label: const Text('Tambah item'),
+                          label: Text(AppLocalizations.of(context).addItem),
                         ),
                       ],
                     ),
@@ -459,8 +464,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               child: TextField(
                                 key: Key('itemName_$i'),
                                 controller: _itemDrafts[i].nameCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Nama barang',
+                                decoration: InputDecoration(
+                                  labelText:
+              AppLocalizations.of(context).itemName,
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -477,8 +483,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 ],
                                 onChanged: (_) => setState(
                                     _syncAmountFromItems),
-                                decoration: const InputDecoration(
-                                  labelText: 'Harga',
+                                decoration: InputDecoration(
+                                  labelText:
+              AppLocalizations.of(context).price,
                                   border: OutlineInputBorder(),
                                   prefixText: 'Rp ',
                                 ),
@@ -496,8 +503,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                 ],
                                 onChanged: (_) => setState(
                                     _syncAmountFromItems),
-                                decoration: const InputDecoration(
-                                  labelText: 'Qty',
+                                decoration: InputDecoration(
+                                  labelText:
+              AppLocalizations.of(context).qty,
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -528,8 +536,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               context,
                               16,
                               color: _type == TransactionType.income
-                                  ? DuitQuTheme.emerald
-                                  : DuitQuTheme.terracotta,
+                                  ? DuitQuTheme.incomeColor(context)
+                                  : DuitQuTheme.expenseColor(context),
                             ),
                           ),
                         ),
@@ -550,7 +558,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     onPressed: _save,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Text(_isEdit ? 'Simpan perubahan' : 'Catat'),
+                      child: Text(_isEdit
+                          ? AppLocalizations.of(context).saveChanges
+                          : AppLocalizations.of(context).save),
                     ),
                   ),
                 ],

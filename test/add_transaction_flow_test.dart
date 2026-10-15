@@ -8,7 +8,9 @@ import 'package:duitqu/src/domain/entities/account.dart';
 import 'package:duitqu/src/domain/entities/transaction.dart';
 import 'package:duitqu/src/domain/repositories/transaction_repository.dart';
 import 'package:duitqu/src/domain/services/transfer_service.dart';
+import 'package:duitqu/src/presentation/l10n/app_localizations.dart';
 import 'package:duitqu/src/presentation/quick_add_defaults.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:duitqu/src/presentation/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +32,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('id'),
         home: HomeScreen(
           txRepo: txRepo,
           accountRepo: accountRepo,
@@ -82,6 +92,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('id'),
         home: HomeScreen(
           txRepo: txRepo,
           accountRepo: accountRepo,
@@ -140,6 +158,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('id'),
         home: HomeScreen(
           txRepo: txRepo,
           accountRepo: accountRepo,
@@ -206,6 +232,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('id'),
         home: HomeScreen(
           txRepo: txRepo,
           accountRepo: accountRepo,
@@ -306,6 +340,14 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('id'),
         home: HomeScreen(
           txRepo: txRepo,
           accountRepo: accountRepo,
