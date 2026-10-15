@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:duitqu/src/data/backup_service.dart';
 import 'package:duitqu/src/data/database.dart' as schema;
 import 'package:duitqu/src/data/repositories/drift_account_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_category_repository.dart';
@@ -34,6 +35,7 @@ void main() {
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
+          backup: BackupService(db),
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -85,6 +87,7 @@ void main() {
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
+          backup: BackupService(db),
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -142,6 +145,7 @@ void main() {
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
+          backup: BackupService(db),
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -207,6 +211,7 @@ void main() {
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
+          backup: BackupService(db),
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -306,6 +311,7 @@ void main() {
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
+          backup: BackupService(db),
           defaults: QuickAddDefaults(),
         ),
       ),

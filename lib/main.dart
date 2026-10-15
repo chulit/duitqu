@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'src/data/backup_service.dart';
 import 'src/data/database.dart';
 import 'src/data/repositories/drift_account_repository.dart';
 import 'src/data/repositories/drift_category_repository.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
   final categoryRepo = DriftCategoryRepository(db);
   final txRepo = DriftTransactionRepository(db);
   final transferService = TransferService(txRepo, categoryRepo);
+  final backup = BackupService(db);
   await categoryRepo.seedDefaults();
 
   runApp(DuitQuApp(
@@ -24,6 +26,7 @@ Future<void> main() async {
     accountRepo: accountRepo,
     categoryRepo: categoryRepo,
     transferService: transferService,
+    backup: backup,
   ));
 }
 
@@ -32,6 +35,7 @@ class DuitQuApp extends StatelessWidget {
   final DriftAccountRepository accountRepo;
   final DriftCategoryRepository categoryRepo;
   final TransferService transferService;
+  final BackupService backup;
 
   const DuitQuApp({
     super.key,
@@ -39,6 +43,7 @@ class DuitQuApp extends StatelessWidget {
     required this.accountRepo,
     required this.categoryRepo,
     required this.transferService,
+    required this.backup,
   });
 
   @override
@@ -52,6 +57,7 @@ class DuitQuApp extends StatelessWidget {
         accountRepo: accountRepo,
         categoryRepo: categoryRepo,
         transferService: transferService,
+        backup: backup,
         defaults: QuickAddDefaults(),
       ),
     );

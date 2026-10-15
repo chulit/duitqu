@@ -1,5 +1,11 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../data/backup_service.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/transaction.dart';
@@ -8,6 +14,7 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/summary_service.dart';
 import '../../domain/services/transfer_service.dart';
+import '../backup_sheet.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
@@ -19,6 +26,7 @@ class HomeScreen extends StatefulWidget {
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
   final TransferService transferService;
+  final BackupService backup;
   final QuickAddDefaults defaults;
 
   const HomeScreen({
@@ -27,6 +35,7 @@ class HomeScreen extends StatefulWidget {
     required this.accountRepo,
     required this.categoryRepo,
     required this.transferService,
+    required this.backup,
     required this.defaults,
   });
 
@@ -194,6 +203,111 @@ class _HomeScreenState extends State<HomeScreen> {
     if (saved == true) setState(() {});
   }
 
+  Future<void> _openBackup() async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (_) => BackupSheet(
+        onExport: _exportBackup,
+        onImport: _importBackup,
+      ),
+    );
+  }
+
+  Future<void> _exportBackup() async {
+    try {
+      final csv = await widget.backup.exportCsv();
+      final dir = await getTemporaryDirectory();
+      final stamp = DateTime.now().toIso8601String().split('T').first;
+      final file = File('${dir.path}/duitqu-backup-$stamp.csv');
+      await file.writeAsString(csv);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], text: 'Backup DuitQu'));
+    } catch (e) {
+      if (mounted) _showBackupError('Gagal mengekspor: $e');
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+    if (picked.isEmpty) return; // pengguna batal
+    final path = picked.single.path;
+    if (path == null) return;
+    try {
+      final csv = await File(path).readAsString();
+      final report = await widget.backup.importCsv(csv);
+      setState(() {
+        _init = _load();
+      });
+      if (mounted) _showImportReport(report);
+    } on BackupFormatException catch (e) {
+      if (mounted) _showBackupError(e.message);
+    } catch (e) {
+      if (mounted) _showBackupError('Gagal mengimpor: $e');
+    }
+  }
+
+  void _showBackupError(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Backup gagal'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showImportReport(ImportReport report) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Impor selesai'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Berhasil diimpor: ${report.accounts} akun, '
+                '${report.categories} kategori, '
+                '${report.transactions} transaksi, '
+                '${report.items} item.',
+              ),
+              if (report.skipped.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  '${report.skipped.length} baris dilewati:',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                ...report.skipped.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('Baris ${s.row}: ${s.reason}'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _confirmDelete(Transaction tx) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -282,6 +396,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 _searchCtrl.clear();
               }
             }),
+          ),
+          IconButton(
+            icon: const Icon(Icons.save_alt),
+            tooltip: 'Backup',
+            onPressed: _openBackup,
           ),
           Stack(
             children: [
