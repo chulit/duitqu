@@ -1,17 +1,55 @@
-# duitqu
+# DuitQu — Money Tracker
 
-A new Flutter project.
+Aplikasi Android pencatat pemasukan & pengeluaran. 100% offline, data tersimpan
+lokal di HP — tanpa akun, tanpa server, tanpa analytics.
 
-## Getting Started
+## Fitur
 
-This project is a starting point for a Flutter application.
+- **Catat kilat** — catat transaksi maksimal 2 tap dari layar utama, dengan
+  default cerdas (akun & kategori terakhir dipakai)
+- **Akun** — bank, cash, e-wallet, lainnya; saldo awal manual per akun
+- **Kategori** — 12 kategori bawaan + kategori kustom
+- **Transfer antar akun** — tipe tersendiri (tidak dihitung sebagai pengeluaran);
+  biaya admin opsional otomatis tercatat sebagai pengeluaran "Biaya Admin"
+- **Rincian item** — nama barang, harga, qty per transaksi; total dihitung otomatis
+- **Ringkasan bulanan** — total masuk, keluar, selisih + navigasi bulan
+- **Filter & cari** — berdasarkan akun, kategori, dan teks (catatan/merchant/nama barang)
+- **Backup CSV** — ekspor & impor manual satu file *(dalam pengerjaan)*
+- **Tema gelap** mengikuti tema sistem
 
-A few resources to get you started if this is your first Flutter project:
+> Status: v1 dalam pengembangan aktif. Lokalisasi Inggris menyusul.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Arsitektur
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Clean architecture yang disederhanakan (mengikuti pola Status Saver):
+
+```
+lib/src/
+├── presentation/   # UI tipis: layar, theme, format (tanpa logika bisnis)
+├── domain/         # entity, interface repository, service murni (pure Dart)
+└── data/           # drift/SQLite: implementasi repository, BackupService
+```
+
+- `TransactionRepository` adalah seam utama — seluruh akses data lewat interface ini.
+- Aturan data: tidak ada hapus otomatis, tidak ada TTL; impor CSV divalidasi dulu
+  sebelum menulis; nominal & tanggal tidak pernah diubah programatik.
+
+## Pengembangan
+
+```bash
+flutter pub get
+flutter analyze   # harus bersih
+flutter test      # harus hijau
+```
+
+Build APK hanya lewat CI (GitHub Actions); VM pengembangan tidak menjalankan
+build Gradle karena keterbatasan RAM.
+
+## Privasi
+
+Seluruh data keuangan tersimpan di SQLite lokal perangkat. Tidak ada data yang
+dikirim ke mana pun.
+
+## Lisensi
+
+Menunggu keputusan pemilik.

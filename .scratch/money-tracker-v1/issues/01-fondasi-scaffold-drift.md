@@ -24,7 +24,7 @@ Selesai 2026-10-15. Yang dikerjakan:
 - `flutter test`: 6/6 hijau (skema + entities). `flutter analyze`: No issues found.
 - **Catatan jujur**: `flutter build apk` TIDAK bisa jalan di VM ini — Gradle daemon
   mati terus (OOM; VM hanya ~1GB available, `_JAVA_OPTIONS` cap 512m). Ini pola yang
-  sama seperti Status Saver: APK hanya di-build di GitHub Actions (tiket 09).
+  sama seperti Status Saver: APK hanya di-build di GitHub Actions (tiket 10).
   AC "build apk --debug" diganti menjadi "terverifikasi via CI pada tiket 09".
 
 - [ ] `flutter build apk --debug` sukses dari VM ini
