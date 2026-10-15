@@ -9,10 +9,12 @@ on:
         type: boolean
         default: false
 
+
 permissions:
   contents: write
   issues: write
   pull-requests: write
+
 
 jobs:
   release:
@@ -59,6 +61,7 @@ jobs:
           cp /tmp/skel/android/gradlew android/gradlew
           cp /tmp/skel/android/gradlew.bat android/gradlew.bat
           chmod +x android/gradlew
+      - run: flutter pub get
       - name: Install semantic-release
         run: |
           npm init -y >/dev/null 2>&1 || true
