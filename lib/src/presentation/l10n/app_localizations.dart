@@ -46,6 +46,11 @@ class AppLocalizations {
   String get allCategories => _id ? 'Semua kategori' : 'All categories';
   String get deleteTransactionTitle =>
       _id ? 'Hapus transaksi?' : 'Delete transaction?';
+  String get deleteTransactionMessage => _id
+      ? 'Transaksi ini akan dihapus permanen.'
+      : 'This transaction will be permanently deleted.';
+  String get deleteTransaction =>
+      _id ? 'Hapus transaksi' : 'Delete transaction';
 
   // -- tambah transaksi --
   String get save => _id ? 'Catat' : 'Save';
@@ -111,10 +116,81 @@ class AppLocalizations {
   String get navStats => _id ? 'Statistik' : 'Stats';
   String get navAccounts => _id ? 'Akun' : 'Accounts';
   String get navMore => _id ? 'Lainnya' : 'More';
-  String get totalBalance => _id ? 'Total saldo' : 'Total balance';
+  String get navInsight => _id ? 'Insight' : 'Insight';
+  String get navGoals => _id ? 'Tujuan' : 'Goals';
+  String get navInbox => _id ? 'Inbox' : 'Inbox';
+  String get totalBalance => _id ? 'Total Saldo' : 'Total Balance';
   String get recentTransactions =>
-      _id ? 'Transaksi terakhir' : 'Recent transactions';
+      _id ? 'Transaksi Terbaru' : 'Recent transactions';
   String get seeAll => _id ? 'Lihat semua' : 'See all';
+  String get seeDetail => _id ? 'Lihat detail' : 'See details';
+
+  // -- mockup: sapaan & chat --
+  String get goodMorning => _id ? 'Selamat pagi,' : 'Good morning,';
+  String get goodAfternoon => _id ? 'Selamat siang,' : 'Good afternoon,';
+  String get goodEvening => _id ? 'Selamat sore,' : 'Good evening,';
+  String get goodNight => _id ? 'Selamat malam,' : 'Good evening,';
+  String get greetingQuestion =>
+      _id ? 'Ada rencana seru hari ini? ✨' : 'Any fun plans today? ✨';
+  String get chatHint => _id ? 'Tanya atau catat...' : 'Ask or record...';
+  String get chatHintLong => _id
+      ? 'Ketik mis. "Makan siang 35 ribu pakai GoPay"...'
+      : 'Type e.g. "Lunch 35 thousand with GoPay"...';
+  String get listening => _id ? 'Mendengarkan...' : 'Listening...';
+
+  // -- mockup: budget --
+  String get remainingThisMonth =>
+      _id ? 'Sisa Bulan Ini' : 'Remaining This Month';
+  String get setBudgetTitle =>
+      _id ? 'Atur budget bulanan' : 'Set monthly budget';
+  String get budgetLabel => _id ? 'Budget (Rp)' : 'Budget (Rp)';
+  String get setBudgetPrompt =>
+      _id ? 'Yuk atur budget bulananmu' : 'Set your monthly budget';
+  String budgetUsed(int pct) => _id
+      ? 'Kamu sudah pakai $pct% dari budget bulanan'
+      : 'You have used $pct% of your monthly budget';
+
+  // -- mockup: insight --
+  String get insightTitle => _id ? 'Insight' : 'Insight';
+  String get expenseThisMonth => _id ? 'Pengeluaran' : 'Expenses';
+  String get ofBudget => _id ? 'dari budget' : 'of budget';
+
+  // -- mockup: tujuan --
+  String get goalsTitle => _id ? 'Tujuan' : 'Goals';
+  String get addGoal => _id ? 'Tambah tujuan' : 'Add goal';
+  String get goalName => _id ? 'Nama tujuan' : 'Goal name';
+  String get targetAmount => _id ? 'Target (Rp)' : 'Target (Rp)';
+  String get savedAmount => _id ? 'Terkumpul' : 'Saved';
+  String get addFunds => _id ? 'Tambah dana' : 'Add funds';
+  String get noGoals => _id
+      ? 'Belum ada tujuan. Yuk buat target nabung pertamamu!'
+      : 'No goals yet. Create your first saving target!';
+
+  // -- mockup: inbox --
+  String get inboxTitle => _id ? 'Inbox Auto-Catat' : 'Auto-Record Inbox';
+  String get needsConfirmation => _id ? 'Perlu Konfirmasi' : 'Needs Review';
+  String get latest => _id ? 'Terbaru' : 'Latest';
+  String get ignore => _id ? 'Abaikan' : 'Ignore';
+  String get saveAction => _id ? 'Simpan' : 'Save';
+  String get inboxEmpty => _id
+      ? 'Belum ada yang perlu dikonfirmasi.\nTransaksi dari notifikasi akan muncul di sini.'
+      : 'Nothing to review yet.\nTransactions from notifications will appear here.';
+  String get justNow => _id ? 'Baru saja' : 'Just now';
+
+  // -- mockup: profil --
+  String get profileTitle => _id ? 'Profil & Lainnya' : 'Profile & More';
+  String get manageAccount =>
+      _id ? 'Kelola akun & preferensi' : 'Manage account & preferences';
+  String get accountsAndBalance => _id ? 'Akun & Saldo' : 'Accounts & Balance';
+  String get budget => _id ? 'Budget' : 'Budget';
+  String get autoRecord => _id ? 'Auto-Catat' : 'Auto-Record';
+  String get backupAndSync => _id ? 'Backup & Sinkronisasi' : 'Backup & Sync';
+  String get securityAndPrivacy =>
+      _id ? 'Keamanan & Privasi' : 'Security & Privacy';
+  String get settings => _id ? 'Pengaturan' : 'Settings';
+  String get helpAndFeedback => _id ? 'Bantuan & Saran' : 'Help & Feedback';
+  String get active => _id ? 'Aktif' : 'Active';
+  String get comingSoon => _id ? 'Segera hadir di v4' : 'Coming in v4';
   String get noTransactionsThisMonth =>
       _id ? 'Belum ada transaksi bulan ini.' : 'No transactions this month.';
   String get thisMonth => _id ? 'Bulan ini' : 'This month';

@@ -36,6 +36,8 @@ class AddTransactionSheet extends StatefulWidget {
   final TransferService transferService;
   final QuickAddDefaults defaults;
   final Transaction? existing;
+  final int? initialAmount;
+  final String? initialNote;
 
   const AddTransactionSheet({
     super.key,
@@ -45,6 +47,8 @@ class AddTransactionSheet extends StatefulWidget {
     required this.transferService,
     required this.defaults,
     this.existing,
+    this.initialAmount,
+    this.initialNote,
   });
 
   @override
@@ -95,6 +99,12 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       _type = widget.defaults.lastType;
       _categoryId = widget.defaults.lastCategoryId;
       _accountId = widget.defaults.lastAccountId;
+      if (widget.initialAmount != null) {
+        _amountCtrl.text = widget.initialAmount.toString();
+      }
+      if (widget.initialNote != null) {
+        _noteCtrl.text = widget.initialNote!;
+      }
     }
     _load();
   }
@@ -226,6 +236,32 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       categoryId: _categoryId,
       type: _type,
     );
+    if (mounted) Navigator.pop(context, true);
+  }
+
+  Future<void> _delete() async {
+    final t = AppLocalizations.of(context);
+    final ex = widget.existing;
+    if (ex?.id == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.deleteTransactionTitle),
+        content: Text(t.deleteTransactionMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(t.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await widget.txRepo.delete(ex!.id!);
     if (mounted) Navigator.pop(context, true);
   }
 
@@ -524,6 +560,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           ),
                           child: Text(_isEdit ? t.saveChanges : t.save),
                         ),
+                        if (_isEdit) ...[
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            key: const Key('deleteButton'),
+                            onPressed: _delete,
+                            icon: const Icon(Icons.delete_outline_rounded),
+                            label: Text(t.deleteTransaction),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                       ],
                     ),

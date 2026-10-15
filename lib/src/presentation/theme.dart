@@ -1,140 +1,100 @@
 import 'package:flutter/material.dart';
 
-/// Tema DuitQu — arah "calm ledger" modern: tenang dan tepercaya untuk
-/// aplikasi uang. Hijau zamrud untuk pemasukan/saldo sehat, terakota
-/// (bukan merah menyala) untuk pengeluaran.
+/// Tema DuitQu mengikuti mockup: biru friendly, kartu putih membulat,
+/// latar abu-biru sangat muda.
 class DuitQuTheme {
-  static const emerald = Color(0xFF0E7C5B);
-  static const terracotta = Color(0xFFC4552D);
+  DuitQuTheme._();
 
-  /// Kertas hangat untuk background light.
-  static const paper = Color(0xFFFAF6EF);
+  static const double radius = 20;
 
-  /// Slate gelap untuk background dark (bukan hitam pekat).
-  static const slate = Color(0xFF14171B);
-  static const slateCard = Color(0xFF1E2228);
+  /// Biru utama (tombol, aksen, nav aktif).
+  static const Color primaryBlue = Color(0xFF2F80ED);
+  static const Color primaryDark = Color(0xFF1B5FC1);
 
-  static const radius = 20.0;
+  /// Latar aplikasi.
+  static const Color scaffoldBg = Color(0xFFF3F6FA);
+
+  /// Teks.
+  static const Color ink = Color(0xFF1B2A41);
+  static const Color inkSoft = Color(0xFF6B7A90);
+
+  /// Pemasukan / pengeluaran.
+  static const Color income = Color(0xFF22B07D);
+  static const Color expense = Color(0xFFE5484D);
 
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: emerald,
+      seedColor: primaryBlue,
       brightness: Brightness.light,
+      primary: primaryBlue,
+      surface: Colors.white,
     );
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: scheme.copyWith(surface: paper),
-      scaffoldBackgroundColor: paper,
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radius),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        ),
-        margin: EdgeInsets.zero,
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: paper,
-        foregroundColor: scheme.onSurface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
-          letterSpacing: -0.5,
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: scheme.outlineVariant),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: scheme.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
-      chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: emerald,
-        unselectedItemColor: scheme.onSurfaceVariant,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: emerald,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(18)),
-        ),
-      ),
-      dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withValues(alpha: 0.5),
-        thickness: 1,
-        space: 1,
-      ),
-    );
+    return _build(scheme, Brightness.light);
   }
 
   static ThemeData dark() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: emerald,
+      seedColor: primaryBlue,
       brightness: Brightness.dark,
+      primary: const Color(0xFF6EA8FE),
+      surface: const Color(0xFF17202E),
     );
+    return _build(scheme, Brightness.dark);
+  }
+
+  static ThemeData _build(ColorScheme scheme, Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: scheme.copyWith(surface: slate),
-      scaffoldBackgroundColor: slate,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: isLight ? scaffoldBg : const Color(0xFF0F1622),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: isLight ? ink : Colors.white,
+        ),
+        iconTheme: IconThemeData(color: isLight ? ink : Colors.white),
+      ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: slateCard,
+        margin: EdgeInsets.zero,
+        color: scheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
         ),
-        margin: EdgeInsets.zero,
+        shadowColor: isLight
+            ? primaryBlue.withValues(alpha: 0.08)
+            : Colors.transparent,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: slate,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primaryBlue,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(64, 48),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(64, 44),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: slateCard,
+        fillColor: isLight
+            ? const Color(0xFFF1F4F9)
+            : Colors.white.withValues(alpha: 0.06),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -145,76 +105,40 @@ class DuitQuTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+          borderSide: const BorderSide(color: primaryBlue, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
         ),
       ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: slateCard,
-        selectedItemColor: const Color(0xFF5ACB95),
-        unselectedItemColor: scheme.onSurfaceVariant,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: emerald,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(18)),
-        ),
-      ),
-      dividerTheme: DividerThemeData(
-        color: Colors.white.withValues(alpha: 0.08),
-        thickness: 1,
-        space: 1,
+      textTheme: const TextTheme(
+        // Angka tabular agar nominal tidak "bergoyang".
+        bodyLarge: TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
+        bodyMedium: TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
+        titleLarge: TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
       ),
     );
   }
 
-  /// Warna nominal pemasukan — versi terang untuk mode gelap agar kontras.
-  static Color incomeColor(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF5ACB95)
-      : emerald;
-
-  /// Warna nominal pengeluaran — versi terang untuk mode gelap agar kontras.
-  static Color expenseColor(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFEE9A6B)
-      : terracotta;
-
-  /// Gaya nominal: angka tabular agar mudah di-scan mata.
+  /// Gaya angka keuangan: selalu tabular.
   static TextStyle amountStyle(
     BuildContext context,
     double size, {
     Color? color,
-    FontWeight weight = FontWeight.w600,
+    FontWeight weight = FontWeight.w700,
   }) {
-    final base = Theme.of(context).textTheme.titleLarge!;
-    return base.copyWith(
+    return TextStyle(
       fontSize: size,
       fontWeight: weight,
-      color: color,
+      color: color ?? Theme.of(context).colorScheme.onSurface,
       fontFeatures: const [FontFeature.tabularFigures()],
-      letterSpacing: -0.3,
     );
   }
+
+  static Color incomeColor(BuildContext context) => income;
+  static Color expenseColor(BuildContext context) => expense;
 }
