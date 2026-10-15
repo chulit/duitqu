@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/backup_service.dart';
+import 'sync_screen.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
@@ -57,6 +58,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoRecordKey, v);
     if (mounted) setState(() => _autoRecord = v);
+  }
+
+  void _openSync() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => SyncScreen(backup: widget.backup)),
+    );
   }
 
   void _openBackup() {
@@ -299,6 +307,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 iconColor: const Color(0xFF27AE60),
                 label: t.backupAndSync,
                 onTap: _openBackup,
+              ),
+              _MenuRow(
+                icon: Icons.cloud_outlined,
+                iconColor: const Color(0xFF2D9CDB),
+                label: 'Sinkronisasi Cloud',
+                onTap: _openSync,
               ),
               _MenuRow(
                 icon: Icons.shield_outlined,
