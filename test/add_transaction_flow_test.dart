@@ -11,13 +11,14 @@ import 'package:duitqu/src/domain/services/transfer_service.dart';
 import 'package:duitqu/src/presentation/l10n/app_localizations.dart';
 import 'package:duitqu/src/presentation/quick_add_defaults.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:duitqu/src/presentation/screens/home_screen.dart';
+import 'package:duitqu/src/presentation/screens/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('alur catat kilat: tambah pengeluaran muncul di riwayat',
-      (tester) async {
+  testWidgets('alur catat kilat: tambah pengeluaran muncul di riwayat', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(900, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -27,8 +28,7 @@ void main() {
     final txRepo = DriftTransactionRepository(db);
     final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
-    await accountRepo.save(
-        const Account(name: 'Cash', type: AccountType.cash));
+    await accountRepo.save(const Account(name: 'Cash', type: AccountType.cash));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -40,13 +40,13 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('id'),
-        home: HomeScreen(
+        home: AppShell(
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
-          backup: BackupService(db),
           defaults: QuickAddDefaults(),
+          backup: BackupService(db),
         ),
       ),
     );
@@ -81,14 +81,16 @@ void main() {
   });
 
   testWidgets('hapus transaksi minta konfirmasi dulu', (tester) async {
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
     final db = schema.AppDatabase(NativeDatabase.memory());
     final accountRepo = DriftAccountRepository(db);
     final categoryRepo = DriftCategoryRepository(db);
     final txRepo = DriftTransactionRepository(db);
     final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
-    await accountRepo.save(
-        const Account(name: 'Cash', type: AccountType.cash));
+    await accountRepo.save(const Account(name: 'Cash', type: AccountType.cash));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -100,13 +102,13 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('id'),
-        home: HomeScreen(
+        home: AppShell(
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
-          backup: BackupService(db),
           defaults: QuickAddDefaults(),
+          backup: BackupService(db),
         ),
       ),
     );
@@ -121,8 +123,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('−Rp 25.000'), findsOneWidget);
 
-    // Ketuk ikon hapus -> dialog konfirmasi muncul, belum terhapus.
-    await tester.tap(find.byIcon(Icons.delete_outline));
+    // Geser kiri -> dialog konfirmasi muncul, belum terhapus.
+    await tester.drag(find.text('−Rp 25.000'), const Offset(-500, 0));
     await tester.pumpAndSettle();
     expect(find.text('Hapus transaksi?'), findsOneWidget);
 
@@ -131,8 +133,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('−Rp 25.000'), findsOneWidget);
 
-    // Hapus -> hilang, kembali ke empty state.
-    await tester.tap(find.byIcon(Icons.delete_outline));
+    // Geser kiri lagi -> hapus.
+    await tester.drag(find.text('−Rp 25.000'), const Offset(-500, 0));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hapus'));
     await tester.pumpAndSettle();
@@ -142,8 +144,9 @@ void main() {
     await db.close();
   });
 
-  testWidgets('catat dengan rincian item: total otomatis dari item',
-      (tester) async {
+  testWidgets('catat dengan rincian item: total otomatis dari item', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(900, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -153,8 +156,7 @@ void main() {
     final txRepo = DriftTransactionRepository(db);
     final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
-    await accountRepo.save(
-        const Account(name: 'Cash', type: AccountType.cash));
+    await accountRepo.save(const Account(name: 'Cash', type: AccountType.cash));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -166,13 +168,13 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('id'),
-        home: HomeScreen(
+        home: AppShell(
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
-          backup: BackupService(db),
           defaults: QuickAddDefaults(),
+          backup: BackupService(db),
         ),
       ),
     );
@@ -214,8 +216,9 @@ void main() {
     await db.close();
   });
 
-  testWidgets('transfer dengan biaya admin: tercatat 2 transaksi',
-      (tester) async {
+  testWidgets('transfer dengan biaya admin: tercatat 2 transaksi', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(900, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -225,10 +228,8 @@ void main() {
     final txRepo = DriftTransactionRepository(db);
     final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
-    await accountRepo.save(
-        const Account(name: 'BCA', type: AccountType.bank));
-    await accountRepo.save(
-        const Account(name: 'Cash', type: AccountType.cash));
+    await accountRepo.save(const Account(name: 'BCA', type: AccountType.bank));
+    await accountRepo.save(const Account(name: 'Cash', type: AccountType.cash));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -240,13 +241,13 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('id'),
-        home: HomeScreen(
+        home: AppShell(
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
-          backup: BackupService(db),
           defaults: QuickAddDefaults(),
+          backup: BackupService(db),
         ),
       ),
     );
@@ -292,15 +293,15 @@ void main() {
     final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
     final bcaId = await accountRepo.save(
-        const Account(name: 'BCA', type: AccountType.bank));
+      const Account(name: 'BCA', type: AccountType.bank),
+    );
     final cashId = await accountRepo.save(
-        const Account(name: 'Cash', type: AccountType.cash));
+      const Account(name: 'Cash', type: AccountType.cash),
+    );
     final cats = await categoryRepo.defaults();
-    final makanId =
-        cats.singleWhere((c) => c.name == 'Makan & Minum').id!;
+    final makanId = cats.singleWhere((c) => c.name == 'Makan & Minum').id!;
     final gajiId = cats.singleWhere((c) => c.name == 'Gaji').id!;
-    final transportId =
-        cats.singleWhere((c) => c.name == 'Transport').id!;
+    final transportId = cats.singleWhere((c) => c.name == 'Transport').id!;
 
     final now = DateTime.now();
     Future<void> seedTx({
@@ -309,34 +310,37 @@ void main() {
       required int accountId,
       int? toAccountId,
       int? categoryId,
-    }) =>
-        txRepo.save(Transaction(
-          type: type,
-          amount: amount,
-          categoryId: categoryId,
-          accountId: accountId,
-          toAccountId: toAccountId,
-          date: now,
-          createdAt: now,
-        ));
+    }) => txRepo.save(
+      Transaction(
+        type: type,
+        amount: amount,
+        categoryId: categoryId,
+        accountId: accountId,
+        toAccountId: toAccountId,
+        date: now,
+        createdAt: now,
+      ),
+    );
 
     await seedTx(
-        type: TransactionType.income,
-        amount: 5000000,
-        accountId: bcaId,
-        categoryId: gajiId);
-    await seedTx(amount: 1500000, accountId: bcaId, categoryId: makanId);
-    await seedTx(
-        amount: 500000, accountId: cashId, categoryId: transportId);
-    // Transfer tidak boleh masuk ringkasan.
-    await transferService.saveTransfer(Transaction(
-      type: TransactionType.transfer,
-      amount: 2000000,
+      type: TransactionType.income,
+      amount: 5000000,
       accountId: bcaId,
-      toAccountId: cashId,
-      date: now,
-      createdAt: now,
-    ));
+      categoryId: gajiId,
+    );
+    await seedTx(amount: 1500000, accountId: bcaId, categoryId: makanId);
+    await seedTx(amount: 500000, accountId: cashId, categoryId: transportId);
+    // Transfer tidak boleh masuk ringkasan.
+    await transferService.saveTransfer(
+      Transaction(
+        type: TransactionType.transfer,
+        amount: 2000000,
+        accountId: bcaId,
+        toAccountId: cashId,
+        date: now,
+        createdAt: now,
+      ),
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -348,33 +352,32 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('id'),
-        home: HomeScreen(
+        home: AppShell(
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
           transferService: transferService,
-          backup: BackupService(db),
           defaults: QuickAddDefaults(),
+          backup: BackupService(db),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    // Kartu ringkasan: Masuk 5jt, Keluar 2jt, Selisih +3jt.
+    // Kartu hero: Masuk 5jt, Keluar 2jt.
     // (di-scope ke Card agar tidak tertukar dengan baris transfer)
     final card = find.byType(Card);
     expect(
-        find.descendant(of: card, matching: find.text('Rp 5.000.000')),
-        findsOneWidget);
+      find.descendant(of: card, matching: find.text('Rp 5.000.000')),
+      findsOneWidget,
+    );
     expect(
-        find.descendant(of: card, matching: find.text('Rp 2.000.000')),
-        findsOneWidget);
-    expect(
-        find.descendant(of: card, matching: find.text('+Rp 3.000.000')),
-        findsOneWidget);
+      find.descendant(of: card, matching: find.text('Rp 2.000.000')),
+      findsOneWidget,
+    );
 
     // Filter akun Cash -> hanya 1 transaksi tampil.
-    await tester.tap(find.byIcon(Icons.filter_list));
+    await tester.tap(find.byIcon(Icons.tune_rounded));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Semua akun'));
     await tester.pumpAndSettle();

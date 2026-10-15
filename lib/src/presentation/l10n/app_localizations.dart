@@ -38,8 +38,9 @@ class AppLocalizations {
 
   // -- home --
   String get backupTooltip => _id ? 'Backup' : 'Backup';
-  String get searchHint =>
-      _id ? 'Cari catatan, merchant, barang…' : 'Search notes, merchants, items…';
+  String get searchHint => _id
+      ? 'Cari catatan, merchant, barang…'
+      : 'Search notes, merchants, items…';
   String get filterTitle => _id ? 'Filter riwayat' : 'Filter history';
   String get allAccounts => _id ? 'Semua akun' : 'All accounts';
   String get allCategories => _id ? 'Semua kategori' : 'All categories';
@@ -52,9 +53,8 @@ class AppLocalizations {
   String get toAccountLabel => _id ? 'Ke akun' : 'To account';
   String get fromAccountLabel => _id ? 'Dari akun' : 'From account';
   String get amountLabel => _id ? 'Nominal (Rp)' : 'Amount (Rp)';
-  String get amountAutoLabel => _id
-      ? 'Total otomatis dari item'
-      : 'Auto total from items';
+  String get amountAutoLabel =>
+      _id ? 'Total otomatis dari item' : 'Auto total from items';
   String get adminFeeLabel =>
       _id ? 'Biaya admin (opsional)' : 'Admin fee (optional)';
   String get adminFeeHint => _id
@@ -84,16 +84,19 @@ class AppLocalizations {
   String get importCsvSubtitle =>
       _id ? 'Pulihkan dari file backup' : 'Restore from a backup file';
 
-  String importSummary(int accounts, int categories, int transactions, int items) =>
-      _id
-          ? 'Berhasil diimpor: $accounts akun, $categories kategori, '
-              '$transactions transaksi, $items item.'
-          : 'Imported: $accounts accounts, $categories categories, '
-              '$transactions transactions, $items items.';
+  String importSummary(
+    int accounts,
+    int categories,
+    int transactions,
+    int items,
+  ) => _id
+      ? 'Berhasil diimpor: $accounts akun, $categories kategori, '
+            '$transactions transaksi, $items item.'
+      : 'Imported: $accounts accounts, $categories categories, '
+            '$transactions transactions, $items items.';
 
-  String skippedRowsTitle(int count) => _id
-      ? '$count baris dilewati:'
-      : '$count rows skipped:';
+  String skippedRowsTitle(int count) =>
+      _id ? '$count baris dilewati:' : '$count rows skipped:';
 
   String skippedRowLine(int row, String reason) =>
       _id ? 'Baris $row: $reason' : 'Row $row: $reason';
@@ -103,26 +106,100 @@ class AppLocalizations {
   String importFailed(Object e) =>
       _id ? 'Gagal mengimpor: $e' : 'Import failed: $e';
 
+  // -- navigasi & layar baru --
+  String get navHome => _id ? 'Beranda' : 'Home';
+  String get navStats => _id ? 'Statistik' : 'Stats';
+  String get navAccounts => _id ? 'Akun' : 'Accounts';
+  String get navMore => _id ? 'Lainnya' : 'More';
+  String get totalBalance => _id ? 'Total saldo' : 'Total balance';
+  String get recentTransactions =>
+      _id ? 'Transaksi terakhir' : 'Recent transactions';
+  String get seeAll => _id ? 'Lihat semua' : 'See all';
+  String get noTransactionsThisMonth =>
+      _id ? 'Belum ada transaksi bulan ini.' : 'No transactions this month.';
+  String get thisMonth => _id ? 'Bulan ini' : 'This month';
+  String get topCategories => _id ? 'Kategori teratas' : 'Top categories';
+  String get addAccount => _id ? 'Tambah akun' : 'Add account';
+  String get editAccount => _id ? 'Ubah akun' : 'Edit account';
+  String get accountName => _id ? 'Nama akun' : 'Account name';
+  String get initialBalance => _id ? 'Saldo awal (Rp)' : 'Initial balance (Rp)';
+  String get deleteAccountTitle => _id ? 'Hapus akun?' : 'Delete account?';
+  String deleteAccountMessage(String name) => _id
+      ? 'Akun "$name" beserta seluruh transaksinya akan dihapus.'
+      : 'Account "$name" and all its transactions will be deleted.';
+  String get categoriesTitle => _id ? 'Kategori' : 'Categories';
+  String get backupTitle => _id ? 'Backup' : 'Backup';
+  String get aboutTitle => _id ? 'Tentang' : 'About';
+  String get aboutText => _id
+      ? 'DuitQu — pencatat keuangan pribadi. 100% offline, datamu hanya milikmu.'
+      : 'DuitQu — personal money tracker. 100% offline, your data stays yours.';
+  String get versionLabel => _id ? 'Versi' : 'Version';
+  String get today => _id ? 'Hari ini' : 'Today';
+  String get yesterday => _id ? 'Kemarin' : 'Yesterday';
+  String get addTransactionTitle =>
+      _id ? 'Catat transaksi' : 'Record transaction';
+  String get editTransactionTitle =>
+      _id ? 'Ubah transaksi' : 'Edit transaction';
+
   // -- bulan --
   static const _shortId = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
   ];
   static const _shortEn = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   static const _longId = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
   static const _longEn = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
-  String shortMonth(int month) =>
-      (_id ? _shortId : _shortEn)[month - 1];
+  String shortMonth(int month) => (_id ? _shortId : _shortEn)[month - 1];
   String longMonth(int month) => (_id ? _longId : _longEn)[month - 1];
 
   // -- alasan baris dilewati (kode dari BackupService) --
@@ -208,8 +285,7 @@ class AppLocalizations {
   }
 
   /// Alasan impor yang sudah dilokalkan untuk satu baris yang dilewati.
-  String localizedSkippedReason(SkippedRow s) =>
-      skippedReason(s.code, s.args);
+  String localizedSkippedReason(SkippedRow s) => skippedReason(s.code, s.args);
 }
 
 class _AppLocalizationsDelegate
