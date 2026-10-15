@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../database.dart' as db;
 import '../../domain/entities/transaction_candidate.dart';
 import '../../domain/repositories/candidate_repository.dart';
+import '../../domain/services/duplicate_detector.dart';
 
 /// Adapter drift untuk [CandidateRepository] (tiket 01, spec v2).
 class DriftCandidateRepository implements CandidateRepository {
@@ -11,7 +12,12 @@ class DriftCandidateRepository implements CandidateRepository {
   DriftCandidateRepository(this._db);
 
   @override
-  Future<int> save(TransactionCandidate c) {
+  Future<int> save(TransactionCandidate c) async {
+    // Idempoten (tiket 03): fingerprint sama → kembalikan id lama.
+    final fp = DuplicateDetector().fingerprint(c);
+    final existing = await findByFingerprint(fp);
+    if (existing != null) return existing.id!;
+
     return _db
         .into(_db.transactionCandidates)
         .insert(
@@ -19,7 +25,7 @@ class DriftCandidateRepository implements CandidateRepository {
             sourceType: c.sourceType.name,
             sourceApp: Value(c.sourceApp),
             sourceReference: Value(c.sourceReference),
-            fingerprint: Value(c.fingerprint),
+            fingerprint: Value(c.fingerprint ?? fp),
             parsedPayload: Value(
               TransactionCandidate.encodePayload(c.parsedPayload),
             ),

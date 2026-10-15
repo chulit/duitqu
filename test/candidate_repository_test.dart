@@ -56,9 +56,12 @@ void main() {
   });
 
   test('listByStatus mengembalikan yang sesuai, terbaru dulu', () async {
-    await repo.save(_sample(status: CandidateStatus.saved));
-    await repo.save(_sample(status: CandidateStatus.needsReview));
-    await repo.save(_sample(status: CandidateStatus.needsReview));
+    await repo.save(_sample(
+        status: CandidateStatus.saved, fingerprint: 'fp-list-1'));
+    await repo.save(_sample(
+        status: CandidateStatus.needsReview, fingerprint: 'fp-list-2'));
+    await repo.save(_sample(
+        status: CandidateStatus.needsReview, fingerprint: 'fp-list-3'));
 
     final review = await repo.listByStatus(CandidateStatus.needsReview);
     expect(review.length, 2);

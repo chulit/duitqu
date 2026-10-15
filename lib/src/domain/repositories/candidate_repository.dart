@@ -5,7 +5,9 @@ import '../entities/transaction_candidate.dart';
 /// Kandidat adalah hasil parsing yang belum tentu menjadi transaksi.
 /// Penyimpanan kandidat terpisah dari transaksi finansial.
 abstract class CandidateRepository {
-  /// Simpan kandidat baru. Mengembalikan id.
+  /// Simpan kandidat. Idempoten: bila kandidat dengan fingerprint sama
+  /// sudah ada, kembalikan id yang sudah ada tanpa membuat record baru
+  /// (tiket 03).
   Future<int> save(TransactionCandidate candidate);
 
   /// Perbarui kandidat yang ada (mis. transisi status).
