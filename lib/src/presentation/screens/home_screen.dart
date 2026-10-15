@@ -6,6 +6,7 @@ import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/transfer_service.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
   final TransactionRepository txRepo;
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
+  final TransferService transferService;
   final QuickAddDefaults defaults;
 
   const HomeScreen({
@@ -23,6 +25,7 @@ class HomeScreen extends StatefulWidget {
     required this.txRepo,
     required this.accountRepo,
     required this.categoryRepo,
+    required this.transferService,
     required this.defaults,
   });
 
@@ -60,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
         txRepo: widget.txRepo,
         accountRepo: widget.accountRepo,
         categoryRepo: widget.categoryRepo,
+        transferService: widget.transferService,
         defaults: widget.defaults,
         existing: existing,
       ),

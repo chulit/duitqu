@@ -5,6 +5,7 @@ import 'package:duitqu/src/data/repositories/drift_category_repository.dart';
 import 'package:duitqu/src/data/repositories/drift_transaction_repository.dart';
 import 'package:duitqu/src/domain/entities/account.dart';
 import 'package:duitqu/src/domain/repositories/transaction_repository.dart';
+import 'package:duitqu/src/domain/services/transfer_service.dart';
 import 'package:duitqu/src/presentation/quick_add_defaults.dart';
 import 'package:duitqu/src/presentation/screens/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ void main() {
     final accountRepo = DriftAccountRepository(db);
     final categoryRepo = DriftCategoryRepository(db);
     final txRepo = DriftTransactionRepository(db);
+    final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
     await accountRepo.save(
         const Account(name: 'Cash', type: AccountType.cash));
@@ -30,6 +32,7 @@ void main() {
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
+          transferService: transferService,
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -68,6 +71,7 @@ void main() {
     final accountRepo = DriftAccountRepository(db);
     final categoryRepo = DriftCategoryRepository(db);
     final txRepo = DriftTransactionRepository(db);
+    final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
     await accountRepo.save(
         const Account(name: 'Cash', type: AccountType.cash));
@@ -78,6 +82,7 @@ void main() {
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
+          transferService: transferService,
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -123,6 +128,7 @@ void main() {
     final accountRepo = DriftAccountRepository(db);
     final categoryRepo = DriftCategoryRepository(db);
     final txRepo = DriftTransactionRepository(db);
+    final transferService = TransferService(txRepo, categoryRepo);
     await categoryRepo.seedDefaults();
     await accountRepo.save(
         const Account(name: 'Cash', type: AccountType.cash));
@@ -133,6 +139,7 @@ void main() {
           txRepo: txRepo,
           accountRepo: accountRepo,
           categoryRepo: categoryRepo,
+          transferService: transferService,
           defaults: QuickAddDefaults(),
         ),
       ),
@@ -171,6 +178,67 @@ void main() {
     final txs = await txRepo.list(const TransactionQuery());
     expect(txs.single.amount, 12000);
     expect(txs.single.items, hasLength(2));
+
+    await db.close();
+  });
+
+  testWidgets('transfer dengan biaya admin: tercatat 2 transaksi',
+      (tester) async {
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    final db = schema.AppDatabase(NativeDatabase.memory());
+    final accountRepo = DriftAccountRepository(db);
+    final categoryRepo = DriftCategoryRepository(db);
+    final txRepo = DriftTransactionRepository(db);
+    final transferService = TransferService(txRepo, categoryRepo);
+    await categoryRepo.seedDefaults();
+    await accountRepo.save(
+        const Account(name: 'BCA', type: AccountType.bank));
+    await accountRepo.save(
+        const Account(name: 'Cash', type: AccountType.cash));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeScreen(
+          txRepo: txRepo,
+          accountRepo: accountRepo,
+          categoryRepo: categoryRepo,
+          transferService: transferService,
+          defaults: QuickAddDefaults(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Transfer'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('amountField')), '100000');
+
+    // Pilih akun tujuan.
+    await tester.ensureVisible(find.byKey(const Key('toAccountDropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('toAccountDropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cash').last);
+    await tester.pumpAndSettle();
+
+    // Isi biaya admin.
+    await tester.ensureVisible(find.byKey(const Key('feeField')));
+    await tester.enterText(find.byKey(const Key('feeField')), '2500');
+
+    await tester.ensureVisible(find.byKey(const Key('saveButton')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('saveButton')));
+    await tester.pumpAndSettle();
+
+    // Riwayat: transfer + expense Biaya Admin.
+    expect(find.text('Transfer'), findsOneWidget);
+    expect(find.text('−Rp 2.500'), findsOneWidget);
+    expect(find.textContaining('Biaya Admin'), findsOneWidget);
 
     await db.close();
   });

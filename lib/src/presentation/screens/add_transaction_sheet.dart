@@ -7,6 +7,7 @@ import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/transfer_service.dart';
 import '../format.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
@@ -29,6 +30,7 @@ class _ItemDraft {
 class AddTransactionSheet extends StatefulWidget {  final TransactionRepository txRepo;
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
+  final TransferService transferService;
   final QuickAddDefaults defaults;
   final Transaction? existing;
 
@@ -37,6 +39,7 @@ class AddTransactionSheet extends StatefulWidget {  final TransactionRepository 
     required this.txRepo,
     required this.accountRepo,
     required this.categoryRepo,
+    required this.transferService,
     required this.defaults,
     this.existing,
   });
@@ -54,6 +57,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   DateTime _date = DateTime.now();
   String _merchant = '';
   final _noteCtrl = TextEditingController();
+  final _feeCtrl = TextEditingController();
   final _itemDrafts = <_ItemDraft>[];
   String? _error;
 
@@ -111,6 +115,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   void dispose() {
     _amountCtrl.dispose();
     _noteCtrl.dispose();
+    _feeCtrl.dispose();
     for (final d in _itemDrafts) {
       d.dispose();
     }
@@ -191,22 +196,26 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     }
 
     final ex = widget.existing;
+    final tx = Transaction(
+      id: ex?.id,
+      type: _type,
+      amount: amount,
+      categoryId: _type == TransactionType.transfer ? null : _categoryId,
+      accountId: _accountId!,
+      toAccountId: _type == TransactionType.transfer ? _toAccountId : null,
+      merchant: _merchant.trim().isEmpty ? null : _merchant.trim(),
+      date: _date,
+      note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+      createdAt: ex?.createdAt ?? DateTime.now(),
+      items: items,
+    );
     try {
-      await widget.txRepo.save(Transaction(
-        id: ex?.id,
-        type: _type,
-        amount: amount,
-        categoryId:
-            _type == TransactionType.transfer ? null : _categoryId,
-        accountId: _accountId!,
-        toAccountId:
-            _type == TransactionType.transfer ? _toAccountId : null,
-        merchant: _merchant.trim().isEmpty ? null : _merchant.trim(),
-        date: _date,
-        note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-        createdAt: ex?.createdAt ?? DateTime.now(),
-        items: items,
-      ));
+      if (_type == TransactionType.transfer) {
+        final fee = int.tryParse(_feeCtrl.text.trim()) ?? 0;
+        await widget.transferService.saveTransfer(tx, fee: fee);
+      } else {
+        await widget.txRepo.save(tx);
+      }
     } on ArgumentError catch (e) {
       setState(() => _error = e.message);
       return;
@@ -311,6 +320,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<int>(
+                          key: const Key('fromAccountDropdown'),
                           initialValue: _accountId,
                           decoration: InputDecoration(
                             labelText: _type == TransactionType.transfer
@@ -333,6 +343,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<int>(
+                            key: const Key('toAccountDropdown'),
                             initialValue: _toAccountId,
                             decoration: const InputDecoration(
                               labelText: 'Ke akun',
@@ -354,6 +365,24 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  if (_type == TransactionType.transfer && !_isEdit) ...[
+                    TextField(
+                      key: const Key('feeField'),
+                      controller: _feeCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Biaya admin (opsional)',
+                        helperText:
+                            'Otomatis tercatat sebagai pengeluaran "Biaya Admin".',
+                        border: OutlineInputBorder(),
+                        prefixText: 'Rp ',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Row(
                     children: [
                       Expanded(
