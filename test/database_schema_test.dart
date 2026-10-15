@@ -5,13 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('skema database', () {
-    test('memuat keempat tabel dengan nama yang benar', () {
+    test('memuat kelima tabel dengan nama yang benar', () {
       final db = AppDatabase();
       final names = db.allTables.map((t) => t.actualTableName).toSet();
-      expect(
-        names,
-        {'accounts', 'categories', 'transactions', 'transaction_items'},
-      );
+      expect(names, {
+        'accounts',
+        'categories',
+        'transactions',
+        'transaction_items',
+        'transaction_candidates',
+      });
     });
 
     test('kolom-kolom kunci tersedia dengan nama yang benar', () {
@@ -28,8 +31,11 @@ void main() {
 
   group('domain entities (pure Dart)', () {
     test('TransactionItem.total = price * qty', () {
-      const item =
-          domain_tx.TransactionItem(name: 'Indomie', price: 3500, qty: 3);
+      const item = domain_tx.TransactionItem(
+        name: 'Indomie',
+        price: 3500,
+        qty: 3,
+      );
       expect(item.total, 10500);
     });
 

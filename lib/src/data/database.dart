@@ -16,7 +16,8 @@ class Accounts extends Table {
   IntColumn get initialBalance => integer().named('initial_balance')();
   TextColumn get icon => text().withDefault(const Constant('wallet'))();
   IntColumn get color => integer().withDefault(const Constant(0xFF0E7C5B))();
-  IntColumn get createdAt => integer().named('created_at')(); // epoch millis, diisi repository
+  IntColumn get createdAt =>
+      integer().named('created_at')(); // epoch millis, diisi repository
 }
 
 /// Kategori bawaan (isDefault) + kustom.
@@ -34,7 +35,8 @@ class Categories extends Table {
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get type => text()(); // income | expense | transfer
-  IntColumn get amount => integer()(); // satuan terkecil; == sum(item) bila ada item
+  IntColumn get amount =>
+      integer()(); // satuan terkecil; == sum(item) bila ada item
   IntColumn get categoryId =>
       integer().named('category_id').nullable().references(Categories, #id)();
   IntColumn get accountId =>
@@ -57,14 +59,56 @@ class TransactionItems extends Table {
   IntColumn get qty => integer().withDefault(const Constant(1))();
 }
 
+/// Kandidat transaksi hasil parsing (spec v2, tiket 01).
+///
+/// Terpisah dari [Transactions]: kandidat adalah data mentah hasil interpretasi
+/// yang belum tentu menjadi transaksi finansial.
+class TransactionCandidates extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get sourceType => text().named('source_type')();
+  TextColumn get sourceApp => text().named('source_app').nullable()();
+  TextColumn get sourceReference =>
+      text().named('source_reference').nullable()();
+  TextColumn get fingerprint => text().nullable().unique()();
+  TextColumn get parsedPayload =>
+      text().named('parsed_payload').withDefault(const Constant('{}'))();
+  RealColumn get confidence => real().withDefault(const Constant(0.0))();
+  TextColumn get status => text().withDefault(const Constant('received'))();
+  TextColumn get reviewReason => text().named('review_reason').nullable()();
+  IntColumn get transactionId => integer()
+      .named('transaction_id')
+      .nullable()
+      .references(Transactions, #id)();
+  IntColumn get receivedAt => integer().named('received_at')();
+  IntColumn get processedAt => integer().named('processed_at').nullable()();
+}
+
 @DriftDatabase(
-  tables: [Accounts, Categories, Transactions, TransactionItems],
+  tables: [
+    Accounts,
+    Categories,
+    Transactions,
+    TransactionItems,
+    TransactionCandidates,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(transactionCandidates);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {
