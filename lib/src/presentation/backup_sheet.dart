@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n/app_localizations.dart';
+
 /// Bottom sheet backup manual: ekspor / impor satu file CSV.
 /// Dumb view — logika ekspor/impor dipegang pemanggil via callback.
 class BackupSheet extends StatelessWidget {
@@ -20,8 +22,8 @@ class BackupSheet extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.upload),
-            title: const Text('Ekspor CSV'),
-            subtitle: const Text('Simpan seluruh data ke satu file'),
+            title: Text(AppLocalizations.of(context).exportCsv),
+            subtitle: Text(AppLocalizations.of(context).exportCsvSubtitle),
             onTap: () {
               Navigator.pop(context);
               onExport();
@@ -29,8 +31,8 @@ class BackupSheet extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.download),
-            title: const Text('Impor CSV'),
-            subtitle: const Text('Pulihkan dari file backup'),
+            title: Text(AppLocalizations.of(context).importCsv),
+            subtitle: Text(AppLocalizations.of(context).importCsvSubtitle),
             onTap: () {
               Navigator.pop(context);
               onImport();

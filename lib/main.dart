@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'src/data/backup_service.dart';
 import 'src/data/database.dart';
@@ -6,6 +7,7 @@ import 'src/data/repositories/drift_account_repository.dart';
 import 'src/data/repositories/drift_category_repository.dart';
 import 'src/data/repositories/drift_transaction_repository.dart';
 import 'src/domain/services/transfer_service.dart';
+import 'src/presentation/l10n/app_localizations.dart';
 import 'src/presentation/quick_add_defaults.dart';
 import 'src/presentation/screens/home_screen.dart';
 import 'src/presentation/theme.dart';
@@ -52,6 +54,13 @@ class DuitQuApp extends StatelessWidget {
       title: 'DuitQu',
       theme: DuitQuTheme.light(),
       darkTheme: DuitQuTheme.dark(),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       home: HomeScreen(
         txRepo: txRepo,
         accountRepo: accountRepo,

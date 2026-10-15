@@ -7,7 +7,8 @@ import 'database.dart' as db;
 /// Tidak ada satu baris pun yang ditulis bila ini dilempar.
 class BackupFormatException implements Exception {
   final String message;
-  BackupFormatException(this.message);
+  final String code;
+  BackupFormatException(this.message, {this.code = ''});
   @override
   String toString() => 'BackupFormatException: $message';
 }
@@ -15,8 +16,19 @@ class BackupFormatException implements Exception {
 /// Satu baris yang dilewati saat impor, beserta alasannya.
 class SkippedRow {
   final int row;
+
+  /// Alasan teknis (fallback Indonesia) — UI memakai [code]+[args]
+  /// yang dilokalkan via AppLocalizations.
   final String reason;
-  const SkippedRow({required this.row, required this.reason});
+  final String code;
+  final List<String> args;
+
+  const SkippedRow({
+    required this.row,
+    required this.reason,
+    this.code = '',
+    this.args = const [],
+  });
 }
 
 /// Hasil impor: yang berhasil per jenis + yang dilewati per baris.
@@ -139,7 +151,7 @@ class BackupService {
       try {
         parsed.add(_parseRow(n + 1, cells));
       } on _RowError catch (e) {
-        skipped.add(SkippedRow(row: n + 1, reason: e.message));
+        skipped.add(SkippedRow(row: n + 1, reason: e.message, code: e.code, args: e.args));
       }
     }
 
@@ -193,7 +205,9 @@ class BackupService {
         if (accountId == null) {
           skipped.add(SkippedRow(
               row: p.row,
-              reason: 'akun ${p.accountId} tidak ada di file backup'));
+              reason: 'akun ${p.accountId} tidak ada di file backup',
+              code: 'accountMissing',
+              args: ['${p.accountId}']));
           continue;
         }
         final toAccountId =
@@ -201,7 +215,9 @@ class BackupService {
         if (p.toAccountId != null && toAccountId == null) {
           skipped.add(SkippedRow(
               row: p.row,
-              reason: 'akun tujuan ${p.toAccountId} tidak ada di file backup'));
+              reason: 'akun tujuan ${p.toAccountId} tidak ada di file backup',
+              code: 'toAccountMissing',
+              args: ['${p.toAccountId}']));
           continue;
         }
         final categoryId =
@@ -209,7 +225,9 @@ class BackupService {
         if (p.categoryId != null && categoryId == null) {
           skipped.add(SkippedRow(
               row: p.row,
-              reason: 'kategori ${p.categoryId} tidak ada di file backup'));
+              reason: 'kategori ${p.categoryId} tidak ada di file backup',
+              code: 'categoryMissing',
+              args: ['${p.categoryId}']));
           continue;
         }
         final newId = await _db.into(_db.transactions).insert(
@@ -234,8 +252,9 @@ class BackupService {
         if (txId == null) {
           skipped.add(SkippedRow(
               row: p.row,
-              reason:
-                  'transaksi ${p.transactionId} tidak ada di file backup'));
+              reason: 'transaksi ${p.transactionId} tidak ada di file backup',
+              code: 'transactionMissing',
+              args: ['${p.transactionId}']));
           continue;
         }
         await _db.into(_db.transactionItems).insert(
@@ -266,21 +285,23 @@ class BackupService {
     try {
       rows = Csv().decode(csv);
     } catch (e) {
-      throw BackupFormatException('File bukan CSV yang valid.');
+      throw BackupFormatException('File bukan CSV yang valid.', code: 'notCsv');
     }
     if (rows.length < 2) {
-      throw BackupFormatException('File kosong atau terpotong.');
+      throw BackupFormatException('File kosong atau terpotong.', code: 'emptyFile');
     }
     final tag = rows[0].map((c) => c.toString()).toList();
     if (tag.length < 2 || tag[0] != '#' || tag[1] != _appTag) {
       throw BackupFormatException(
-          'Bukan file backup DuitQu (tag tidak cocok).');
+          'Bukan file backup DuitQu (tag tidak cocok).',
+          code: 'badTag');
     }
     final header = rows[1].map((c) => c.toString()).toList();
     if (header.length != _header.length ||
         !_iterEquals(header, _header)) {
       throw BackupFormatException(
-          'Header tidak dikenali — mungkin versi backup berbeda.');
+          'Header tidak dikenali — mungkin versi backup berbeda.',
+          code: 'badHeader');
     }
     return rows;
   }
@@ -298,13 +319,19 @@ class BackupService {
 
   int _int(String v, String field, int row) {
     final n = int.tryParse(v);
-    if (n == null) throw _RowError('kolom $field bukan angka: "$v"');
+    if (n == null) {
+      throw _RowError('kolom $field bukan angka: "$v"',
+          code: 'notANumber', args: [field, v]);
+    }
     return n;
   }
 
   _Row _parseRow(int row, List<dynamic> cells) {
     if (cells.length > _header.length) {
-      throw _RowError('kelebihan kolom (${cells.length} > ${_header.length})');
+      throw _RowError(
+          'kelebihan kolom (${cells.length} > ${_header.length})',
+          code: 'tooManyColumns',
+          args: ['${cells.length}', '${_header.length}']);
     }
     final record = _cell(cells, 0);
     final id = _int(_cell(cells, 1), 'id', row);
@@ -313,10 +340,13 @@ class BackupService {
         final type = _cell(cells, 2);
         const valid = {'bank', 'cash', 'e_wallet', 'other'};
         if (!valid.contains(type)) {
-          throw _RowError('tipe akun tidak dikenal: "$type"');
+          throw _RowError('tipe akun tidak dikenal: "$type"',
+              code: 'unknownAccountType', args: [type]);
         }
         final name = _cell(cells, 3);
-        if (name.isEmpty) throw _RowError('nama akun kosong');
+        if (name.isEmpty) {
+          throw _RowError('nama akun kosong', code: 'emptyAccountName');
+        }
         return _AccountRow(
           row: row,
           oldId: id,
@@ -328,7 +358,9 @@ class BackupService {
         );
       case 'category':
         final name = _cell(cells, 3);
-        if (name.isEmpty) throw _RowError('nama kategori kosong');
+        if (name.isEmpty) {
+          throw _RowError('nama kategori kosong', code: 'emptyCategoryName');
+        }
         return _CategoryRow(
           row: row,
           oldId: id,
@@ -341,13 +373,17 @@ class BackupService {
         final type = _cell(cells, 2);
         const valid = {'income', 'expense', 'transfer'};
         if (!valid.contains(type)) {
-          throw _RowError('tipe transaksi tidak dikenal: "$type"');
+          throw _RowError('tipe transaksi tidak dikenal: "$type"',
+              code: 'unknownTxType', args: [type]);
         }
         final amount = _int(_cell(cells, 4), 'amount', row);
-        if (amount <= 0) throw _RowError('amount harus > 0');
+        if (amount <= 0) {
+          throw _RowError('amount harus > 0', code: 'amountNotPositive');
+        }
         final toRaw = _cell(cells, 8);
         if (type == 'transfer' && toRaw.isEmpty) {
-          throw _RowError('transfer tanpa akun tujuan');
+          throw _RowError('transfer tanpa akun tujuan',
+              code: 'transferNoDestination');
         }
         return _TransactionRow(
           row: row,
@@ -366,11 +402,17 @@ class BackupService {
         );
       case 'item':
         final name = _cell(cells, 3);
-        if (name.isEmpty) throw _RowError('nama item kosong');
+        if (name.isEmpty) {
+          throw _RowError('nama item kosong', code: 'emptyItemName');
+        }
         final price = _int(_cell(cells, 5), 'price', row);
-        if (price < 0) throw _RowError('price negatif');
+        if (price < 0) {
+          throw _RowError('price negatif', code: 'negativePrice');
+        }
         final qty = _int(_cell(cells, 6), 'qty', row);
-        if (qty <= 0) throw _RowError('qty harus > 0');
+        if (qty <= 0) {
+          throw _RowError('qty harus > 0', code: 'qtyNotPositive');
+        }
         return _ItemRow(
           row: row,
           oldId: id,
@@ -380,14 +422,17 @@ class BackupService {
           transactionId: _int(_cell(cells, 10), 'transaction_id', row),
         );
       default:
-        throw _RowError('tipe record tidak dikenal: "$record"');
+        throw _RowError('tipe record tidak dikenal: "$record"',
+            code: 'unknownRecord', args: [record]);
     }
   }
 }
 
 class _RowError implements Exception {
   final String message;
-  _RowError(this.message);
+  final String code;
+  final List<String> args;
+  _RowError(this.message, {required this.code, this.args = const []});
 }
 
 sealed class _Row {
