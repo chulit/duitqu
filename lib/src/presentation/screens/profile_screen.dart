@@ -16,6 +16,7 @@ import '../backup_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../theme_mode_store.dart';
+import '../widgets/mascot_image.dart';
 import 'accounts_screen.dart';
 import 'categories_screen.dart';
 import 'goals_screen.dart';
@@ -208,6 +209,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showAbout() {
+    final t = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.menuAbout),
+        content: Text(t.aboutText),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.close)),
+        ],
+      ),
+    );
+  }
+
   void _comingSoon() {
     final t = AppLocalizations.of(context);
     ScaffoldMessenger.of(context)
@@ -223,55 +238,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(t.profileTitle)),
+      appBar: AppBar(
+        title: Text(t.profileTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: t.menuSettings,
+            onPressed: () => _push(const AutoRecordSettingsScreen()),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
         children: [
           Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(DuitQuTheme.radius),
+              onTap: _comingSoon,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(child: MascotImage.avatar(size: 40)),
                     ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      color: DuitQuTheme.primaryBlue,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.appTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dinda Putri',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                            ),
                           ),
-                        ),
-                        Text(
-                          t.manageAccount,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: scheme.onSurfaceVariant,
+                          const SizedBox(height: 2),
+                          Text(
+                            t.manageAccount,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ],
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -281,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _MenuRow(
                 icon: Icons.account_balance_wallet_outlined,
                 iconColor: const Color(0xFFF2994A),
-                label: t.accountsAndBalance,
+                label: t.menuAccounts,
                 onTap: () => _push(
                   AccountsScreen(
                     accountRepo: widget.accountRepo,
@@ -292,26 +317,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _MenuRow(
                 icon: Icons.grid_view_rounded,
                 iconColor: const Color(0xFF27AE60),
-                label: t.categoriesTitle,
+                label: t.menuCategories,
                 onTap: () =>
                     _push(CategoriesScreen(categoryRepo: widget.categoryRepo)),
               ),
               _MenuRow(
                 icon: Icons.savings_outlined,
                 iconColor: DuitQuTheme.primaryBlue,
-                label: t.budget,
+                label: t.menuBudget,
                 onTap: _comingSoon,
               ),
               _MenuRow(
                 icon: Icons.flag_outlined,
                 iconColor: const Color(0xFF9B51E0),
-                label: t.goalsTitle,
+                label: t.menuGoals,
                 onTap: () => _push(const GoalsScreen()),
               ),
               _MenuRow(
                 icon: Icons.auto_awesome_outlined,
                 iconColor: const Color(0xFFF2994A),
-                label: t.autoRecord,
+                label: t.menuAutoRecord,
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -340,25 +365,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _MenuRow(
                 icon: Icons.backup_outlined,
                 iconColor: const Color(0xFF27AE60),
-                label: t.backupAndSync,
+                label: t.menuBackupSync,
                 onTap: _openBackup,
               ),
               _MenuRow(
                 icon: Icons.cloud_outlined,
                 iconColor: const Color(0xFF2D9CDB),
-                label: 'Sinkronisasi Cloud',
+                label: t.cloudSync,
                 onTap: _openSync,
               ),
               _MenuRow(
                 icon: Icons.shield_outlined,
                 iconColor: const Color(0xFFEB5757),
-                label: t.securityAndPrivacy,
+                label: t.menuSecurity,
                 onTap: _comingSoon,
               ),
               _MenuRow(
                 icon: Icons.settings_outlined,
                 iconColor: scheme.onSurfaceVariant,
-                label: t.settings,
+                label: t.menuSettings,
                 onTap: () => _push(const AutoRecordSettingsScreen()),
               ),
               _MenuRow(
@@ -384,8 +409,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _MenuRow(
                 icon: Icons.help_outline_rounded,
                 iconColor: DuitQuTheme.primaryBlue,
-                label: t.helpAndFeedback,
+                label: t.menuHelp,
                 onTap: _comingSoon,
+              ),
+              _MenuRow(
+                icon: Icons.info_outline_rounded,
+                iconColor: const Color(0xFF9B51E0),
+                label: t.menuAbout,
+                onTap: _showAbout,
               ),
             ],
           ),
@@ -402,6 +433,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 Text(
                   t.aboutText,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

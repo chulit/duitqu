@@ -7,12 +7,12 @@ class DuitQuTheme {
 
   static const double radius = 20;
 
-  /// Biru utama (tombol, aksen, nav aktif).
-  static const Color primaryBlue = Color(0xFF2F80ED);
+  /// Biru utama (tombol, aksen, nav aktif). Sesuai mockup v2 (~#2E9BFF).
+  static const Color primaryBlue = Color(0xFF2E9BFF);
   static const Color primaryDark = Color(0xFF1B5FC1);
 
-  /// Latar aplikasi.
-  static const Color scaffoldBg = Color(0xFFF3F6FA);
+  /// Latar aplikasi (mockup v2: putih/abu sangat muda).
+  static const Color scaffoldBg = Color(0xFFF7FAFE);
 
   /// Teks.
   static const Color ink = Color(0xFF1B2A41);
@@ -66,8 +66,9 @@ class DuitQuTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
         ),
+        // Mockup v2: kartu putih dengan shadow halus.
         shadowColor: isLight
-            ? primaryBlue.withValues(alpha: 0.08)
+            ? const Color(0xFF2E9BFF).withValues(alpha: 0.10)
             : Colors.transparent,
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -141,4 +142,22 @@ class DuitQuTheme {
 
   static Color incomeColor(BuildContext context) => income;
   static Color expenseColor(BuildContext context) => expense;
+
+  /// Dekorasi kartu ala mockup v2: putih, rounded-2xl, shadow halus.
+  static BoxDecoration cardDecoration(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    return BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: isLight
+          ? [
+              BoxShadow(
+                color: primaryBlue.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ]
+          : null,
+    );
+  }
 }
