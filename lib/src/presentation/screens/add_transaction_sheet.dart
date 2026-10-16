@@ -38,6 +38,7 @@ class AddTransactionSheet extends StatefulWidget {
   final Transaction? existing;
   final int? initialAmount;
   final String? initialNote;
+  final TransactionType? initialType;
 
   const AddTransactionSheet({
     super.key,
@@ -49,6 +50,7 @@ class AddTransactionSheet extends StatefulWidget {
     this.existing,
     this.initialAmount,
     this.initialNote,
+    this.initialType,
   });
 
   @override
@@ -96,7 +98,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
         _itemDrafts.add(d);
       }
     } else {
-      _type = widget.defaults.lastType;
+      _type = widget.initialType ?? widget.defaults.lastType;
       _categoryId = widget.defaults.lastCategoryId;
       _accountId = widget.defaults.lastAccountId;
       if (widget.initialAmount != null) {

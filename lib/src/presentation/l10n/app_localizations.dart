@@ -503,6 +503,36 @@ class AppLocalizations {
       ? 'Berapa pengeluaranku minggu ini?'
       : 'How much did I spend this week?';
 
+  // -- chat bottom sheet --
+  String get chatSheetTitle =>
+      _id ? 'Catat transaksi dengan chat' : 'Record transactions with chat';
+  String get chatSheetSubtitle => _id
+      ? 'Tulis pengeluaran atau pemasukan dengan bahasa biasa, nanti aku yang catat. \u{2728}'
+      : 'Type income or expenses in plain language, I\u2019ll record it for you. \u{2728}';
+  String get chatSheetHint => _id
+      ? 'Tulis transaksi, misalnya \u2018Beli kopi 28 ribu\u2019'
+      : 'Type a transaction, e.g. \u2018Beli kopi 28 ribu\u2019';
+  String get chatChipMore => _id ? 'Lainnya...' : 'More...';
+
+  // -- home (mockup baru) --
+  String get quickIncome => _id ? 'Pemasukan' : 'Income';
+  String get quickExpense => _id ? 'Pengeluaran' : 'Expense';
+  String get quickTransactions => _id ? 'Transaksi' : 'Transactions';
+  String get quickReport => _id ? 'Laporan' : 'Reports';
+  String get monthlyBudget => _id ? 'Budget Bulan Ini' : 'This Month\u2019s Budget';
+  String budgetFrom(String amount) => _id ? 'dari $amount' : 'of $amount';
+  String get ctaTitle =>
+      _id ? 'Yuk, catat transaksi hari ini!' : 'Let\u2019s record today\u2019s transactions!';
+  String get ctaSubtitle => _id
+      ? 'Biar keuanganmu tetap terpantau \u{1F4C8}'
+      : 'Keep your finances on track \u{1F4C8}';
+  String get searchTransactions =>
+      _id ? 'Cari transaksi' : 'Search transactions';
+  String get userNameTitle => _id ? 'Nama panggilan' : 'Nickname';
+  String get userNameHint =>
+      _id ? 'Nama untuk sapaan, mis. Dinda' : 'Name for greetings, e.g. Dinda';
+  String get setName => _id ? 'Atur nama' : 'Set name';
+
   // -- insight --
   String get expenseTab => _id ? 'Pengeluaran' : 'Expenses';
   String get incomeTab => _id ? 'Pemasukan' : 'Income';
