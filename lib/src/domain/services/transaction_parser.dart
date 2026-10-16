@@ -96,12 +96,12 @@ class TransactionParser {
     );
   }
 
-  /// Ekstrak nominal: "35 ribu", "7 juta", "Rp28.000", "50rb", "1,5jt".
+  /// Ekstrak nominal: "35 ribu", "7 juta", "Rp28.000", "50rb", "1,5jt", "25k".
   int? _extractAmount(String lower) {
-    // Pola: angka + satuan (ribu/rb/juta/jt) atau Rp + angka.
+    // Pola: angka + satuan (ribu/rb/k/juta/jt) atau Rp + angka.
     final patterns = [
-      RegExp(r'rp\s?([\d\.,]+)\s*(ribu|rb|juta|jt)?\b'),
-      RegExp(r'([\d\.,]+)\s*(ribu|rb|juta|jt)\b'),
+      RegExp(r'rp\s?([\d\.,]+)\s*(ribu|rb|k|juta|jt)?\b'),
+      RegExp(r'([\d\.,]+)\s*(ribu|rb|k|juta|jt)\b'),
       RegExp(r'\b([\d\.,]+)\b'),
     ];
     for (final re in patterns) {
@@ -117,7 +117,7 @@ class TransactionParser {
       // Tanpa satuan eksplisit tapi ada "ribu/rb" terpisah sudah ditangani;
       // angka polos dianggap rupiah.
       final withRibu =
-          (unit == 'ribu' || unit == 'rb') ? 1000 : 1;
+          (unit == 'ribu' || unit == 'rb' || unit == 'k') ? 1000 : 1;
       return (value * multiplier * withRibu).round();
     }
     return null;
@@ -158,11 +158,11 @@ class TransactionParser {
     var rest = lower;
     // Buang pola nominal.
     rest = rest.replaceAll(
-      RegExp(r'rp\s?[\d\.,]+\s*(ribu|rb|juta|jt)?\b'),
+      RegExp(r'rp\s?[\d\.,]+\s*(ribu|rb|k|juta|jt)?\b'),
       ' ',
     );
     rest = rest.replaceAll(
-      RegExp(r'[\d\.,]+\s*(ribu|rb|juta|jt)\b'),
+      RegExp(r'[\d\.,]+\s*(ribu|rb|k|juta|jt)\b'),
       ' ',
     );
     rest = rest.replaceAll(RegExp(r'\b[\d\.,]+\b'), ' ');

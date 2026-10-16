@@ -22,6 +22,10 @@ void main() {
       expect(parser.parseChat('jajan 50rb').amount, 50000);
     });
 
+    test('"25k" → 25000', () {
+      expect(parser.parseChat('makan malam 25k').amount, 25000);
+    });
+
     test('"1,5jt" → 1500000', () {
       expect(parser.parseChat('dapat 1,5jt').amount, 1500000);
     });

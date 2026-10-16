@@ -4,6 +4,7 @@ import '../../data/auto_record_settings_store.dart';
 import '../../data/receipt_capture.dart';
 import '../../domain/entities/transaction.dart' as domain;
 import '../../domain/entities/transaction_candidate.dart';
+import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/candidate_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
@@ -41,13 +42,41 @@ class ChatMsg {
   final DateTime occurredAt;
   bool done = false; // kartu konfirmasi sudah dipakai (simpan/edit)
 
+  /// Smart defaults untuk kartu konfirmasi (bisa diubah via edit inline).
+  int? categoryId;
+  String? categoryName;
+  int? accountId;
+  String? accountName;
+
   ChatMsg({
     required this.kind,
     this.text = '',
     this.parsed,
     this.accountHint,
     DateTime? occurredAt,
+    this.categoryId,
+    this.categoryName,
+    this.accountId,
+    this.accountName,
   }) : occurredAt = occurredAt ?? DateTime.now();
+
+  /// True bila semua field penting sudah terisi untuk simpan langsung.
+  bool get isComplete => categoryId != null && accountId != null;
+}
+
+/// Hasil tebakan smart defaults untuk kartu konfirmasi chat.
+class _SmartDefaults {
+  final int? categoryId;
+  final String? categoryName;
+  final int? accountId;
+  final String? accountName;
+
+  const _SmartDefaults({
+    this.categoryId,
+    this.categoryName,
+    this.accountId,
+    this.accountName,
+  });
 }
 
 /// Controller chat assistant bersama: satu instance dipakai bottom sheet DAN
@@ -65,6 +94,7 @@ class ChatAssistantController extends ChangeNotifier {
     this.queryService,
     this.candidateRepo,
     this.categoryRepo,
+    this.accountRepo,
     this.onQuickAddType,
     this.onConfirmDelete,
     this._scanReceiptFn,
@@ -83,6 +113,7 @@ class ChatAssistantController extends ChangeNotifier {
   final FinancialQueryService? queryService;
   final CandidateRepository? candidateRepo;
   final CategoryRepository? categoryRepo;
+  final AccountRepository? accountRepo;
 
   final Future<ReceiptScanOutcome> Function()? _scanReceiptFn;
 
@@ -152,12 +183,112 @@ class ChatAssistantController extends ChangeNotifier {
       return;
     }
     _say(t.chatParsedOk);
+    // Smart defaults: tebak kategori dari keyword, akun dari terakhir dipakai.
+    final smartDefaults = await _smartDefaults(text);
     _addMsg(ChatMsg(
       kind: MsgKind.confirm,
       parsed: parsed,
       accountHint: raw.accountName,
+      categoryId: smartDefaults.categoryId,
+      categoryName: smartDefaults.categoryName,
+      accountId: smartDefaults.accountId,
+      accountName: smartDefaults.accountName,
     ));
   }
+
+  /// Hasil tebakan smart defaults untuk kartu konfirmasi.
+  Future<_SmartDefaults> _smartDefaults(String text) async {
+    int? categoryId;
+    String? categoryName;
+    int? accountId;
+    String? accountName;
+
+    // 1. Tebak kategori dari keyword.
+    final cats = await categoryRepo?.list();
+    if (cats != null) {
+      final lower = text.toLowerCase();
+      for (final entry in _categoryKeywords.entries) {
+        if (entry.value.any(lower.contains)) {
+          final match = cats.where((c) => c.name == entry.key).firstOrNull;
+          if (match != null && match.id != null) {
+            categoryId = match.id;
+            categoryName = match.name;
+            break;
+          }
+        }
+      }
+    }
+
+    // 2. Akun: pakai yang terakhir dipakai (dari transaksi terbaru).
+    // Fallback ke akun pertama bila belum ada riwayat.
+    try {
+      final recent = await txRepo?.list(
+        const TransactionQuery(),
+      );
+      if (recent != null && recent.isNotEmpty) {
+        accountId = recent.first.accountId;
+      }
+    } catch (_) {}
+    if (accountId == null) {
+      try {
+        final accounts = await accountRepo?.list();
+        if (accounts != null && accounts.isNotEmpty) {
+          accountId = accounts.first.id;
+          accountName = accounts.first.name;
+        }
+      } catch (_) {}
+    }
+    // Nama akun dari ID bila belum ada.
+    if (accountId != null && accountName == null) {
+      try {
+        final accounts = await accountRepo?.list();
+        accountName = accounts
+            ?.where((a) => a.id == accountId)
+            .firstOrNull
+            ?.name;
+      } catch (_) {}
+    }
+
+    return _SmartDefaults(
+      categoryId: categoryId,
+      categoryName: categoryName,
+      accountId: accountId,
+      accountName: accountName,
+    );
+  }
+
+  /// Keyword → nama kategori default untuk tebakan otomatis.
+  static const Map<String, List<String>> _categoryKeywords = {
+    'Makan & Minum': [
+      'kopi', 'makan', 'minum', 'sarapan', 'cafe', 'kafe', 'restoran',
+      'resto', 'jajan', 'snack', 'lunch', 'dinner', 'warteg', 'padang',
+    ],
+    'Transport': [
+      'bensin', 'bbm', 'parkir', 'tol', 'ojek', 'ojol', 'grab', 'gojek',
+      'taksi', 'taxi', 'bus', 'kereta', 'transport', 'pertamax', 'pertalite',
+    ],
+    'Belanja': [
+      'belanja', 'shopping', 'mall', 'indomaret', 'alfamart', 'minimarket',
+    ],
+    'Tagihan': [
+      'listrik', 'pln', 'pdam', 'air', 'tagihan', 'bayar listrik',
+    ],
+    'Pulsa & Internet': [
+      'pulsa', 'kuota', 'internet', 'wifi', 'paket data',
+    ],
+    'Kesehatan': [
+      'obat', 'dokter', 'rumah sakit', 'klinik', 'apotek', 'sehat',
+    ],
+    'Hiburan': [
+      'nonton', 'bioskop', 'game', 'hiburan', 'liburan', 'karaoke',
+    ],
+    'Pendidikan': [
+      'sekolah', 'kuliah', 'kursus', 'buku', 'les', 'pendidikan',
+    ],
+    'Gaji': ['gaji', 'salary', 'upah'],
+    'Bonus': ['bonus', 'thr', 'tunjangan'],
+    'Biaya Admin': ['admin', 'biaya admin', 'fee'],
+  };
 
   Future<void> _handleCorrection(
       CorrectionCommand cmd, AppLocalizations t) async {
@@ -202,10 +333,37 @@ class ChatAssistantController extends ChangeNotifier {
     _say(t.corrected);
   }
 
-  /// Tombol "Simpan": buka form tambah (via onSave), lalu bubble sukses.
-  void saveConfirm(ChatMsg msg, AppLocalizations t) {
+  /// Tombol "Simpan": simpan langsung bila semua field terisi (smart save).
+  /// Bila ada yang kosong, fallback buka form (via onSave) agar user melengkapi.
+  Future<void> saveConfirm(ChatMsg msg, AppLocalizations t) async {
+    final parsed = msg.parsed!;
+    // Fallback: data belum lengkap → buka form seperti dulu.
+    if (!msg.isComplete || txRepo == null) {
+      msg.done = true;
+      onSave(parsed);
+      _say(t.chatSaved);
+      _say(t.chatSavedAsk);
+      notifyListeners();
+      return;
+    }
+    // Simpan langsung tanpa buka form.
+    final type = switch (parsed.transactionType) {
+      'income' => domain.TransactionType.income,
+      'transfer' => domain.TransactionType.transfer,
+      _ => domain.TransactionType.expense,
+    };
+    final tx = domain.Transaction(
+      type: type,
+      amount: parsed.amount,
+      categoryId: msg.categoryId,
+      accountId: msg.accountId!,
+      merchant: parsed.description,
+      date: msg.occurredAt,
+      createdAt: DateTime.now(),
+      origin: domain.TransactionOrigin.chat,
+    );
+    await txRepo!.save(tx);
     msg.done = true;
-    onSave(msg.parsed!);
     _say(t.chatSaved);
     _say(t.chatSavedAsk);
     notifyListeners();

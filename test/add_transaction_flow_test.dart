@@ -128,21 +128,9 @@ void main() {
     // Hasil cepat muncul dengan nominal terparse.
     expect(find.text('Rp 50.000'), findsOneWidget);
 
-    // Simpan -> sheet tambah terbuka dengan prefill.
+    // Smart save: kategori "Transport" (keyword "bensin") + akun "Cash"
+    // terisi otomatis → tap Simpan langsung nyimpen tanpa buka form.
     await tester.tap(find.text('Simpan Transaksi'));
-    await tester.pumpAndSettle();
-    expect(find.text('Catat transaksi'), findsOneWidget);
-    final amountField = tester.widget<TextField>(
-      find.byKey(const Key('amountField')),
-    );
-    expect(amountField.controller!.text, '50000');
-
-    // Pilih kategori + simpan.
-    await tester.tap(find.text('Makan & Minum'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('saveButton')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
 
     // Kembali ke home: tutup bottom sheet chat via tap di luar sheet.

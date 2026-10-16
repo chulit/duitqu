@@ -283,7 +283,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
               icon: Icons.restaurant_rounded,
               iconBg: const Color(0xFF22B07D),
               label: t.categoryLabel,
-              value: '—',
+              value: msg.categoryName ?? '—',
               onTap: msg.done
                   ? null
                   : () => widget.controller.editConfirm(msg),
@@ -292,7 +292,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
               icon: Icons.account_balance_wallet_rounded,
               iconBg: DuitQuTheme.primaryBlue,
               label: t.accountLabel,
-              value: _displayAccount(msg.accountHint),
+              value: msg.accountName ?? _displayAccount(msg.accountHint),
               onTap: msg.done
                   ? null
                   : () => widget.controller.editConfirm(msg),

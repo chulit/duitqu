@@ -68,6 +68,7 @@ class _AppShellState extends State<AppShell> {
           FinancialQueryService(widget.txRepo, widget.categoryRepo),
       candidateRepo: widget.candidateRepo,
       categoryRepo: widget.categoryRepo,
+      accountRepo: widget.accountRepo,
       onQuickAddType: (type) => _openAdd(type: type),
       onConfirmDelete: (title, body) async {
         final t = AppLocalizations.of(context);
