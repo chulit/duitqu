@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 
-/// Bottom nav ala mockup v2: 5 slot — Home, Insight, tombol chat bulat
-/// biru di tengah, Tujuan, Lainnya.
+/// Total footprint vertikal navbar dari bawah layar
+/// (tinggi container + margin bawah). Dipakai AppShell agar bottom sheet
+/// chat diposisikan tepat di atas navbar, tidak menutupinya.
+const floatingNavFootprint = 92.0;
+const _navHeight = 72.0;
+
+/// Bottom nav ala mockup: Home, Insight, tombol chat bulat biru di tengah,
+/// Tujuan, Akun.
 class FloatingNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -22,14 +28,16 @@ class FloatingNav extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final items = [
-      _NavData(t.navHome, Icons.home_rounded),
+      // Label persis mockup (Home/Insight sama di ID & EN).
+      _NavData('Home', Icons.home_rounded),
       _NavData(t.navInsight, Icons.bar_chart_rounded),
       _NavData(t.navGoals, Icons.flag_rounded),
-      _NavData(t.navMore, Icons.menu_rounded),
+      _NavData(t.navAccounts, Icons.person_rounded),
     ];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      height: _navHeight,
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(28),

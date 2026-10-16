@@ -64,6 +64,16 @@ class MascotImage extends StatelessWidget {
       : asset = 'assets/mascot/poses/tips.webp',
         fit = BoxFit.contain;
 
+  /// Hero home: maskot pegang koin Rp.
+  const MascotImage.coin({super.key, this.size, this.width, this.height})
+      : asset = 'assets/mascot/poses/coin.webp',
+        fit = BoxFit.contain;
+
+  /// Kartu CTA: maskot dengan lampu ide.
+  const MascotImage.idea({super.key, this.size, this.width, this.height})
+      : asset = 'assets/mascot/stickers/idea.webp',
+        fit = BoxFit.contain;
+
   @override
   Widget build(BuildContext context) {
     final w = width ?? size;

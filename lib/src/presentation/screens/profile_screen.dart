@@ -16,6 +16,7 @@ import '../backup_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../theme_mode_store.dart';
+import '../user_name_store.dart';
 import '../widgets/mascot_image.dart';
 import 'accounts_screen.dart';
 import 'categories_screen.dart';
@@ -30,6 +31,7 @@ class ProfileScreen extends StatefulWidget {
   final TransactionRepository txRepo;
   final BackupService backup;
   final ThemeModeStore themeStore;
+  final UserNameStore nameStore;
 
   const ProfileScreen({
     super.key,
@@ -38,6 +40,7 @@ class ProfileScreen extends StatefulWidget {
     required this.txRepo,
     required this.backup,
     required this.themeStore,
+    required this.nameStore,
   });
 
   @override
@@ -63,6 +66,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoRecordKey, v);
     if (mounted) setState(() => _autoRecord = v);
+  }
+
+  /// Dialog atur nama panggilan untuk sapaan di beranda.
+  Future<void> _editName() async {
+    final t = AppLocalizations.of(context);
+    final ctrl =
+        TextEditingController(text: widget.nameStore.value ?? '');
+    final value = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.userNameTitle),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(hintText: t.userNameHint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(t.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: Text(t.save),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (value == null || !mounted) return;
+    await widget.nameStore.setName(value.isEmpty ? null : value);
   }
 
   Future<void> _pickTheme() async {
@@ -254,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(DuitQuTheme.radius),
-              onTap: _comingSoon,
+              onTap: _editName,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -273,16 +308,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Dinda Putri',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 17,
+                          ValueListenableBuilder<String?>(
+                            valueListenable: widget.nameStore,
+                            builder: (context, name, _) => Text(
+                              (name == null || name.isEmpty)
+                                  ? t.setName
+                                  : name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 17,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            t.manageAccount,
+                            t.userNameHint,
                             style: TextStyle(
                               fontSize: 13,
                               color: scheme.onSurfaceVariant,

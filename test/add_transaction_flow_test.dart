@@ -145,12 +145,12 @@ void main() {
     await tester.tap(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
 
-    // Kembali ke home dari layar chat.
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    // Kembali ke home: tutup bottom sheet chat via tap di luar sheet.
+    await tester.tapAt(const Offset(200, 60));
     await tester.pumpAndSettle();
 
     // Muncul di riwayat.
-    expect(find.text('−Rp 50.000'), findsOneWidget);
+    expect(find.text('− Rp 50.000'), findsOneWidget);
     expect(find.textContaining('Belum ada transaksi'), findsNothing);
 
     await h.db.close();
@@ -169,10 +169,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
-    expect(find.text('−Rp 25.000'), findsOneWidget);
+    expect(find.text('− Rp 25.000'), findsOneWidget);
 
     // Ketuk baris -> sheet edit terbuka.
-    await tester.tap(find.text('−Rp 25.000'));
+    await tester.tap(find.text('− Rp 25.000'));
     await tester.pumpAndSettle();
     expect(find.text('Ubah transaksi'), findsOneWidget);
 
@@ -193,7 +193,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hapus').last);
     await tester.pumpAndSettle();
-    expect(find.text('−Rp 25.000'), findsNothing);
+    expect(find.text('− Rp 25.000'), findsNothing);
 
     await h.db.close();
   });
@@ -230,7 +230,7 @@ void main() {
     await tester.tap(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
 
-    expect(find.text('−Rp 13.000'), findsOneWidget);
+    expect(find.text('− Rp 13.000'), findsOneWidget);
 
     await h.db.close();
   });
@@ -272,7 +272,7 @@ void main() {
     await h.db.close();
   });
 
-  testWidgets('kartu statistik: pemasukan, pengeluaran, sisa', (tester) async {
+  testWidgets('kartu budget: terpakai vs total + persen', (tester) async {
     final h = await pumpApp(tester);
     final cats = await h.categoryRepo.defaults();
     final cashId = (await h.accountRepo.list()).first.id!;
@@ -302,10 +302,20 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Kartu statistik menampilkan ketiga angka.
-    expect(find.text('Rp 5.000.000'), findsOneWidget);
+    // Tanpa budget: kartu menampilkan '—' (jujur, tidak difabrikasi).
+    expect(find.text('Budget Bulan Ini'), findsOneWidget);
+
+    // Atur budget lewat dialog.
+    await tester.tap(find.text('Budget Bulan Ini'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '10000000');
+    await tester.tap(find.text('Catat'));
+    await tester.pumpAndSettle();
+
+    // Kartu budget menampilkan terpakai + total + persen dari data asli.
     expect(find.text('Rp 2.000.000'), findsOneWidget);
-    expect(find.text('Rp 3.000.000'), findsOneWidget);
+    expect(find.text('dari Rp 10.000.000'), findsOneWidget);
+    expect(find.text('20%'), findsOneWidget);
 
     await h.db.close();
   });
