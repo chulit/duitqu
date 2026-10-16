@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Scan struk via kamera (tiket 13). -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <application
         android:label="DuitQu"
         android:name="${applicationName}"

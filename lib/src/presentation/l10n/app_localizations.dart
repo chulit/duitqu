@@ -455,6 +455,20 @@ class AppLocalizations {
   String get chatAssistantTitle => _id ? 'DuitQu Assistant' : 'DuitQu Assistant';
   String get online => _id ? 'Online' : 'Online';
   String get chatInputHint => _id ? 'Tanya atau catat...' : 'Ask or record...';
+  String get scanReceipt => _id ? 'Scan struk' : 'Scan receipt';
+  String get receiptScanning =>
+      _id ? 'Memindai struk... \u{1F4F7}' : 'Scanning receipt... \u{1F4F7}';
+  String get receiptModelNotReady => _id
+      ? 'Model OCR belum ter-download (\u224830 MB, butuh internet sekali). Hubungkan internet lalu coba scan lagi.'
+      : 'OCR model not downloaded yet (\u224830 MB, needs internet once). Connect and try scanning again.';
+  String receiptToInbox(String amount) => _id
+      ? 'Struk terbaca: $amount. Cek Inbox untuk konfirmasi sebelum disimpan \u{1F4E5}'
+      : 'Receipt read: $amount. Check Inbox to confirm before saving \u{1F4E5}';
+  String get receiptDuplicate => _id
+      ? 'Struk ini sudah pernah dipindai sebelumnya.'
+      : 'This receipt was already scanned before.';
+  String get receiptFailed =>
+      _id ? 'Gagal memindai struk. Coba foto lebih jelas.' : 'Failed to scan receipt. Try a clearer photo.';
   String get chatGreeting => _id
       ? 'Halo! Ada transaksi baru yang mau dicatat? \u{1F60A}'
       : 'Hi! Any new transactions to record? \u{1F60A}';

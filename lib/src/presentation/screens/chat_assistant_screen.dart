@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../data/auto_record_settings_store.dart';
+import '../../data/receipt_capture.dart';
 import '../../domain/entities/transaction.dart' as domain;
+import '../../domain/entities/transaction_candidate.dart';
+import '../../domain/repositories/candidate_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/chat_correction_service.dart';
 import '../../domain/services/financial_query_service.dart';
+import '../../domain/services/receipt_scan_service.dart';
 import '../../domain/services/transaction_parser.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
@@ -18,12 +23,14 @@ class ChatAssistantScreen extends StatefulWidget {
   final void Function(QuickParse parsed) onSave;
   final TransactionRepository? txRepo;
   final FinancialQueryService? queryService;
+  final CandidateRepository? candidateRepo;
 
   const ChatAssistantScreen({
     super.key,
     required this.onSave,
     this.txRepo,
     this.queryService,
+    this.candidateRepo,
   });
 
   @override
@@ -58,6 +65,7 @@ class _ChatAssistantScreenState extends State<ChatAssistantScreen>
   final _focus = FocusNode();
   late final AnimationController _wave;
   bool _listening = false;
+  bool _scanning = false;
 
   @override
   void initState() {
@@ -585,6 +593,45 @@ class _ChatAssistantScreenState extends State<ChatAssistantScreen>
     );
   }
 
+  /// Scan struk via kamera → kandidat (tiket 13).
+  Future<void> _scanReceipt() async {
+    final repo = widget.candidateRepo;
+    if (repo == null || _scanning) return;
+    final t = AppLocalizations.of(context);
+    setState(() => _scanning = true);
+    _say(t.receiptScanning);
+    try {
+      final service = ReceiptScanService(
+        repo,
+        capture: ReceiptCapture().captureAndRecognize,
+      );
+      final settings = await AutoRecordSettingsStore().load();
+      final outcome = await service.scan(settings);
+      if (!mounted) return;
+      if (outcome.cancelled) return;
+      if (outcome.modelNotReady) {
+        _say(t.receiptModelNotReady);
+        return;
+      }
+      if (outcome.error != null || outcome.candidate == null) {
+        _say(t.receiptFailed);
+        return;
+      }
+      final c = outcome.candidate!;
+      if (c.status == CandidateStatus.duplicate) {
+        _say(t.receiptDuplicate);
+        return;
+      }
+      final amount = c.parsedPayload['amount'];
+      final formatted = amount is num
+          ? 'Rp${amount.toInt()}'
+          : 'nominal terbaca';
+      _say(t.receiptToInbox(formatted));
+    } finally {
+      if (mounted) setState(() => _scanning = false);
+    }
+  }
+
   /// Bottom input bar ala mockup: "+" outline, field + sparkles + mic,
   /// tombol send bulat biru.
   Widget _inputBar(AppLocalizations t) {
@@ -645,6 +692,23 @@ class _ChatAssistantScreenState extends State<ChatAssistantScreen>
                 ),
               ),
             ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: t.scanReceipt,
+            onPressed: widget.candidateRepo == null || _scanning
+                ? null
+                : _scanReceipt,
+            style: IconButton.styleFrom(
+              fixedSize: const Size(48, 48),
+            ),
+            icon: _scanning
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.camera_alt_rounded, size: 22),
           ),
           const SizedBox(width: 8),
           IconButton(

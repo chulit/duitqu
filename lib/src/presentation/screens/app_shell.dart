@@ -79,6 +79,7 @@ class _AppShellState extends State<AppShell> {
             widget.txRepo,
             widget.categoryRepo,
           ),
+          candidateRepo: widget.candidateRepo,
         ),
       ),
     );
