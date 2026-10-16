@@ -46,6 +46,8 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   final _listController = ScrollController();
   late final AnimationController _wave;
   bool _listening = false;
+  // Offset drag vertikal untuk slide-down to dismiss.
+  double _dragOffset = 0;
 
   @override
   void initState() {
@@ -112,7 +114,24 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final controller = widget.controller;
     final msgs = controller.messages;
     final maxH = MediaQuery.of(context).size.height;
-    return Container(
+    return GestureDetector(
+      // Slide ke bawah untuk tutup (pengganti tombol X).
+      onVerticalDragUpdate: (details) {
+        setState(() {
+          _dragOffset = (_dragOffset + details.delta.dy).clamp(0.0, maxH);
+        });
+      },
+      onVerticalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        if (_dragOffset > 120 || velocity > 500) {
+          widget.onClose();
+        } else {
+          setState(() => _dragOffset = 0);
+        }
+      },
+      child: Transform.translate(
+        offset: Offset(0, _dragOffset),
+        child: Container(
       // Compact mengikuti isi; full-width, sudut atas membulat,
       // sudut bawah siku agar nyambung flush ke navbar.
       constraints: BoxConstraints(maxHeight: maxH * 0.7),
@@ -164,13 +183,16 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
             ListeningOverlay(wave: _wave, onDismiss: _stopListening),
         ],
       ),
+        ),
+      ),
     );
   }
 
-  /// Header: maskot + judul + deskripsi + tombol expand/close.
+  /// Header: maskot + judul + deskripsi + tombol expand.
+  /// (Tombol close dihapus; tutup via slide ke bawah.)
   Widget _header(AppLocalizations t, ColorScheme scheme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,7 +210,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                     height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   t.chatSheetSubtitle,
                   style: TextStyle(
@@ -204,12 +226,6 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
             tooltip: t.expandChat,
             onPressed: widget.onExpand,
             icon: const Icon(Icons.open_in_full_rounded, size: 20),
-          ),
-          IconButton(
-            tooltip:
-                MaterialLocalizations.of(context).closeButtonTooltip,
-            onPressed: widget.onClose,
-            icon: const Icon(Icons.close_rounded, size: 20),
           ),
         ],
       ),
@@ -393,29 +409,43 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   /// Chip saran: pill biru muda, grid 3 kolom x 2 baris.
   Widget _suggestionChipsRow(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
+    Widget row(List<Widget> chips) => Row(
+          children: [
+            for (int i = 0; i < chips.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(child: chips[i]),
+            ],
+          ],
+        );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 3.6,
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final (emoji, text) in _suggestionChips)
+          row([
+            for (final (emoji, text) in _suggestionChips.take(3))
+              _compactChip(
+                scheme: scheme,
+                label: '$emoji $text',
+                onTap: () => _submitText(text),
+              ),
+          ]),
+          const SizedBox(height: 8),
+          row([
+            for (final (emoji, text) in _suggestionChips.skip(3))
+              _compactChip(
+                scheme: scheme,
+                label: '$emoji $text',
+                onTap: () => _submitText(text),
+              ),
             _compactChip(
               scheme: scheme,
-              label: '$emoji $text',
-              onTap: () => _submitText(text),
+              label: t.chatChipMore,
+              italic: true,
+              outlined: true,
+              onTap: () => _focus.requestFocus(),
             ),
-          _compactChip(
-            scheme: scheme,
-            label: t.chatChipMore,
-            italic: true,
-            outlined: true,
-            onTap: () => _focus.requestFocus(),
-          ),
+          ]),
         ],
       ),
     );
