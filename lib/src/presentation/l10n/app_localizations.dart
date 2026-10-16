@@ -422,6 +422,118 @@ class AppLocalizations {
 
   /// Alasan impor yang sudah dilokalkan untuk satu baris yang dilewati.
   String localizedSkippedReason(SkippedRow s) => skippedReason(s.code, s.args);
+
+  // -- mockup v2 redesign --
+  String get seeDetails => _id ? 'Lihat detail' : 'See details';
+  String get incomeFull => _id ? 'Pemasukan' : 'Income';
+  String get expenseFull => _id ? 'Pengeluaran' : 'Expenses';
+  String get noTransactionsTitle =>
+      _id ? 'Belum ada transaksi' : 'No transactions yet';
+  String get noTransactionsSubtitle => _id
+      ? 'Yuk, mulai catat transaksi pertamamu!'
+      : 'Come on, record your first transaction!';
+  String get recordNow => _id ? 'Catat Sekarang' : 'Record Now';
+
+  // -- insight: kartu tips maskot --
+  String insightExpenseUp(String category, int pct) => _id
+      ? 'Pengeluaran $category naik $pct% dibanding bulan lalu. Yuk, lebih hemat minggu ini! \u{1F4AA}'
+      : 'Spending on $category is up $pct% vs last month. Save more this week! \u{1F4AA}';
+  String insightIncomeUp(String category, int pct) => _id
+      ? 'Pemasukan dari $category naik $pct% dibanding bulan lalu. Pertahankan! \u{1F389}'
+      : 'Income from $category is up $pct% vs last month. Keep it up! \u{1F389}';
+  String insightNewCategory(String category, String amount) => _id
+      ? 'Ada catatan baru di $category ($amount) bulan ini. Pantau terus ya! \u{1F440}'
+      : 'New activity in $category ($amount) this month. Keep an eye on it! \u{1F440}';
+  String get insightCalm => _id
+      ? 'Kabar baik! Catatan bulan ini terkendali. Pertahankan ritmenya! \u{1F44D}'
+      : 'Good news! This month is under control. Keep the rhythm! \u{1F44D}';
+  String get insightNoData => _id
+      ? 'Belum cukup data untuk insight bulan ini. Tetap catat setiap transaksi ya! \u{1F4DD}'
+      : 'Not enough data for insights this month. Keep recording every transaction! \u{1F4DD}';
+
+  // -- chat assistant --
+  String get chatAssistantTitle => _id ? 'DuitQu Assistant' : 'DuitQu Assistant';
+  String get online => _id ? 'Online' : 'Online';
+  String get chatInputHint => _id ? 'Tanya atau catat...' : 'Ask or record...';
+  String get chatGreeting => _id
+      ? 'Halo! Ada transaksi baru yang mau dicatat? \u{1F60A}'
+      : 'Hi! Any new transactions to record? \u{1F60A}';
+  String get chatParsedOk =>
+      _id ? 'Siap! Ini hasilnya \u{1F447}' : 'Got it! Here it is \u{1F447}';
+  String get chatSaved =>
+      _id ? 'Sudah tersimpan!' : 'Saved!';
+  String get chatSavedAsk => _id
+      ? 'Mau catat yang lain? \u{1F60A}'
+      : 'Want to record another? \u{1F60A}';
+  String get edit => _id ? 'Edit' : 'Edit';
+  String get saveTransaction =>
+      _id ? 'Simpan Transaksi' : 'Save Transaction';
+  String get dateLabel => _id ? 'Tanggal' : 'Date';
+  String get todayAt => _id ? 'Hari ini,' : 'Today,';
+  String get listeningTitle => _id ? 'Mendengarkan...' : 'Listening...';
+  String get listeningHint => _id
+      ? 'Yoba ucapkan, misalnya:\n"Tadi beli kopi 25 ribu"'
+      : 'Try saying, for example:\n"Bought coffee for 25 thousand earlier"';
+  String get chatParseFail => _id
+      ? 'Hmm, aku belum paham. Coba tulis nominalnya, misalnya "Makan siang 35 ribu".'
+      : 'Hmm, I didn\'t quite get that. Try including the amount, e.g. "Lunch 35 thousand".';
+  String get chatNoteDefault => _id ? 'Catatan' : 'Note';
+  String get chatExamplesTitle =>
+      _id ? 'Contoh yang bisa kamu tulis' : 'Things you can type';
+  String get chatExample1 => _id
+      ? 'Makan siang 35 ribu pakai GoPay'
+      : 'Lunch 35 thousand with GoPay';
+  String get chatExample2 =>
+      _id ? 'Dapat gaji 5 juta' : 'Got salary 5 million';
+  String get chatExample3 => _id
+      ? 'Berapa pengeluaranku minggu ini?'
+      : 'How much did I spend this week?';
+
+  // -- insight --
+  String get expenseTab => _id ? 'Pengeluaran' : 'Expenses';
+  String get incomeTab => _id ? 'Pemasukan' : 'Income';
+  String budgetPercent(int percent) =>
+      _id ? '$percent% dari budget' : '$percent% of budget';
+
+  // -- tujuan --
+  String collected(String amount) =>
+      _id ? 'Terkumpul $amount' : 'Collected $amount';
+  String get noGoalsTitle =>
+      _id ? 'Yuk, capai tujuanmu!' : "Let's reach your goals!";
+  String get noGoalsSubtitle => _id
+      ? 'Mulai menabung untuk rencana besar kamu di masa depan.'
+      : 'Start saving for your big plans ahead.';
+  String get createGoal => _id ? 'Buat Tujuan' : 'Create Goal';
+  String get deleteGoalTitle => _id ? 'Hapus tujuan?' : 'Delete goal?';
+  String deleteGoalMessage(String name) => _id
+      ? 'Tujuan "$name" beserta dana terkumpulnya akan dihapus.'
+      : 'Goal "$name" and its saved funds will be deleted.';
+
+  // -- profil --
+  String get menuAccounts => _id ? 'Akun & Saldo' : 'Accounts & Balance';
+  String get menuCategories => _id ? 'Kategori' : 'Categories';
+  String get menuBudget => _id ? 'Budget' : 'Budget';
+  String get menuGoals => _id ? 'Tujuan' : 'Goals';
+  String get menuAutoRecord => _id ? 'Auto-Catat' : 'Auto-Record';
+  String get menuBackupSync =>
+      _id ? 'Backup & Sinkronisasi' : 'Backup & Sync';
+  String get menuSecurity =>
+      _id ? 'Keamanan & Privasi' : 'Security & Privacy';
+  String get menuSettings => _id ? 'Pengaturan' : 'Settings';
+  String get menuHelp => _id ? 'Bantuan & Saran' : 'Help & Feedback';
+  String get menuAbout => _id ? 'Tentang DuitQu' : 'About DuitQu';
+  String get cloudSync => _id ? 'Sinkronisasi Cloud' : 'Cloud Sync';
+
+  // -- inbox --
+  String get newest => _id ? 'Terbaru' : 'Newest';
+
+  // -- success state --
+  String get savedTitle => _id ? 'Berhasil Disimpan!' : 'Saved!';
+  String get savedSubtitle =>
+      _id ? 'Transaksi sudah dicatat \u{1F389}' : 'Transaction recorded \u{1F389}';
+  String get recordAgain => _id ? 'Catat Lagi' : 'Record Again';
+  String get viewTransactions =>
+      _id ? 'Lihat Transaksi' : 'View Transactions';
 }
 
 class _AppLocalizationsDelegate

@@ -14,12 +14,15 @@ import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
-import '../widgets/hero_art.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/mascot_image.dart';
 import 'add_transaction_sheet.dart';
 
 const _budgetKey = 'duitqu.monthly_budget';
 
-/// Beranda ala mockup: sapaan, hero saldo, statistik, budget, transaksi terbaru.
+/// Beranda ala mockup v2: sapaan maskot, hero saldo gradient, kartu 3 stat,
+/// budget bar, dan daftar transaksi terbaru. Read-only terhadap data:
+/// baca lewat repository, tulis hanya via TransactionRepository.
 class HomeScreen extends StatefulWidget {
   final TransactionRepository txRepo;
   final AccountRepository accountRepo;
@@ -159,11 +162,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
           children: [
             SizedBox(height: topPad + 12),
             _Header(greeting: _greeting(t), onOpenInbox: widget.onOpenInbox),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             FutureBuilder<int>(
               future: _balanceFuture,
               builder: (context, snap) => _HeroCard(
@@ -173,36 +176,46 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() => _balanceHidden = !_balanceHidden),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             StreamBuilder<List<Transaction>>(
               stream: _txStream,
               builder: (context, snapshot) {
                 final txs = snapshot.data ?? [];
                 final summary = _summaryService.summarize(txs);
-                final net = summary.income - summary.expense;
                 return Column(
                   children: [
                     _StatsCard(
                       income: summary.income,
                       expense: summary.expense,
-                      net: net,
+                      remaining: summary.net,
                       hidden: _balanceHidden,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _BudgetCard(
                       expense: summary.expense,
                       budget: _budget,
                       onTap: _setBudget,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     _SectionHeader(
                       title: t.recentTransactions,
                       actionLabel: t.seeAll,
                       onAction: widget.onSeeAll,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     if (txs.isEmpty)
-                      _EmptyTransactions()
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16, bottom: 8),
+                        child: EmptyState(
+                          mascot: const MascotImage.emptyTransactions(
+                            size: 140,
+                          ),
+                          title: t.noTransactionsTitle,
+                          subtitle: t.noTransactionsSubtitle,
+                          actionLabel: t.recordNow,
+                          onAction: widget.onAdd,
+                        ),
+                      )
                     else
                       for (final tx in txs.take(5))
                         _TransactionRow(
@@ -257,22 +270,17 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
+          width: 52,
+          height: 52,
+          decoration: const BoxDecoration(
+            color: Color(0xFFE3F2FD),
+            shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.person_rounded,
-            color: DuitQuTheme.primaryBlue,
-            size: 28,
-          ),
+          clipBehavior: Clip.antiAlias,
+          child: const MascotImage.avatar(size: 48),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -281,45 +289,38 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 greeting,
-                style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                style: const TextStyle(fontSize: 13, color: DuitQuTheme.inkSoft),
               ),
-              Text(
-                t.greetingQuestion,
-                style: const TextStyle(
-                  fontSize: 16,
+              // Sapaan contoh — tidak ada data nama user.
+              const Text(
+                'Dinda! 👋',
+                style: TextStyle(
+                  fontSize: 17,
                   fontWeight: FontWeight.w800,
+                  color: DuitQuTheme.ink,
                 ),
               ),
             ],
           ),
         ),
-        IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () {}),
         Stack(
           children: [
             IconButton(
-              icon: const Icon(Icons.notifications_outlined),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: DuitQuTheme.ink,
+              ),
               onPressed: onOpenInbox,
             ),
-            Positioned(
-              right: 10,
-              top: 10,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: const BoxDecoration(
+            const Positioned(
+              right: 12,
+              top: 12,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
                   color: DuitQuTheme.expense,
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: Text(
-                    '1',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: SizedBox(width: 10, height: 10),
               ),
             ),
           ],
@@ -344,13 +345,13 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Container(
-      height: 170,
+      height: 172,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(DuitQuTheme.radius),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF5B9BF5), Color(0xFF2F80ED), Color(0xFF1B5FC1)],
+          colors: [Color(0xFF5EB3FF), Color(0xFF2E9BFF)],
         ),
         boxShadow: [
           BoxShadow(
@@ -362,89 +363,108 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          const Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 170,
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+          Positioned(
+            right: -24,
+            top: -24,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
               ),
-              child: HeroArt(),
+            ),
+          ),
+          Positioned(
+            left: 24,
+            bottom: -40,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Text(
-                      t.totalBalance,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 14,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            t.totalBalance,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: onToggleHide,
+                            child: Icon(
+                              hidden
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              size: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onToggleHide,
-                      child: Icon(
-                        hidden
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        size: 18,
+                      const SizedBox(height: 8),
+                      Text(
+                        hidden ? 'Rp ••••••••' : formatRupiah(balance),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  hidden ? 'Rp ••••••••' : formatRupiah(balance),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          t.seeDetail,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                t.seeDetails,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                const MascotImage.hero(size: 112),
               ],
             ),
           ),
@@ -457,13 +477,13 @@ class _HeroCard extends StatelessWidget {
 class _StatsCard extends StatelessWidget {
   final int income;
   final int expense;
-  final int net;
+  final int remaining;
   final bool hidden;
 
   const _StatsCard({
     required this.income,
     required this.expense,
-    required this.net,
+    required this.remaining,
     required this.hidden,
   });
 
@@ -471,34 +491,33 @@ class _StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     String fmt(int v) => hidden ? 'Rp •••' : formatRupiah(v);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          children: [
-            _StatItem(
-              icon: Icons.arrow_upward_rounded,
-              iconBg: DuitQuTheme.income.withValues(alpha: 0.12),
-              iconColor: DuitQuTheme.income,
-              label: t.income,
-              value: fmt(income),
-            ),
-            _StatItem(
-              icon: Icons.arrow_downward_rounded,
-              iconBg: DuitQuTheme.expense.withValues(alpha: 0.12),
-              iconColor: DuitQuTheme.expense,
-              label: t.expense,
-              value: fmt(expense),
-            ),
-            _StatItem(
-              icon: Icons.account_balance_wallet_outlined,
-              iconBg: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
-              iconColor: DuitQuTheme.primaryBlue,
-              label: t.remainingThisMonth,
-              value: fmt(net),
-            ),
-          ],
-        ),
+    return Container(
+      decoration: DuitQuTheme.cardDecoration(context),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Row(
+        children: [
+          _StatItem(
+            icon: Icons.arrow_upward_rounded,
+            iconBg: DuitQuTheme.income.withValues(alpha: 0.12),
+            iconColor: DuitQuTheme.income,
+            label: t.incomeFull,
+            value: fmt(income),
+          ),
+          _StatItem(
+            icon: Icons.arrow_downward_rounded,
+            iconBg: DuitQuTheme.expense.withValues(alpha: 0.12),
+            iconColor: DuitQuTheme.expense,
+            label: t.expenseFull,
+            value: fmt(expense),
+          ),
+          _StatItem(
+            icon: Icons.account_balance_wallet_outlined,
+            iconBg: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
+            iconColor: DuitQuTheme.primaryBlue,
+            label: t.remainingThisMonth,
+            value: fmt(remaining),
+          ),
+        ],
       ),
     );
   }
@@ -549,7 +568,7 @@ class _StatItem extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             value,
             maxLines: 1,
@@ -577,10 +596,10 @@ class _BudgetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final pct = budget == null || budget == 0
-        ? 0.0
-        : (expense / budget!).clamp(0.0, 1.0);
-    return Card(
+    final hasBudget = budget != null && budget! > 0;
+    final pct = hasBudget ? (expense / budget!).clamp(0.0, 1.0) : 0.0;
+    return Container(
+      decoration: DuitQuTheme.cardDecoration(context),
       child: InkWell(
         borderRadius: BorderRadius.circular(DuitQuTheme.radius),
         onTap: onTap,
@@ -593,24 +612,40 @@ class _BudgetCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      budget == null
-                          ? t.setBudgetPrompt
-                          : t.budgetUsed((pct * 100).round()),
+                      // Aturan kejujuran data: tanpa budget -> '—'.
+                      hasBudget ? t.budgetUsed((pct * 100).round()) : '—',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        color: DuitQuTheme.ink,
                       ),
                     ),
                     const SizedBox(height: 10),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: pct,
-                        minHeight: 10,
-                        backgroundColor: scheme.surfaceContainerHighest
-                            .withValues(alpha: 0.7),
-                        valueColor: const AlwaysStoppedAnimation(
-                          DuitQuTheme.income,
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        height: 10,
+                        child: Stack(
+                          children: [
+                            Container(
+                              color: scheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.7),
+                            ),
+                            FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: pct,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      DuitQuTheme.income,
+                                      DuitQuTheme.primaryBlue,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -644,7 +679,11 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: DuitQuTheme.ink,
+          ),
         ),
         const Spacer(),
         GestureDetector(
@@ -668,27 +707,6 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _EmptyTransactions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Center(
-          child: Text(
-            t.emptyHistory,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -718,14 +736,17 @@ class _TransactionRow extends StatelessWidget {
     final pillColor = isIncome
         ? DuitQuTheme.income
         : isExpense
-        ? const Color(0xFFE5484D)
+        ? DuitQuTheme.expense
         : DuitQuTheme.primaryBlue;
-    final pillBg = pillColor.withValues(alpha: 0.12);
 
     final title = tx.type == TransactionType.transfer
         ? t.transfer
         : (category?.name ?? '—');
-    final subtitle = '${formatTanggal(tx.date, t)} · ${(account?.name ?? '')}';
+    final dateLabel = _relativeDate(tx.date, t);
+    final accountName = account?.name ?? '';
+    final subtitle = accountName.isEmpty
+        ? dateLabel
+        : '$dateLabel · $accountName';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -762,6 +783,7 @@ class _TransactionRow extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: DuitQuTheme.ink,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -803,7 +825,7 @@ class _TransactionRow extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: pillBg,
+                      color: pillColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -822,5 +844,14 @@ class _TransactionRow extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _relativeDate(DateTime d, AppLocalizations t) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(d.year, d.month, d.day);
+    if (day == today) return t.today;
+    if (day == today.subtract(const Duration(days: 1))) return t.yesterday;
+    return formatTanggal(d, t);
   }
 }

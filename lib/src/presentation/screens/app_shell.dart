@@ -13,6 +13,7 @@ import '../widgets/chat_sheet.dart';
 import '../widgets/floating_nav.dart';
 import 'add_transaction_sheet.dart';
 import 'all_transactions_screen.dart';
+import 'chat_assistant_screen.dart';
 import 'goals_screen.dart';
 import 'home_screen.dart';
 import 'inbox_screen.dart';
@@ -68,16 +69,16 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _openChat() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ChatSheet(
-        onSave: (parsed) => _openAdd(prefill: parsed),
-        txRepo: widget.txRepo,
-        queryService: FinancialQueryService(
-          widget.txRepo,
-          widget.categoryRepo,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatAssistantScreen(
+          onSave: (parsed) => _openAdd(prefill: parsed),
+          txRepo: widget.txRepo,
+          queryService: FinancialQueryService(
+            widget.txRepo,
+            widget.categoryRepo,
+          ),
         ),
       ),
     );
