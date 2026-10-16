@@ -116,7 +116,8 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       constraints: BoxConstraints(maxHeight: maxH * 0.85),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        // Semua sudut rounded karena sheet floating (ada margin).
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),

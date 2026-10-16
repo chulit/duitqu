@@ -230,13 +230,17 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
               // Sheet chat compact mengikuti isi (bukan fractional) —
-              // navbar tetap terlihat di bawahnya.
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: ChatAssistantSheet(
-                  controller: _chatController,
-                  onExpand: _expandChat,
-                  onClose: _closeChat,
+              // navbar tetap terlihat di bawahnya, dengan margin agar
+              // terlihat floating.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ChatAssistantSheet(
+                    controller: _chatController,
+                    onExpand: _expandChat,
+                    onClose: _closeChat,
+                  ),
                 ),
               ),
             ],
