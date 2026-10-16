@@ -31,6 +31,7 @@ void main() {
               scrollController: ScrollController(),
               controller: controller,
               onExpand: () {},
+              onClose: () {},
             ),
           ),
         ),

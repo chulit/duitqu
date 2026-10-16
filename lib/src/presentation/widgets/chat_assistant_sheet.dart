@@ -18,12 +18,14 @@ class ChatAssistantSheet extends StatefulWidget {
   final ScrollController scrollController;
   final ChatAssistantController controller;
   final VoidCallback onExpand;
+  final VoidCallback onClose;
 
   const ChatAssistantSheet({
     super.key,
     required this.scrollController,
     required this.controller,
     required this.onExpand,
+    required this.onClose,
   });
 
   @override
@@ -169,6 +171,11 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                       tooltip: t.expandChat,
                       onPressed: widget.onExpand,
                       icon: const Icon(Icons.open_in_full_rounded),
+                    ),
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                      onPressed: widget.onClose,
+                      icon: const Icon(Icons.close_rounded),
                     ),
                   ],
                 ),
@@ -413,13 +420,15 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     );
   }
 
-  /// Input bar: avatar maskot, field, mic, kamera, tombol kirim biru.
+  /// Input bar: avatar maskot, field, kamera, mic, tombol kirim biru.
+  /// Catatan: Scaffold sudah resize body saat keyboard terbuka
+  /// (resizeToAvoidBottomInset), jadi tidak perlu tambah viewInsets manual
+  /// — dulu sempat dobel dan menyisakan gap abu-abu di atas keyboard.
   Widget _inputBar(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final controller = widget.controller;
     return Container(
-      padding: EdgeInsets.fromLTRB(12, 8, 12, 12 + bottomInset),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
