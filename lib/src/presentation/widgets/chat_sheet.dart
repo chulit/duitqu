@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/services/transaction_parser.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
@@ -49,37 +50,15 @@ class _ChatSheetState extends State<ChatSheet>
     super.dispose();
   }
 
-  /// Parse heuristik: angka + ribu/juta, sisanya deskripsi.
+  /// Parse via TransactionParser deterministik (tiket 06, spec v2).
   QuickParse? _parse(String text) {
-    final lower = text.toLowerCase();
-    final numMatch = RegExp(r'(\d[\d\.]*)').firstMatch(lower);
-    if (numMatch == null) return null;
-    var value = int.tryParse(numMatch.group(1)!.replaceAll('.', '')) ?? 0;
-    if (lower.contains('juta') || lower.contains(' jt')) {
-      value *= 1000000;
-    } else if (lower.contains('ribu') ||
-        lower.contains(' rb') ||
-        lower.contains('rb')) {
-      value *= 1000;
-    }
-    if (value <= 0) return null;
-    var desc = text.replaceFirst(numMatch.group(0)!, '').trim();
-    desc = desc
-        .replaceAll(RegExp(r'\b(ribu|rb|juta|jt)\b', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    // Hapus kata akun umum dari deskripsi.
-    desc = desc
-        .replaceAll(
-          RegExp(r'\b(pakai|pake|dengan)\b', caseSensitive: false),
-          '',
-        )
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    if (desc.isEmpty) desc = 'Catatan';
+    final parsed = TransactionParser().parseChat(text);
+    final amount = parsed.amount;
+    if (amount == null || amount <= 0) return null;
+    var desc = parsed.merchant ?? 'Catatan';
     // Kapitalisasi awal.
     desc = desc[0].toUpperCase() + desc.substring(1);
-    return QuickParse(amount: value, description: desc);
+    return QuickParse(amount: amount, description: desc);
   }
 
   void _submit() {
