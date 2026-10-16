@@ -59,6 +59,11 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // Aturan R8 untuk ML Kit (abaikan model bahasa opsional).
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
