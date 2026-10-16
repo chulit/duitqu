@@ -6,6 +6,8 @@ import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/repositories/candidate_repository.dart';
+import '../chat/chat_controller.dart';
+import '../l10n/app_localizations.dart';
 import '../theme_mode_store.dart';
 import '../../domain/services/financial_query_service.dart';
 import '../../domain/services/transfer_service.dart';
@@ -15,6 +17,7 @@ import '../widgets/chat_assistant_sheet.dart';
 import '../widgets/floating_nav.dart';
 import 'add_transaction_sheet.dart';
 import 'all_transactions_screen.dart';
+import 'chat_ai_screen.dart';
 import 'goals_screen.dart';
 import 'home_screen.dart';
 import 'inbox_screen.dart';
@@ -52,15 +55,47 @@ class _AppShellState extends State<AppShell> {
   int _index = 0;
   bool _chatOpen = false;
   late final UserNameStore _nameStore;
+  late final ChatAssistantController _chatController;
 
   @override
   void initState() {
     super.initState();
     _nameStore = UserNameStore();
+    _chatController = ChatAssistantController(
+      onSave: (parsed) => _openAdd(prefill: parsed),
+      txRepo: widget.txRepo,
+      queryService:
+          FinancialQueryService(widget.txRepo, widget.categoryRepo),
+      candidateRepo: widget.candidateRepo,
+      categoryRepo: widget.categoryRepo,
+      onQuickAddType: (type) => _openAdd(type: type),
+      onConfirmDelete: (title, body) async {
+        final t = AppLocalizations.of(context);
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(t.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(t.deleteAction),
+              ),
+            ],
+          ),
+        );
+        return ok == true;
+      },
+    );
   }
 
   @override
   void dispose() {
+    _chatController.dispose();
     _nameStore.dispose();
     super.dispose();
   }
@@ -92,6 +127,21 @@ class _AppShellState extends State<AppShell> {
   void _openChat() => setState(() => _chatOpen = true);
 
   void _closeChat() => setState(() => _chatOpen = false);
+
+  /// Tombol expand di sheet: tutup sheet lalu buka halaman penuh.
+  /// Riwayat chat dilanjutkan karena controller-nya sama.
+  void _expandChat() {
+    _closeChat();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatAiScreen(
+          controller: _chatController,
+          nameStore: _nameStore,
+        ),
+      ),
+    );
+  }
 
   void _openInbox() {
     Navigator.push(
@@ -186,13 +236,8 @@ class _AppShellState extends State<AppShell> {
                   maxChildSize: 0.95,
                   builder: (context, scrollController) => ChatAssistantSheet(
                     scrollController: scrollController,
-                    onSave: (parsed) => _openAdd(prefill: parsed),
-                    txRepo: widget.txRepo,
-                    queryService: FinancialQueryService(
-                      widget.txRepo,
-                      widget.categoryRepo,
-                    ),
-                    candidateRepo: widget.candidateRepo,
+                    controller: _chatController,
+                    onExpand: _expandChat,
                   ),
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:duitqu/src/presentation/chat/chat_controller.dart';
 import 'package:duitqu/src/presentation/l10n/app_localizations.dart';
 import 'package:duitqu/src/presentation/widgets/chat_assistant_sheet.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,10 @@ void main() {
     WidgetTester tester, {
     void Function(QuickParse parsed)? onSave,
   }) async {
+    final controller = ChatAssistantController(
+      onSave: onSave ?? (_) {},
+    );
+    addTearDown(controller.dispose);
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [
@@ -24,7 +29,8 @@ void main() {
             height: 700,
             child: ChatAssistantSheet(
               scrollController: ScrollController(),
-              onSave: onSave ?? (_) {},
+              controller: controller,
+              onExpand: () {},
             ),
           ),
         ),

@@ -514,6 +514,38 @@ class AppLocalizations {
       : 'Type a transaction, e.g. \u2018Beli kopi 28 ribu\u2019';
   String get chatChipMore => _id ? 'Lainnya...' : 'More...';
 
+  // -- chat AI full page --
+  String get aiTitle => 'DuitQu AI';
+  String get aiOnline => _id ? 'Siap membantu' : 'Ready to help';
+  String aiGreeting(String? name) => name == null
+      ? (_id ? 'Hai! \u{1F44B}' : 'Hi! \u{1F44B}')
+      : (_id ? 'Hai, $name! \u{1F44B}' : 'Hi, $name! \u{1F44B}');
+  String get aiSubtitle => _id
+      ? 'Mau catat transaksi atau cek kondisi keuanganmu?'
+      : 'Want to record a transaction or check your finances?';
+  String get aiChipRecordExpense =>
+      _id ? 'Catat pengeluaran' : 'Record expense';
+  String get aiChipRecordIncome => _id ? 'Catat pemasukan' : 'Record income';
+  String get aiChipMonthlyReport =>
+      _id ? 'Laporan bulan ini' : 'This month\u2019s report';
+  String get aiChipTopExpense =>
+      _id ? 'Pengeluaran terbesar' : 'Biggest expense';
+  String get aiInputHint =>
+      _id ? 'Tulis pesan atau transaksi...' : 'Type a message or transaction...';
+  String get aiClearHistory =>
+      _id ? 'Bersihkan riwayat' : 'Clear chat history';
+  String get aiSave => _id ? 'Simpan' : 'Save';
+  String get aiNoData =>
+      _id ? 'Belum ada transaksi bulan ini.' : 'No transactions this month yet.';
+  String aiMonthlyReport(String income, String expense, String net) => _id
+      ? 'Laporan bulan ini \u{1F4CA}\n\u2022 Pemasukan: $income\n\u2022 Pengeluaran: $expense\n\u2022 Selisih: $net'
+      : 'This month\u2019s report \u{1F4CA}\n\u2022 Income: $income\n\u2022 Expenses: $expense\n\u2022 Net: $net';
+  String aiTopExpense(String category, String amount) => _id
+      ? 'Pengeluaran terbesarmu bulan ini: $category ($amount). \u{1F3AF}'
+      : 'Your biggest expense this month: $category ($amount). \u{1F3AF}';
+  String get expandChat => _id ? 'Buka layar penuh' : 'Open full screen';
+  String get more => _id ? 'Lainnya' : 'More';
+
   // -- home (mockup baru) --
   String get quickIncome => _id ? 'Pemasukan' : 'Income';
   String get quickExpense => _id ? 'Pengeluaran' : 'Expense';
