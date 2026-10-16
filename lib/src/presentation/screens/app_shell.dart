@@ -209,12 +209,13 @@ class _AppShellState extends State<AppShell> {
         nameStore: _nameStore,
       ),
     ];
-    // Sheet chat: full-width, dari ~8% atas layar sampai bawah layar —
-    // "full nyambung": navbar mengambang di atas sheet sehingga terlihat
-    // sebagai satu permukaan yang tersambung.
+    // Sheet chat: compact full-width, bawahnya nempel flush ke navbar
+    // ("full nyambung"): tidak ada margin/jarak.
     // Backdrop hanya meredupkan konten di balik sheet.
-    final screenH = MediaQuery.of(context).size.height;
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    // Navbar top di 92px dari bawah (20 margin + 72 tinggi).
+    // Sheet dioverlap 2px agar tidak ada hairline gap.
+    final sheetBottom = viewInsets > 0 ? viewInsets : 90.0;
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -232,8 +233,7 @@ class _AppShellState extends State<AppShell> {
             Positioned(
               left: 0,
               right: 0,
-              top: screenH * 0.08,
-              bottom: viewInsets > 0 ? viewInsets : 0,
+              bottom: sheetBottom,
               // Material: sheet butuh Material ancestor (TextField, InkWell).
               child: Material(
                 type: MaterialType.transparency,

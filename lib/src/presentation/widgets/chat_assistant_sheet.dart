@@ -5,7 +5,6 @@ import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import 'chat_message_widgets.dart';
-import 'floating_nav.dart';
 import 'mascot_image.dart';
 
 /// Isi bottom sheet chat assistant: sapaan maskot, chip saran cepat,
@@ -112,25 +111,21 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final scheme = Theme.of(context).colorScheme;
     final controller = widget.controller;
     final msgs = controller.messages;
+    final maxH = MediaQuery.of(context).size.height;
     return Container(
-      // Mengisi penuh area Positioned dari AppShell (full-width, bawah layar).
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        // Hanya sudut atas yang membulat (bottom sheet standar).
-        borderRadius: const BorderRadius.vertical(
+      // Compact mengikuti isi; full-width, sudut atas membulat,
+      // sudut bawah siku agar nyambung flush ke navbar.
+      constraints: BoxConstraints(maxHeight: maxH * 0.7),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(28),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 24,
-            offset: const Offset(0, -8),
-          ),
-        ],
       ),
       child: Stack(
         children: [
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Handle.
               const SizedBox(height: 10),
@@ -143,25 +138,26 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 ),
               ),
               _header(t, scheme),
+              // Riwayat chat: mengikuti isi, scroll bila melebihi batas.
+              if (msgs.isNotEmpty)
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(maxHeight: maxH * 0.35),
+                    child: ListView.builder(
+                      controller: _listController,
+                      shrinkWrap: true,
+                      padding:
+                          const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      itemCount: msgs.length,
+                      itemBuilder: (context, i) =>
+                          _buildMsg(msgs[i], t),
+                    ),
+                  ),
+                ),
               // Chip saran cepat — hanya sebelum ada pesan user.
               if (!controller.hasUserMessage) _suggestionChipsRow(t),
-              // Area tengah fleksibel: riwayat chat, scroll bila penuh.
-              // Saat kosong, menjaga input tetap di bawah.
-              Expanded(
-                child: msgs.isEmpty
-                    ? const SizedBox.shrink()
-                    : ListView.builder(
-                        controller: _listController,
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        itemCount: msgs.length,
-                        itemBuilder: (context, i) =>
-                            _buildMsg(msgs[i], t),
-                      ),
-              ),
               _inputBar(t),
-              // Ruang untuk navbar yang mengambang di atas sheet.
-              const SizedBox(height: floatingNavFootprint),
             ],
           ),
           if (_listening)
