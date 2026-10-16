@@ -28,7 +28,6 @@ void main() {
           body: SizedBox(
             height: 700,
             child: ChatAssistantSheet(
-              scrollController: ScrollController(),
               controller: controller,
               onExpand: () {},
               onClose: () {},
@@ -54,8 +53,8 @@ void main() {
     await tester.tap(find.text('\u2615 Beli kopi 28 ribu'));
     await tester.pumpAndSettle();
 
-    // Bubble user + kartu konfirmasi muncul; chip hilang.
-    expect(find.text('Beli kopi 28 ribu'), findsOneWidget);
+    // Auto-scroll ke kartu konfirmasi (bubble awal terscroll ke atas);
+    // chip saran hilang setelah ada pesan user.
     expect(find.text('Rp 28.000'), findsOneWidget);
     expect(find.text('Simpan Transaksi'), findsOneWidget);
     expect(find.text('Lainnya...'), findsNothing);
@@ -69,9 +68,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.send_rounded));
     await tester.pumpAndSettle();
 
-    // Bubble user + hasil parse dari data ASLI.
-    expect(find.text('makan siang 35 ribu pakai GoPay'), findsOneWidget);
-    expect(find.textContaining('Ini hasilnya'), findsOneWidget);
+    // Kartu konfirmasi muncul (auto-scroll ke bawah) dengan hasil parse
+    // dari data ASLI.
     expect(find.text('Siang'), findsOneWidget);
     expect(find.text('Rp 35.000'), findsOneWidget);
     expect(find.text('Gopay'), findsOneWidget);

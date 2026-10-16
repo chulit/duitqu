@@ -56,18 +56,11 @@ class _AppShellState extends State<AppShell> {
   bool _chatOpen = false;
   late final UserNameStore _nameStore;
   late final ChatAssistantController _chatController;
-  final _sheetController = DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
     _nameStore = UserNameStore();
-    // Geser sheet sampai bawah -> tutup (drag-to-dismiss).
-    _sheetController.addListener(() {
-      if (_chatOpen && _sheetController.isAttached && _sheetController.size <= 0.451) {
-        _closeChat();
-      }
-    });
     _chatController = ChatAssistantController(
       onSave: (parsed) => _openAdd(prefill: parsed),
       txRepo: widget.txRepo,
@@ -102,7 +95,6 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
-    _sheetController.dispose();
     _chatController.dispose();
     _nameStore.dispose();
     super.dispose();
@@ -237,18 +229,14 @@ class _AppShellState extends State<AppShell> {
                   ),
                 ),
               ),
-              Positioned.fill(
-                child: DraggableScrollableSheet(
-                  controller: _sheetController,
-                  initialChildSize: 0.55,
-                  minChildSize: 0.45,
-                  maxChildSize: 0.95,
-                  builder: (context, scrollController) => ChatAssistantSheet(
-                    scrollController: scrollController,
-                    controller: _chatController,
-                    onExpand: _expandChat,
-                    onClose: _closeChat,
-                  ),
+              // Sheet chat compact mengikuti isi (bukan fractional) —
+              // navbar tetap terlihat di bawahnya.
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ChatAssistantSheet(
+                  controller: _chatController,
+                  onExpand: _expandChat,
+                  onClose: _closeChat,
                 ),
               ),
             ],

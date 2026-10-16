@@ -8,21 +8,19 @@ import 'chat_message_widgets.dart';
 import 'mascot_image.dart';
 
 /// Isi bottom sheet chat assistant: sapaan maskot, chip saran cepat,
-/// riwayat chat (scroll), dan input bar. Dipakai di dalam
-/// [DraggableScrollableSheet] — [scrollController] diteruskan dari sana
-/// agar drag sheet dan scroll riwayat terkoordinasi.
+/// riwayat chat (scroll), dan input bar. Sheet ini ukurannya mengikuti
+/// isi (compact seperti mockup) — bukan fractional seperti
+/// DraggableScrollableSheet dulu.
 ///
 /// Berbagi [ChatAssistantController] dengan halaman penuh "DuitQu AI";
 /// seluruh logika chat tinggal di controller, widget ini hanya render.
 class ChatAssistantSheet extends StatefulWidget {
-  final ScrollController scrollController;
   final ChatAssistantController controller;
   final VoidCallback onExpand;
   final VoidCallback onClose;
 
   const ChatAssistantSheet({
     super.key,
-    required this.scrollController,
     required this.controller,
     required this.onExpand,
     required this.onClose,
@@ -45,6 +43,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     with SingleTickerProviderStateMixin {
   final _ctrl = TextEditingController();
   final _focus = FocusNode();
+  final _listController = ScrollController();
   late final AnimationController _wave;
   bool _listening = false;
 
@@ -63,6 +62,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     widget.controller.removeListener(_onChatChanged);
     _ctrl.dispose();
     _focus.dispose();
+    _listController.dispose();
     _wave.dispose();
     super.dispose();
   }
@@ -70,7 +70,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   void _onChatChanged() {
     if (mounted) setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final c = widget.scrollController;
+      final c = _listController;
       if (!c.hasClients || !mounted) return;
       c.animateTo(
         c.position.maxScrollExtent,
@@ -111,7 +111,9 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final scheme = Theme.of(context).colorScheme;
     final controller = widget.controller;
     final msgs = controller.messages;
+    final maxH = MediaQuery.of(context).size.height;
     return Container(
+      constraints: BoxConstraints(maxHeight: maxH * 0.85),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -125,9 +127,11 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       ),
       child: Stack(
         children: [
+          // Ukuran mengikuti isi (compact) — tidak ada ruang kosong.
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle draggable.
+              // Handle.
               const SizedBox(height: 10),
               Container(
                 width: 44,
@@ -181,17 +185,17 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 ),
               ),
               const SizedBox(height: 8),
-              // Riwayat chat (scrollable, controller dari sheet).
-              Expanded(
-                child: msgs.isEmpty
-                    ? const SizedBox.shrink()
-                    : ListView.builder(
-                        controller: widget.scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        itemCount: msgs.length,
-                        itemBuilder: (context, i) => _buildMsg(msgs[i], t),
-                      ),
-              ),
+              // Riwayat chat: tinggi mengikuti isi sampai 40% layar, scroll bila penuh.
+              if (msgs.isNotEmpty)
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxH * 0.4),
+                  child: ListView.builder(
+                    controller: _listController,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    itemCount: msgs.length,
+                    itemBuilder: (context, i) => _buildMsg(msgs[i], t),
+                  ),
+                ),
               // Chip saran cepat — hanya sebelum ada pesan user.
               if (!controller.hasUserMessage) _suggestionChipsRow(t),
               _inputBar(t),
@@ -420,84 +424,83 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     );
   }
 
-  /// Input bar: avatar maskot, field, kamera, mic, tombol kirim biru.
+  /// Input bar ala mockup: satu pill berisi avatar maskot, field,
+  /// tombol kamera/mic, dan tombol kirim biru bulat.
   /// Catatan: Scaffold sudah resize body saat keyboard terbuka
-  /// (resizeToAvoidBottomInset), jadi tidak perlu tambah viewInsets manual
-  /// — dulu sempat dobel dan menyisakan gap abu-abu di atas keyboard.
+  /// (resizeToAvoidBottomInset), jadi tidak perlu tambah viewInsets manual.
   Widget _inputBar(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
     final controller = widget.controller;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
           ),
         ),
-      ),
-      child: Row(
-        children: [
-          const MascotImage.avatar(size: 40),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _ctrl,
-              focusNode: _focus,
-              onSubmitted: (_) => _submit(),
-              textInputAction: TextInputAction.send,
-              decoration: InputDecoration(
-                hintText: t.chatSheetHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor:
-                    scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+        child: Row(
+          children: [
+            const MascotImage.avatar(size: 38),
+            const SizedBox(width: 4),
+            Expanded(
+              child: TextField(
+                controller: _ctrl,
+                focusNode: _focus,
+                onSubmitted: (_) => _submit(),
+                textInputAction: TextInputAction.send,
+                decoration: InputDecoration(
+                  hintText: t.chatSheetHint,
+                  hintStyle: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            tooltip: t.scanReceipt,
-            onPressed: controller.candidateRepo == null || controller.scanning
-                ? null
-                : () => controller.scanReceipt(t: t),
-            icon: controller.scanning
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    Icons.camera_alt_outlined,
-                    color: scheme.onSurfaceVariant,
-                  ),
-          ),
-          IconButton(
-            onPressed: _startListening,
-            icon: Icon(
-              Icons.mic_rounded,
-              color: scheme.onSurfaceVariant,
+            IconButton(
+              tooltip: t.scanReceipt,
+              onPressed: controller.candidateRepo == null || controller.scanning
+                  ? null
+                  : () => controller.scanReceipt(t: t),
+              icon: controller.scanning
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      Icons.camera_alt_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
             ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: _submit,
-            style: IconButton.styleFrom(
-              backgroundColor: DuitQuTheme.primaryBlue,
-              foregroundColor: Colors.white,
-              fixedSize: const Size(48, 48),
+            IconButton(
+              onPressed: _startListening,
+              icon: Icon(
+                Icons.mic_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
-            icon: const Icon(Icons.send_rounded, size: 20),
-          ),
-        ],
+            const SizedBox(width: 2),
+            IconButton(
+              onPressed: _submit,
+              style: IconButton.styleFrom(
+                backgroundColor: DuitQuTheme.primaryBlue,
+                foregroundColor: Colors.white,
+                fixedSize: const Size(46, 46),
+              ),
+              icon: const Icon(Icons.send_rounded, size: 20),
+            ),
+          ],
+        ),
       ),
     );
   }
