@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/transaction.dart' as domain;
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/chat_correction_service.dart';
+import '../../domain/services/financial_query_service.dart';
 import '../../domain/services/transaction_parser.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
@@ -21,8 +22,14 @@ class QuickParse {
 class ChatSheet extends StatefulWidget {
   final void Function(QuickParse parsed) onSave;
   final TransactionRepository? txRepo;
+  final FinancialQueryService? queryService;
 
-  const ChatSheet({super.key, required this.onSave, this.txRepo});
+  const ChatSheet({
+    super.key,
+    required this.onSave,
+    this.txRepo,
+    this.queryService,
+  });
 
   @override
   State<ChatSheet> createState() => _ChatSheetState();
@@ -67,6 +74,16 @@ class _ChatSheetState extends State<ChatSheet>
 
   void _submit() async {
     final text = _ctrl.text;
+    // 0. Cek pertanyaan keuangan dulu (tiket 08).
+    final query = widget.queryService?.interpret(text);
+    if (query != null) {
+      final ans = await widget.queryService!.answer(query);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ans), duration: const Duration(seconds: 4)),
+      );
+      return;
+    }
     // 1. Cek perintah koreksi/hapus dulu (tiket 07).
     final correction = ChatCorrectionService().interpret(
       text,

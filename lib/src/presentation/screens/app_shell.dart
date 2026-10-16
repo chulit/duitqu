@@ -5,6 +5,7 @@ import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/repositories/candidate_repository.dart';
+import '../../domain/services/financial_query_service.dart';
 import '../../domain/services/transfer_service.dart';
 import '../quick_add_defaults.dart';
 import '../widgets/chat_sheet.dart';
@@ -71,6 +72,10 @@ class _AppShellState extends State<AppShell> {
       builder: (_) => ChatSheet(
         onSave: (parsed) => _openAdd(prefill: parsed),
         txRepo: widget.txRepo,
+        queryService: FinancialQueryService(
+          widget.txRepo,
+          widget.categoryRepo,
+        ),
       ),
     );
   }
