@@ -190,6 +190,10 @@ class AppLocalizations {
   String get deleteAction => _id ? 'Hapus' : 'Delete';
   String get deleted => _id ? 'Transaksi dihapus.' : 'Transaction deleted.';
   String get corrected => _id ? 'Transaksi dikoreksi.' : 'Transaction corrected.';
+  String get theme => _id ? 'Tema' : 'Theme';
+  String get themeLight => _id ? 'Terang' : 'Light';
+  String get themeDark => _id ? 'Gelap' : 'Dark';
+  String get themeSystem => _id ? 'Ikuti sistem' : 'System';
   String get notifSetupTitle =>
       _id ? 'Auto-Catat Notifikasi' : 'Notification Auto-Record';
   String get notifHowItWorks => _id ? 'Cara kerja' : 'How it works';

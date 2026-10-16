@@ -12,6 +12,7 @@ import 'src/presentation/l10n/app_localizations.dart';
 import 'src/presentation/quick_add_defaults.dart';
 import 'src/presentation/screens/app_shell.dart';
 import 'src/presentation/theme.dart';
+import 'src/presentation/theme_mode_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,17 +34,19 @@ Future<void> main() async {
       candidateRepo: candidateRepo,
       transferService: transferService,
       backup: backup,
+      themeStore: ThemeModeStore(),
     ),
   );
 }
 
-class DuitQuApp extends StatelessWidget {
+class DuitQuApp extends StatefulWidget {
   final DriftTransactionRepository txRepo;
   final DriftAccountRepository accountRepo;
   final DriftCategoryRepository categoryRepo;
   final DriftCandidateRepository candidateRepo;
   final TransferService transferService;
   final BackupService backup;
+  final ThemeModeStore themeStore;
 
   const DuitQuApp({
     super.key,
@@ -53,14 +56,23 @@ class DuitQuApp extends StatelessWidget {
     required this.candidateRepo,
     required this.transferService,
     required this.backup,
+    required this.themeStore,
   });
 
   @override
+  State<DuitQuApp> createState() => _DuitQuAppState();
+}
+
+class _DuitQuAppState extends State<DuitQuApp> {
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DuitQu',
-      theme: DuitQuTheme.light(),
-      darkTheme: DuitQuTheme.dark(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: widget.themeStore,
+      builder: (context, mode, _) => MaterialApp(
+        title: 'DuitQu',
+        theme: DuitQuTheme.light(),
+        darkTheme: DuitQuTheme.dark(),
+        themeMode: mode,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -68,14 +80,16 @@ class DuitQuApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: AppShell(
-        txRepo: txRepo,
-        accountRepo: accountRepo,
-        categoryRepo: categoryRepo,
-        candidateRepo: candidateRepo,
-        transferService: transferService,
-        backup: backup,
-        defaults: QuickAddDefaults(),
+        home: AppShell(
+          txRepo: widget.txRepo,
+          accountRepo: widget.accountRepo,
+          categoryRepo: widget.categoryRepo,
+          candidateRepo: widget.candidateRepo,
+          transferService: widget.transferService,
+          backup: widget.backup,
+          defaults: QuickAddDefaults(),
+          themeStore: widget.themeStore,
+        ),
       ),
     );
   }

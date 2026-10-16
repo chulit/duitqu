@@ -15,6 +15,7 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../backup_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import '../theme_mode_store.dart';
 import 'accounts_screen.dart';
 import 'categories_screen.dart';
 import 'goals_screen.dart';
@@ -27,6 +28,7 @@ class ProfileScreen extends StatefulWidget {
   final CategoryRepository categoryRepo;
   final TransactionRepository txRepo;
   final BackupService backup;
+  final ThemeModeStore themeStore;
 
   const ProfileScreen({
     super.key,
@@ -34,6 +36,7 @@ class ProfileScreen extends StatefulWidget {
     required this.categoryRepo,
     required this.txRepo,
     required this.backup,
+    required this.themeStore,
   });
 
   @override
@@ -59,6 +62,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoRecordKey, v);
     if (mounted) setState(() => _autoRecord = v);
+  }
+
+  Future<void> _pickTheme() async {
+    final t = AppLocalizations.of(context);
+    final picked = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: RadioGroup<ThemeMode>(
+          groupValue: widget.themeStore.value,
+          onChanged: (v) => Navigator.pop(ctx, v),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: Text(t.themeLight),
+                value: ThemeMode.light,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text(t.themeDark),
+                value: ThemeMode.dark,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text(t.themeSystem),
+                value: ThemeMode.system,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked != null) await widget.themeStore.setMode(picked);
   }
 
   void _openSync() {
@@ -326,6 +360,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 iconColor: scheme.onSurfaceVariant,
                 label: t.settings,
                 onTap: () => _push(const AutoRecordSettingsScreen()),
+              ),
+              _MenuRow(
+                icon: Icons.brightness_6_outlined,
+                iconColor: const Color(0xFFF2994A),
+                label: t.theme,
+                trailing: ValueListenableBuilder<ThemeMode>(
+                  valueListenable: widget.themeStore,
+                  builder: (context, mode, _) => Text(
+                    switch (mode) {
+                      ThemeMode.light => t.themeLight,
+                      ThemeMode.dark => t.themeDark,
+                      ThemeMode.system => t.themeSystem,
+                    },
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                onTap: _pickTheme,
               ),
               _MenuRow(
                 icon: Icons.help_outline_rounded,

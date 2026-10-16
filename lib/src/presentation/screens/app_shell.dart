@@ -5,6 +5,7 @@ import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/repositories/candidate_repository.dart';
+import '../theme_mode_store.dart';
 import '../../domain/services/financial_query_service.dart';
 import '../../domain/services/transfer_service.dart';
 import '../quick_add_defaults.dart';
@@ -27,6 +28,7 @@ class AppShell extends StatefulWidget {
   final TransferService transferService;
   final BackupService backup;
   final QuickAddDefaults defaults;
+  final ThemeModeStore themeStore;
 
   const AppShell({
     super.key,
@@ -37,6 +39,7 @@ class AppShell extends StatefulWidget {
     required this.transferService,
     required this.backup,
     required this.defaults,
+    required this.themeStore,
   });
 
   @override
@@ -125,6 +128,7 @@ class _AppShellState extends State<AppShell> {
         categoryRepo: widget.categoryRepo,
         txRepo: widget.txRepo,
         backup: widget.backup,
+        themeStore: widget.themeStore,
       ),
     ];
     return Scaffold(

@@ -154,13 +154,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_ready) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    final topPad = MediaQuery.of(context).padding.top;
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
           children: [
-            const SizedBox(height: 16),
+            SizedBox(height: topPad + 12),
             _Header(greeting: _greeting(t), onOpenInbox: widget.onOpenInbox),
             const SizedBox(height: 16),
             FutureBuilder<int>(
