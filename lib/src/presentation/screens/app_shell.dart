@@ -209,52 +209,51 @@ class _AppShellState extends State<AppShell> {
         nameStore: _nameStore,
       ),
     ];
-    // Backdrop menutupi SEMUA termasuk navbar; sheet diposisikan
-    // di atas navbar (atau keyboard bila terbuka).
+    // Sheet chat: panel besar dari ~10% atas layar sampai di atas navbar.
+    // Backdrop hanya meredupkan konten body — navbar tetap terang sebagai
+    // bagian dari "bottom action system" bersama composer (sesuai referensi).
+    final screenH = MediaQuery.of(context).size.height;
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final sheetBottom =
-        12 + (viewInsets > 0 ? viewInsets : floatingNavFootprint);
-    return Stack(
-      children: [
-        Scaffold(
-          extendBody: true,
-          body: Stack(
-            children: [
-              IndexedStack(index: _index, children: pages),
-            ],
-          ),
-          bottomNavigationBar: FloatingNav(
-            currentIndex: _index,
-            onTap: (i) => setState(() => _index = i),
-            onChatTap: _openChat,
-          ),
-        ),
-        if (_chatOpen) ...[
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _closeChat,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.45),
+    final sheetBottom = viewInsets > 0
+        ? viewInsets + 12
+        : floatingNavFootprint + 12;
+    return Scaffold(
+      extendBody: true,
+      body: Stack(
+        children: [
+          IndexedStack(index: _index, children: pages),
+          if (_chatOpen) ...[
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _closeChat,
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.45),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: sheetBottom,
-            // Material transparan: sheet butuh Material ancestor
-            // (TextField, InkWell) karena overlay di luar Scaffold.
-            child: Material(
-              type: MaterialType.transparency,
-              child: ChatAssistantSheet(
-                controller: _chatController,
-                onExpand: _expandChat,
-                onClose: _closeChat,
+            Positioned(
+              left: 12,
+              right: 12,
+              top: screenH * 0.1,
+              bottom: sheetBottom,
+              // Material: sheet butuh Material ancestor (TextField, InkWell).
+              child: Material(
+                type: MaterialType.transparency,
+                child: ChatAssistantSheet(
+                  controller: _chatController,
+                  onExpand: _expandChat,
+                  onClose: _closeChat,
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
+      bottomNavigationBar: FloatingNav(
+        currentIndex: _index,
+        onTap: (i) => setState(() => _index = i),
+        onChatTap: _openChat,
+      ),
     );
   }
 }

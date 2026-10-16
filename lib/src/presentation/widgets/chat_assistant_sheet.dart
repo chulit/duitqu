@@ -111,13 +111,13 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final scheme = Theme.of(context).colorScheme;
     final controller = widget.controller;
     final msgs = controller.messages;
-    final maxH = MediaQuery.of(context).size.height;
     return Container(
-      constraints: BoxConstraints(maxHeight: maxH * 0.85),
+      // Panel besar mengisi ruang Positioned dari AppShell.
       decoration: BoxDecoration(
         color: scheme.surface,
-        // Semua sudut rounded karena sheet floating (ada margin).
-        borderRadius: BorderRadius.circular(24),
+        // Sudut atas sangat membulat ala mockup; bawah juga rounded
+        // karena sheet floating di atas navbar.
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
@@ -128,9 +128,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       ),
       child: Stack(
         children: [
-          // Ukuran mengikuti isi (compact) — tidak ada ruang kosong.
           Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               // Handle.
               const SizedBox(height: 10),
@@ -142,62 +140,19 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              // Header: maskot + judul + deskripsi + tombol expand/close.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 12, 2),
-                child: Row(
-                  children: [
-                    const MascotImage.avatar(size: 48),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.chatSheetTitle,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            t.chatSheetSubtitle,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: scheme.onSurfaceVariant,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
+              _header(t, scheme),
+              // Area tengah fleksibel: riwayat chat, scroll bila penuh.
+              // Saat kosong, area ini menjaga composer tetap di bawah.
+              Expanded(
+                child: msgs.isEmpty
+                    ? const SizedBox.shrink()
+                    : ListView.builder(
+                        controller: _listController,
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        itemCount: msgs.length,
+                        itemBuilder: (context, i) => _buildMsg(msgs[i], t),
                       ),
-                    ),
-                    IconButton(
-                      tooltip: t.expandChat,
-                      onPressed: widget.onExpand,
-                      icon: const Icon(Icons.open_in_full_rounded, size: 20),
-                    ),
-                    IconButton(
-                      tooltip: MaterialLocalizations.of(context)
-                          .closeButtonTooltip,
-                      onPressed: widget.onClose,
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 4),
-              // Riwayat chat: tinggi mengikuti isi sampai 40% layar, scroll bila penuh.
-              if (msgs.isNotEmpty)
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxH * 0.4),
-                  child: ListView.builder(
-                    controller: _listController,
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                    itemCount: msgs.length,
-                    itemBuilder: (context, i) => _buildMsg(msgs[i], t),
-                  ),
-                ),
               // Chip saran cepat — hanya sebelum ada pesan user.
               if (!controller.hasUserMessage) _suggestionChipsRow(t),
               _inputBar(t),
@@ -205,6 +160,55 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           ),
           if (_listening)
             ListeningOverlay(wave: _wave, onDismiss: _stopListening),
+        ],
+      ),
+    );
+  }
+
+  /// Header: maskot + judul + deskripsi + tombol expand/close.
+  Widget _header(AppLocalizations t, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const MascotImage.avatar(size: 56),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.chatSheetTitle,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  t.chatSheetSubtitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: scheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: t.expandChat,
+            onPressed: widget.onExpand,
+            icon: const Icon(Icons.open_in_full_rounded, size: 20),
+          ),
+          IconButton(
+            tooltip:
+                MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: widget.onClose,
+            icon: const Icon(Icons.close_rounded, size: 20),
+          ),
         ],
       ),
     );
@@ -384,18 +388,18 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   }
 
   /// Chip saran cepat (wrap, ~2 baris). Tap = langsung kirim sebagai pesan.
-  /// Chip saran cepat ala mockup: grid 3 kolom x 2 baris, compact, biru muda.
+  /// Chip saran: pill biru muda, grid 3 kolom x 2 baris.
   Widget _suggestionChipsRow(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: GridView.count(
         crossAxisCount: 3,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-        childAspectRatio: 4.4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 3.6,
         children: [
           for (final (emoji, text) in _suggestionChips)
             _compactChip(
@@ -415,7 +419,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     );
   }
 
-  /// Chip compact biru muda yang muat 3 kolom: teks mengecil bila kepanjangan.
+  /// Chip pill biru muda; teks mengecil bila kepanjangan.
   Widget _compactChip({
     required ColorScheme scheme,
     required String label,
@@ -426,17 +430,17 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final isLight = Theme.of(context).brightness == Brightness.light;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: outlined
               ? Colors.transparent
               : isLight
-                  ? const Color(0xFFE7F1FE)
+                  ? const Color(0xFFEDF3FF)
                   : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: outlined
               ? Border.all(color: scheme.outlineVariant)
               : null,
@@ -447,9 +451,10 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
             label,
             maxLines: 1,
             style: TextStyle(
-              fontSize: 12,
-              color: italic ? scheme.onSurfaceVariant : scheme.onSurface,
-              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+              fontSize: 15,
+              color: italic
+                  ? scheme.onSurfaceVariant
+                  : const Color(0xFF5B6B8C),
             ),
           ),
         ),
@@ -457,73 +462,132 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     );
   }
 
-  /// Input bar ala mockup: pill putih berisi avatar maskot, field,
-  /// tombol mic, dan tombol kirim biru bulat.
+  /// Transaction composer: floating pill putih berisi maskot kecil,
+  /// TextField multiline, tombol mic lingkaran, dan tombol kirim biru.
   Widget _inputBar(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
     final isLight = Theme.of(context).brightness == Brightness.light;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
         decoration: BoxDecoration(
           color: isLight
               ? Colors.white
               : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
+            color: const Color(0xFFD6E3FF).withValues(alpha: 0.8),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF347AFF).withValues(alpha: 0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const MascotImage.avatar(size: 38),
-            const SizedBox(width: 4),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 6),
+              child: MascotImage.avatar(size: 40),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: _ctrl,
                 focusNode: _focus,
                 onSubmitted: (_) => _submit(),
                 textInputAction: TextInputAction.send,
+                minLines: 2,
+                maxLines: 4,
                 decoration: InputDecoration(
                   hintText: t.chatSheetHint,
                   hintStyle: TextStyle(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 14,
+                    fontSize: 16,
+                    height: 1.35,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 10,
+                    horizontal: 4,
+                    vertical: 8,
                   ),
                 ),
               ),
             ),
-            IconButton(
-              onPressed: _startListening,
-              icon: Icon(
-                Icons.mic_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: _micButton(scheme, isLight),
             ),
-            const SizedBox(width: 2),
-            IconButton(
-              onPressed: _submit,
-              style: IconButton.styleFrom(
-                backgroundColor: DuitQuTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                fixedSize: const Size(46, 46),
-              ),
-              icon: const Icon(Icons.send_rounded, size: 20),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: _sendButton(),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Tombol mic: lingkaran putih dengan border halus.
+  Widget _micButton(ColorScheme scheme, bool isLight) {
+    return InkWell(
+      onTap: _startListening,
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: isLight ? Colors.white : Colors.transparent,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.mic_rounded,
+          color: scheme.onSurfaceVariant,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  /// Tombol kirim: lingkaran Frost Blue dengan ikon paper plane putih.
+  Widget _sendButton() {
+    return InkWell(
+      onTap: _submit,
+      borderRadius: BorderRadius.circular(32),
+      child: Container(
+        width: 58,
+        height: 58,
+        decoration: BoxDecoration(
+          color: const Color(0xFF347AFF),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF347AFF).withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.send_rounded,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );
