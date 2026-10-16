@@ -190,6 +190,24 @@ class AppLocalizations {
   String get deleteAction => _id ? 'Hapus' : 'Delete';
   String get deleted => _id ? 'Transaksi dihapus.' : 'Transaction deleted.';
   String get corrected => _id ? 'Transaksi dikoreksi.' : 'Transaction corrected.';
+  String get notifSetupTitle =>
+      _id ? 'Auto-Catat Notifikasi' : 'Notification Auto-Record';
+  String get notifHowItWorks => _id ? 'Cara kerja' : 'How it works';
+  String get notifExplanation => _id
+      ? 'DuitQu membaca notifikasi dari aplikasi yang kamu pilih, lalu mencatat transaksi secara otomatis. Hanya aplikasi terpilih yang dibaca. Kamu bisa mencabut izin kapan saja via Pengaturan Android.'
+      : 'DuitQu reads notifications from apps you select, then records transactions automatically. Only selected apps are read. You can revoke access anytime via Android Settings.';
+  String get notifStepPermission => _id ? 'Beri izin akses notifikasi' : 'Grant notification access';
+  String get notifStepPermissionDesc => _id
+      ? 'Android akan membuka Pengaturan — aktifkan akses untuk DuitQu.'
+      : 'Android will open Settings — enable access for DuitQu.';
+  String get notifStepApps => _id ? 'Pilih aplikasi sumber' : 'Choose source apps';
+  String get notifStepAppsDesc => _id
+      ? 'Hanya notifikasi dari aplikasi ini yang diproses.'
+      : 'Only notifications from these apps are processed.';
+  String get openSettings => _id ? 'Buka Pengaturan' : 'Open Settings';
+  String get notifPrivacyNote => _id
+      ? 'Catatan: tidak semua notifikasi bisa diproses (mis. notifikasi yang tidak mencantumkan nominal). Data notifikasi hanya disimpan lokal di HP.'
+      : 'Note: not all notifications can be processed (e.g. ones without an amount). Notification data stays on your phone.';
 
   // -- mockup: profil --
   String get profileTitle => _id ? 'Profil & Lainnya' : 'Profile & More';

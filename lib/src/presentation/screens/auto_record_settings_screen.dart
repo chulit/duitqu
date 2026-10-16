@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/auto_record_settings_store.dart';
+import 'notification_setup_screen.dart';
 import '../../domain/entities/transaction_candidate.dart';
 import '../../domain/services/auto_record_policy.dart';
 import '../l10n/app_localizations.dart';
@@ -56,6 +57,18 @@ class _AutoRecordSettingsScreenState
               padding: const EdgeInsets.all(16),
               children: [
                 _ExplanationCard(t: t, scheme: scheme),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const NotificationSetupScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.notifications_outlined),
+                  label: Text(t.notifSetupTitle),
+                ),
                 const SizedBox(height: 16),
                 SwitchListTile(
                   title: Text(t.autoRecordEnabled),
