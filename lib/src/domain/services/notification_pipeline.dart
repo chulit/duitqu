@@ -3,6 +3,7 @@ import '../entities/transaction_candidate.dart';
 import '../repositories/candidate_repository.dart';
 import 'auto_record_policy.dart';
 import 'duplicate_detector.dart';
+import 'notification_parsers.dart';
 
 /// Pipeline: notifikasi Android → kandidat → kebijakan (tiket 09, spec v2).
 ///
@@ -14,13 +15,21 @@ class NotificationPipeline {
   final CandidateRepository _candidateRepo;
   final AutoRecordPolicy _policy;
   final DuplicateDetector _detector;
+  final NotificationParserRegistry _parsers;
+
+  /// Mapping package → nama akun default (dari setup tiket 09).
+  final Map<String, String> sourceAccountMap;
 
   NotificationPipeline(
     this._candidateRepo, [
     AutoRecordPolicy? policy,
     DuplicateDetector? detector,
+    NotificationParserRegistry? parsers,
+    Map<String, String>? sourceAccountMap,
   ])  : _policy = policy ?? AutoRecordPolicy(),
-        _detector = detector ?? DuplicateDetector();
+        _detector = detector ?? DuplicateDetector(),
+        _parsers = parsers ?? NotificationParserRegistry(),
+        sourceAccountMap = sourceAccountMap ?? const {};
 
   /// Proses satu notifikasi menjadi kandidat.
   /// Mengembalikan null bila notifikasi diabaikan (bukan transaksi).
@@ -28,26 +37,28 @@ class NotificationPipeline {
     RawNotification notif,
     AutoRecordSettings settings,
   ) async {
-    // Parse dasar: gabung judul + isi.
-    final text = '${notif.title} ${notif.text}'.trim();
-    if (text.isEmpty) return null;
+    // Parse deterministik per format sumber (tiket 10).
+    final parsed = _parsers.parse(notif);
+    if (parsed == null) return null;
 
-    // Ekstrak nominal sederhana (parser notifikasi detail di tiket 10).
-    final amount = _extractAmount(text);
-    if (amount == null || amount <= 0) return null;
-
+    // failed/pending/refund → kandidat tetap dibuat agar policy
+    // bisa memutuskan ignore dengan alasan jelas.
     var candidate = TransactionCandidate(
       sourceType: CandidateSourceType.androidNotification,
       sourceApp: notif.packageName,
-      sourceReference: '${notif.packageName}:${notif.id}:${notif.postedAt.millisecondsSinceEpoch}',
+      sourceReference:
+          '${notif.packageName}:${notif.id}:${notif.postedAt.millisecondsSinceEpoch}',
       parsedPayload: {
-        'transaction_type': _guessType(text),
-        'amount': amount,
-        'merchant': notif.title,
+        'transaction_type': parsed.transactionType,
+        'amount': parsed.amount,
+        if (parsed.merchant != null) 'merchant': parsed.merchant,
         'description': notif.text,
         'occurred_at': notif.postedAt.millisecondsSinceEpoch,
+        // Nama akun default dari mapping sumber (tiket 09 setup).
+        if (sourceAccountMap[notif.packageName] != null)
+          'account_hint': sourceAccountMap[notif.packageName],
       },
-      confidence: 0.7,
+      confidence: parsed.confidence,
       status: CandidateStatus.parsing,
       receivedAt: DateTime.now(),
     );
@@ -83,24 +94,4 @@ class NotificationPipeline {
     return (await _candidateRepo.getById(id))!;
   }
 
-  int? _extractAmount(String text) {
-    final m = RegExp(
-      r'rp\s?([\d\.,]+)',
-      caseSensitive: false,
-    ).firstMatch(text);
-    if (m == null) return null;
-    final numStr = m.group(1)!.replaceAll('.', '').replaceAll(',', '.');
-    final value = double.tryParse(numStr);
-    return value?.round();
-  }
-
-  String _guessType(String text) {
-    final lower = text.toLowerCase();
-    if (lower.contains('terima') ||
-        lower.contains('masuk') ||
-        lower.contains('diterima')) {
-      return 'income';
-    }
-    return 'expense';
-  }
 }
