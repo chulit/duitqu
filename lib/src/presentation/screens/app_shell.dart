@@ -211,11 +211,13 @@ class _AppShellState extends State<AppShell> {
     ];
     // Sheet chat: compact full-width, bawahnya nempel flush ke navbar
     // ("full nyambung"): tidak ada margin/jarak.
-    // Backdrop hanya meredupkan konten di balik sheet.
+    // Backdrop meredupkan konten; "dock" putih di belakang navbar membuat
+    // seluruh area bawah (sheet + navbar) satu permukaan putih tersambung.
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     // Navbar top di 92px dari bawah (20 margin + 72 tinggi).
     // Sheet dioverlap 2px agar tidak ada hairline gap.
     final sheetBottom = viewInsets > 0 ? viewInsets : 90.0;
+    final surface = Theme.of(context).colorScheme.surface;
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -229,6 +231,15 @@ class _AppShellState extends State<AppShell> {
                   color: Colors.black.withValues(alpha: 0.45),
                 ),
               ),
+            ),
+            // Dock putih di belakang navbar: menutupi backdrop di area
+            // samping & bawah navbar.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 112,
+              child: Container(color: surface),
             ),
             Positioned(
               left: 0,

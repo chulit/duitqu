@@ -116,9 +116,9 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       // Compact mengikuti isi; full-width, sudut atas membulat,
       // sudut bawah siku agar nyambung flush ke navbar.
       constraints: BoxConstraints(maxHeight: maxH * 0.7),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(28),
         ),
       ),
