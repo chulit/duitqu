@@ -209,12 +209,12 @@ class _AppShellState extends State<AppShell> {
         nameStore: _nameStore,
       ),
     ];
-    // Sheet chat compact: mengikuti isi, di atas navbar dengan gap rapat.
-    // Backdrop hanya meredupkan konten body — navbar tetap terang sebagai
-    // bagian dari "bottom action system" bersama composer (sesuai referensi).
+    // Sheet chat: full-width, dari ~8% atas layar sampai bawah layar —
+    // "full nyambung": navbar mengambang di atas sheet sehingga terlihat
+    // sebagai satu permukaan yang tersambung.
+    // Backdrop hanya meredupkan konten di balik sheet.
+    final screenH = MediaQuery.of(context).size.height;
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final sheetBottom =
-        viewInsets > 0 ? viewInsets + 12 : floatingNavFootprint + 2;
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -230,9 +230,10 @@ class _AppShellState extends State<AppShell> {
               ),
             ),
             Positioned(
-              left: 12,
-              right: 12,
-              bottom: sheetBottom,
+              left: 0,
+              right: 0,
+              top: screenH * 0.08,
+              bottom: viewInsets > 0 ? viewInsets : 0,
               // Material: sheet butuh Material ancestor (TextField, InkWell).
               child: Material(
                 type: MaterialType.transparency,
