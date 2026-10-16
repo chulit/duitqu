@@ -16,14 +16,10 @@ import 'mascot_image.dart';
 /// seluruh logika chat tinggal di controller, widget ini hanya render.
 class ChatAssistantSheet extends StatefulWidget {
   final ChatAssistantController controller;
-  final VoidCallback onExpand;
-  final VoidCallback onClose;
 
   const ChatAssistantSheet({
     super.key,
     required this.controller,
-    required this.onExpand,
-    required this.onClose,
   });
 
   @override
@@ -142,9 +138,10 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              // Header: maskot + judul + deskripsi + tombol expand.
+              // Header: maskot + judul + deskripsi (bersih ala mockup,
+              // tanpa tombol — tutup via tap di luar sheet).
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 12, 4),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
                 child: Row(
                   children: [
                     const MascotImage.avatar(size: 52),
@@ -171,16 +168,6 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      tooltip: t.expandChat,
-                      onPressed: widget.onExpand,
-                      icon: const Icon(Icons.open_in_full_rounded),
-                    ),
-                    IconButton(
-                      tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                      onPressed: widget.onClose,
-                      icon: const Icon(Icons.close_rounded),
                     ),
                   ],
                 ),
@@ -426,12 +413,9 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   }
 
   /// Input bar ala mockup: satu pill berisi avatar maskot, field,
-  /// tombol kamera/mic, dan tombol kirim biru bulat.
-  /// Catatan: Scaffold sudah resize body saat keyboard terbuka
-  /// (resizeToAvoidBottomInset), jadi tidak perlu tambah viewInsets manual.
+  /// tombol mic, dan tombol kirim biru bulat.
   Widget _inputBar(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
-    final controller = widget.controller;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Container(
@@ -466,22 +450,6 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                   ),
                 ),
               ),
-            ),
-            IconButton(
-              tooltip: t.scanReceipt,
-              onPressed: controller.candidateRepo == null || controller.scanning
-                  ? null
-                  : () => controller.scanReceipt(t: t),
-              icon: controller.scanning
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      Icons.camera_alt_outlined,
-                      color: scheme.onSurfaceVariant,
-                    ),
             ),
             IconButton(
               onPressed: _startListening,

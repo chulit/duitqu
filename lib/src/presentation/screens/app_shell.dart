@@ -122,9 +122,15 @@ class _AppShellState extends State<AppShell> {
     if (changed == true) setState(() {});
   }
 
-  /// Tombol chat tengah: buka bottom sheet (overlay di atas body,
-  /// navbar tetap terlihat di bawahnya).
-  void _openChat() => setState(() => _chatOpen = true);
+  /// Tombol chat tengah: buka bottom sheet. Kalau sheet sudah terbuka,
+  /// tap lagi untuk expand ke halaman penuh "DuitQu AI".
+  void _openChat() {
+    if (_chatOpen) {
+      _expandChat();
+    } else {
+      setState(() => _chatOpen = true);
+    }
+  }
 
   void _closeChat() => setState(() => _chatOpen = false);
 
@@ -238,8 +244,6 @@ class _AppShellState extends State<AppShell> {
                   alignment: Alignment.bottomCenter,
                   child: ChatAssistantSheet(
                     controller: _chatController,
-                    onExpand: _expandChat,
-                    onClose: _closeChat,
                   ),
                 ),
               ),
