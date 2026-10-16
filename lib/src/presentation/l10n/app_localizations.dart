@@ -181,6 +181,15 @@ class AppLocalizations {
   String daysAgo(int d) => _id ? '$d hari lalu' : '$d days ago';
   String get unknownMerchant => _id ? 'Transaksi' : 'Transaction';
   String get markDuplicate => _id ? 'Duplikat' : 'Duplicate';
+  String get correctionNotFound =>
+      _id ? 'Transaksi yang dimaksud tidak ditemukan.' : 'Transaction not found.';
+  String get confirmDeleteTitle => _id ? 'Hapus transaksi?' : 'Delete transaction?';
+  String confirmDeleteBody(String merchant, int amount) => _id
+      ? 'Hapus "$merchant" sebesar $amount? Tindakan ini tidak bisa dibatalkan.'
+      : 'Delete "$merchant" of $amount? This cannot be undone.';
+  String get deleteAction => _id ? 'Hapus' : 'Delete';
+  String get deleted => _id ? 'Transaksi dihapus.' : 'Transaction deleted.';
+  String get corrected => _id ? 'Transaksi dikoreksi.' : 'Transaction corrected.';
 
   // -- mockup: profil --
   String get profileTitle => _id ? 'Profil & Lainnya' : 'Profile & More';

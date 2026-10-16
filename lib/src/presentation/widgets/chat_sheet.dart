@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/entities/transaction.dart' as domain;
+import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/chat_correction_service.dart';
 import '../../domain/services/transaction_parser.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
@@ -13,12 +16,13 @@ class QuickParse {
   const QuickParse({required this.amount, required this.description});
 }
 
-/// Bottom sheet chat ala mockup: default, ketik, dengar, hasil cepat.
-/// UI saja — simpan membuka sheet tambah dengan prefill.
+/// Bottom sheet chat: parse transaksi baru + koreksi/hapus via chat
+/// (tiket 07, spec v2).
 class ChatSheet extends StatefulWidget {
   final void Function(QuickParse parsed) onSave;
+  final TransactionRepository? txRepo;
 
-  const ChatSheet({super.key, required this.onSave});
+  const ChatSheet({super.key, required this.onSave, this.txRepo});
 
   @override
   State<ChatSheet> createState() => _ChatSheetState();
@@ -61,13 +65,94 @@ class _ChatSheetState extends State<ChatSheet>
     return QuickParse(amount: amount, description: desc);
   }
 
-  void _submit() {
-    final parsed = _parse(_ctrl.text);
+  void _submit() async {
+    final text = _ctrl.text;
+    // 1. Cek perintah koreksi/hapus dulu (tiket 07).
+    final correction = ChatCorrectionService().interpret(
+      text,
+      (t) => TransactionParser().parseChat(t).amount,
+    );
+    if (correction != null && widget.txRepo != null) {
+      await _handleCorrection(correction);
+      return;
+    }
+    // 2. Fallback: parse transaksi baru.
+    final parsed = _parse(text);
     if (parsed == null) return;
     setState(() {
       _parsed = parsed;
       _state = _ChatState.result;
     });
+  }
+
+  Future<void> _handleCorrection(CorrectionCommand cmd) async {
+    final repo = widget.txRepo!;
+    final recent = await repo.list(const TransactionQuery());
+    final target = ChatCorrectionService().resolveTarget(cmd, recent);
+    if (!mounted) return;
+    final t = AppLocalizations.of(context);
+
+    if (target == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.correctionNotFound)),
+      );
+      return;
+    }
+
+    if (cmd.action == CorrectionAction.delete) {
+      // Hapus wajib konfirmasi eksplisit.
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(t.confirmDeleteTitle),
+          content: Text(t.confirmDeleteBody(
+            target.merchant ?? t.unknownMerchant,
+            target.amount,
+          )),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(t.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(t.deleteAction),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) {
+        await repo.delete(target.id!);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.deleted)),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    // Koreksi: update nominal transaksi yang ada.
+    final updated = domain.Transaction(
+      id: target.id,
+      type: target.type,
+      amount: cmd.newAmount ?? target.amount,
+      categoryId: target.categoryId,
+      accountId: target.accountId,
+      toAccountId: target.toAccountId,
+      merchant: target.merchant,
+      date: target.date,
+      note: target.note,
+      createdAt: target.createdAt,
+      items: target.items,
+      origin: target.origin,
+    );
+    await repo.save(updated);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(t.corrected)),
+    );
+    Navigator.pop(context);
   }
 
   void _startListening() {

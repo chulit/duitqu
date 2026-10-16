@@ -68,7 +68,10 @@ class _AppShellState extends State<AppShell> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ChatSheet(onSave: (parsed) => _openAdd(prefill: parsed)),
+      builder: (_) => ChatSheet(
+        onSave: (parsed) => _openAdd(prefill: parsed),
+        txRepo: widget.txRepo,
+      ),
     );
   }
 
