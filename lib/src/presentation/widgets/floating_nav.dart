@@ -6,7 +6,7 @@ import '../theme.dart';
 /// Total footprint vertikal navbar dari bawah layar
 /// (margin atas untuk tombol raised + tinggi container + margin bawah).
 /// Dipakai AppShell agar bottom sheet chat diposisikan tepat di atas navbar.
-const floatingNavFootprint = 114.0;
+const floatingNavFootprint = 108.0;
 const _navHeight = 72.0;
 
 /// Bottom nav ala mockup: Home, Insight, tombol chat raised di tengah,
@@ -36,7 +36,7 @@ class FloatingNav extends StatelessWidget {
     ];
     return Container(
       // Margin atas memberi ruang untuk tombol tengah yang menonjol ke atas.
-      margin: const EdgeInsets.fromLTRB(16, 22, 16, 20),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -78,7 +78,7 @@ class FloatingNav extends StatelessWidget {
           // Tombol chat raised: kontur putih melengkung di belakang
           // lingkaran biru, menonjol ke atas navbar.
           Positioned(
-            top: -18,
+            top: -12,
             left: 0,
             right: 0,
             child: Center(

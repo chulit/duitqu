@@ -111,12 +111,12 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final scheme = Theme.of(context).colorScheme;
     final controller = widget.controller;
     final msgs = controller.messages;
+    final maxH = MediaQuery.of(context).size.height;
     return Container(
-      // Panel besar mengisi ruang Positioned dari AppShell.
+      // Compact mengikuti isi, dibatasi 75% layar.
+      constraints: BoxConstraints(maxHeight: maxH * 0.75),
       decoration: BoxDecoration(
         color: scheme.surface,
-        // Sudut atas sangat membulat ala mockup; bawah juga rounded
-        // karena sheet floating di atas navbar.
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
@@ -129,6 +129,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       child: Stack(
         children: [
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Handle.
               const SizedBox(height: 10),
@@ -141,18 +142,20 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 ),
               ),
               _header(t, scheme),
-              // Area tengah fleksibel: riwayat chat, scroll bila penuh.
-              // Saat kosong, area ini menjaga composer tetap di bawah.
-              Expanded(
-                child: msgs.isEmpty
-                    ? const SizedBox.shrink()
-                    : ListView.builder(
-                        controller: _listController,
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        itemCount: msgs.length,
-                        itemBuilder: (context, i) => _buildMsg(msgs[i], t),
-                      ),
-              ),
+              // Riwayat chat: mengikuti isi sampai 40% layar, scroll bila penuh.
+              if (msgs.isNotEmpty)
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxH * 0.4),
+                    child: ListView.builder(
+                      controller: _listController,
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      itemCount: msgs.length,
+                      itemBuilder: (context, i) => _buildMsg(msgs[i], t),
+                    ),
+                  ),
+                ),
               // Chip saran cepat — hanya sebelum ada pesan user.
               if (!controller.hasUserMessage) _suggestionChipsRow(t),
               _inputBar(t),

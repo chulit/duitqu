@@ -209,14 +209,12 @@ class _AppShellState extends State<AppShell> {
         nameStore: _nameStore,
       ),
     ];
-    // Sheet chat: panel besar dari ~10% atas layar sampai di atas navbar.
+    // Sheet chat compact: mengikuti isi, di atas navbar dengan gap rapat.
     // Backdrop hanya meredupkan konten body — navbar tetap terang sebagai
     // bagian dari "bottom action system" bersama composer (sesuai referensi).
-    final screenH = MediaQuery.of(context).size.height;
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final sheetBottom = viewInsets > 0
-        ? viewInsets + 12
-        : floatingNavFootprint + 12;
+    final sheetBottom =
+        viewInsets > 0 ? viewInsets + 12 : floatingNavFootprint + 2;
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -234,7 +232,6 @@ class _AppShellState extends State<AppShell> {
             Positioned(
               left: 12,
               right: 12,
-              top: screenH * 0.1,
               bottom: sheetBottom,
               // Material: sheet butuh Material ancestor (TextField, InkWell).
               child: Material(
