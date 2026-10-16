@@ -115,8 +115,8 @@ void main() {
     // Kondisi awal: riwayat kosong.
     expect(find.textContaining('Belum ada transaksi'), findsOneWidget);
 
-    // Ketuk pil chat.
-    await tester.tap(find.text('Tanya atau catat...'));
+    // Ketuk tombol chat bulat di tengah nav.
+    await tester.tap(find.byIcon(Icons.auto_awesome_rounded));
     await tester.pumpAndSettle();
 
     // Ketik + kirim.
@@ -129,7 +129,7 @@ void main() {
     expect(find.text('Rp 50.000'), findsOneWidget);
 
     // Simpan -> sheet tambah terbuka dengan prefill.
-    await tester.tap(find.byIcon(Icons.check_rounded));
+    await tester.tap(find.text('Simpan Transaksi'));
     await tester.pumpAndSettle();
     expect(find.text('Catat transaksi'), findsOneWidget);
     final amountField = tester.widget<TextField>(
@@ -143,6 +143,10 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('saveButton')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('saveButton')));
+    await tester.pumpAndSettle();
+
+    // Kembali ke home dari layar chat.
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
 
     // Muncul di riwayat.

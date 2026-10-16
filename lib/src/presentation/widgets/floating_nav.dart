@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 
-/// Floating navbar ala mockup: 4 tab + pil chat AI di tengah.
+/// Bottom nav ala mockup v2: 5 slot — Home, Insight, tombol chat bulat
+/// biru di tengah, Tujuan, Lainnya.
 class FloatingNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -20,20 +21,18 @@ class FloatingNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final labels = [t.navHome, t.navInsight, t.navGoals, t.navMore];
-    final icons = [
-      Icons.home_rounded,
-      Icons.bar_chart_rounded,
-      Icons.flag_rounded,
-      Icons.menu_rounded,
+    final items = [
+      _NavData(t.navHome, Icons.home_rounded),
+      _NavData(t.navInsight, Icons.bar_chart_rounded),
+      _NavData(t.navGoals, Icons.flag_rounded),
+      _NavData(t.navMore, Icons.menu_rounded),
     ];
-    // Tab 0,1 di kiri pil — tab 2,3 di kanan pil.
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
             color: DuitQuTheme.primaryBlue.withValues(alpha: 0.14),
@@ -46,16 +45,16 @@ class FloatingNav extends StatelessWidget {
         children: [
           for (var i = 0; i < 2; i++)
             _NavItem(
-              label: labels[i],
-              icon: icons[i],
+              label: items[i].label,
+              icon: items[i].icon,
               active: currentIndex == i,
               onTap: () => onTap(i),
             ),
-          Expanded(child: _ChatPill(onTap: onChatTap)),
+          _ChatButton(onTap: onChatTap),
           for (var i = 2; i < 4; i++)
             _NavItem(
-              label: labels[i],
-              icon: icons[i],
+              label: items[i].label,
+              icon: items[i].icon,
               active: currentIndex == i,
               onTap: () => onTap(i),
             ),
@@ -63,6 +62,12 @@ class FloatingNav extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NavData {
+  final String label;
+  final IconData icon;
+  const _NavData(this.label, this.icon);
 }
 
 class _NavItem extends StatelessWidget {
@@ -83,71 +88,68 @@ class _NavItem extends StatelessWidget {
     final color = active
         ? DuitQuTheme.primaryBlue
         : Theme.of(context).colorScheme.onSurfaceVariant;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: color,
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ChatPill extends StatelessWidget {
+/// Tombol chat bulat biru di tengah nav.
+class _ChatButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _ChatPill({required this.onTap});
+  const _ChatButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        width: 56,
+        height: 56,
         margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: scheme.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.auto_awesome_rounded,
-              size: 18,
-              color: DuitQuTheme.primaryBlue,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                t.chatHint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-              ),
-            ),
-            const Icon(
-              Icons.mic_rounded,
-              size: 18,
-              color: DuitQuTheme.primaryBlue,
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4DA6FF), Color(0xFF2E9BFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: DuitQuTheme.primaryBlue.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: const Icon(
+          Icons.auto_awesome_rounded,
+          color: Colors.white,
+          size: 26,
         ),
       ),
     );
