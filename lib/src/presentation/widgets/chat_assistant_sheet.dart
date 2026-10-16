@@ -370,44 +370,72 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   }
 
   /// Chip saran cepat (wrap, ~2 baris). Tap = langsung kirim sebagai pesan.
+  /// Chip saran cepat ala mockup: grid 3 kolom x 2 baris, compact.
   Widget _suggestionChipsRow(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 3.4,
         children: [
           for (final (emoji, text) in _suggestionChips)
-            ActionChip(
-              label: Text('$emoji $text'),
-              labelStyle: TextStyle(
-                fontSize: 13,
-                color: scheme.onSurface,
-              ),
-              backgroundColor:
-                  scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-              side: BorderSide.none,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              onPressed: () => _submitText(text),
+            _compactChip(
+              scheme: scheme,
+              label: '$emoji $text',
+              onTap: () => _submitText(text),
             ),
-          ActionChip(
-            label: Text(t.chatChipMore),
-            labelStyle: TextStyle(
-              fontSize: 13,
-              color: scheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-            ),
-            backgroundColor: Colors.transparent,
-            side: BorderSide(color: scheme.outlineVariant),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () => _focus.requestFocus(),
+          _compactChip(
+            scheme: scheme,
+            label: t.chatChipMore,
+            italic: true,
+            outlined: true,
+            onTap: () => _focus.requestFocus(),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Chip compact yang muat 3 kolom: teks mengecil bila kepanjangan.
+  Widget _compactChip({
+    required ColorScheme scheme,
+    required String label,
+    required VoidCallback onTap,
+    bool italic = false,
+    bool outlined = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: outlined
+              ? Colors.transparent
+              : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+          border: outlined
+              ? Border.all(color: scheme.outlineVariant)
+              : null,
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: italic ? scheme.onSurfaceVariant : scheme.onSurface,
+              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+            ),
+          ),
+        ),
       ),
     );
   }
