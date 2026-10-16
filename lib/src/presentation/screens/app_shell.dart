@@ -122,15 +122,8 @@ class _AppShellState extends State<AppShell> {
     if (changed == true) setState(() {});
   }
 
-  /// Tombol chat tengah: buka bottom sheet. Kalau sheet sudah terbuka,
-  /// tap lagi untuk expand ke halaman penuh "DuitQu AI".
-  void _openChat() {
-    if (_chatOpen) {
-      _expandChat();
-    } else {
-      setState(() => _chatOpen = true);
-    }
-  }
+  /// Tombol chat tengah: buka bottom sheet.
+  void _openChat() => setState(() => _chatOpen = true);
 
   void _closeChat() => setState(() => _chatOpen = false);
 
@@ -216,46 +209,52 @@ class _AppShellState extends State<AppShell> {
         nameStore: _nameStore,
       ),
     ];
-    return Scaffold(
-      extendBody: true,
-      // Saat chat terbuka, body diberi padding bawah setinggi navbar agar
-      // bottom sheet diposisikan tepat di atas navbar (tidak menutupinya).
-      body: Padding(
-        padding: EdgeInsets.only(bottom: _chatOpen ? floatingNavFootprint : 0),
-        child: Stack(
-          children: [
-            IndexedStack(index: _index, children: pages),
-            // Overlay chat: background redup di body, navbar tetap terlihat.
-            if (_chatOpen) ...[
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: _closeChat,
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.45),
-                  ),
-                ),
-              ),
-              // Sheet chat compact mengikuti isi (bukan fractional) —
-              // navbar tetap terlihat di bawahnya, dengan margin agar
-              // terlihat floating.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ChatAssistantSheet(
-                    controller: _chatController,
-                  ),
-                ),
-              ),
+    // Backdrop menutupi SEMUA termasuk navbar; sheet diposisikan
+    // di atas navbar (atau keyboard bila terbuka).
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    final sheetBottom =
+        12 + (viewInsets > 0 ? viewInsets : floatingNavFootprint);
+    return Stack(
+      children: [
+        Scaffold(
+          extendBody: true,
+          body: Stack(
+            children: [
+              IndexedStack(index: _index, children: pages),
             ],
-          ],
+          ),
+          bottomNavigationBar: FloatingNav(
+            currentIndex: _index,
+            onTap: (i) => setState(() => _index = i),
+            onChatTap: _openChat,
+          ),
         ),
-      ),
-      bottomNavigationBar: FloatingNav(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
-        onChatTap: _openChat,
-      ),
+        if (_chatOpen) ...[
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _closeChat,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: sheetBottom,
+            // Material transparan: sheet butuh Material ancestor
+            // (TextField, InkWell) karena overlay di luar Scaffold.
+            child: Material(
+              type: MaterialType.transparency,
+              child: ChatAssistantSheet(
+                controller: _chatController,
+                onExpand: _expandChat,
+                onClose: _closeChat,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

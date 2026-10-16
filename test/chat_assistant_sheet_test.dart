@@ -29,6 +29,8 @@ void main() {
             height: 700,
             child: ChatAssistantSheet(
               controller: controller,
+              onExpand: () {},
+              onClose: () {},
             ),
           ),
         ),
