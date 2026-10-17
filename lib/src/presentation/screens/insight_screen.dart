@@ -688,12 +688,12 @@ class _InsightScreenState extends State<InsightScreen> {
       _brightPalette[index % _brightPalette.length];
 
   static const _brightPalette = [
-    Color(0xFF64B5F6), // biru soft
-    Color(0xFF81C784), // hijau soft
-    Color(0xFFBA68C8), // ungu soft
-    Color(0xFFFFD54F), // kuning soft
-    Color(0xFFE57373), // merah coral soft
-    Color(0xFFE0E0E0), // abu terang (Lainnya)
+    Color(0xFF3B82F6), // biru medium
+    Color(0xFF22C55E), // hijau medium
+    Color(0xFFA855F7), // ungu medium
+    Color(0xFFEAB308), // kuning golden
+    Color(0xFFF87171), // merah coral medium
+    Color(0xFFCBD5E1), // abu kebiruan (Lainnya)
   ];
 
   /// Agregasi nominal per kategori untuk satu tipe transaksi.

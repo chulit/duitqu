@@ -54,7 +54,7 @@ class _DonutPainter extends CustomPainter {
         ..color = emptyColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
       canvas.drawCircle(center, radius, paint);
       return;
     }
@@ -67,7 +67,7 @@ class _DonutPainter extends CustomPainter {
         ..color = colors[i % colors.length]
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
         start + gap / 2,
