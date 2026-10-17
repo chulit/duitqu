@@ -15,6 +15,39 @@ String shortAxis(int value) {
   return '$value';
 }
 
+/// Bulatkan interval ke angka "cantik" (1, 2, 2.5, 5 x 10^n).
+int _niceInterval(int rawInterval) {
+  if (rawInterval <= 0) return 1;
+  int magnitude = 1;
+  int v = rawInterval;
+  while (v >= 10) {
+    v ~/= 10;
+    magnitude *= 10;
+  }
+  final normalized = rawInterval / magnitude;
+  double nice;
+  if (normalized <= 1) {
+    nice = 1;
+  } else if (normalized <= 2) {
+    nice = 2;
+  } else if (normalized <= 2.5) {
+    nice = 2.5;
+  } else if (normalized <= 5) {
+    nice = 5;
+  } else {
+    nice = 10;
+  }
+  return (nice * magnitude).round();
+}
+
+/// Bulatkan max ke angka "cantik" agar label Y rapi.
+/// max = niceInterval(max/3) * 3, jadi label selalu bulat.
+int niceCeiling(int value) {
+  if (value <= 0) return 1;
+  final interval = _niceInterval((value / 3).ceil());
+  return interval * 3;
+}
+
 /// Gambar label teks di canvas.
 void paintLabel(
   Canvas canvas,
@@ -33,7 +66,7 @@ void paintLabel(
   tp.paint(canvas, offset);
 }
 
-/// Gambar grid horizontal + label Y (0..max, 4 garis).
+/// Gambar grid horizontal + label Y (0..max, 4 garis) dengan angka cantik.
 void paintYGrid(
   Canvas canvas,
   Size size,
@@ -43,9 +76,10 @@ void paintYGrid(
   double topPad = 8,
   double bottomPad = 24,
 }) {
+  final niceMax = niceCeiling(maxVal);
   final chartH = size.height - bottomPad - topPad;
   final gridPaint = Paint()
-    ..color = textColor.withValues(alpha: 0.15)
+    ..color = textColor.withValues(alpha: 0.12)
     ..strokeWidth = 1;
   for (var i = 0; i <= 3; i++) {
     final y = topPad + chartH - (chartH * i / 3);
@@ -54,7 +88,7 @@ void paintYGrid(
       Offset(size.width, y),
       gridPaint,
     );
-    final label = shortAxis((maxVal * i / 3).round());
+    final label = shortAxis((niceMax * i / 3).round());
     final tp = TextPainter(
       text: TextSpan(
         text: label,
@@ -63,6 +97,32 @@ void paintYGrid(
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, Offset(leftPad - tp.width - 6, y - tp.height / 2));
+  }
+}
+
+/// Gambar grid vertikal tipis (untuk line chart ala mockup).
+void paintVerticalGrid(
+  Canvas canvas,
+  Size size,
+  int count,
+  Color textColor, {
+  double leftPad = 36,
+  double topPad = 8,
+  double bottomPad = 24,
+}) {
+  if (count <= 1) return;
+  final chartW = size.width - leftPad;
+  final chartH = size.height - bottomPad - topPad;
+  final gridPaint = Paint()
+    ..color = textColor.withValues(alpha: 0.08)
+    ..strokeWidth = 1;
+  for (var i = 0; i < count; i++) {
+    final x = leftPad + chartW * i / (count - 1);
+    canvas.drawLine(
+      Offset(x, topPad),
+      Offset(x, topPad + chartH),
+      gridPaint,
+    );
   }
 }
 
@@ -91,37 +151,39 @@ class GroupedBarsPainter extends CustomPainter {
         [...first, ...second].fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
 
-    const leftPad = 36.0;
+    const leftPad = 44.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
     final chartH = size.height - bottomPad - topPad;
+    final niceMax = niceCeiling(maxVal);
 
-    paintYGrid(canvas, size, maxVal, textColor);
+    paintYGrid(canvas, size, maxVal, textColor,
+        leftPad: leftPad, topPad: topPad, bottomPad: bottomPad);
 
     final n = first.length;
     final groupW = chartW / n;
-    final barW = (groupW * 0.32).clamp(8.0, 28.0);
+    final barW = (groupW * 0.42).clamp(12.0, 36.0);
     final firstPaint = Paint()..color = firstColor;
     final secondPaint = Paint()..color = secondColor;
     for (var i = 0; i < n; i++) {
       final cx = leftPad + groupW * i + groupW / 2;
-      final fh = chartH * first[i] / maxVal;
+      final fh = chartH * first[i] / niceMax;
       if (fh > 0) {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(cx - barW - 2, topPad + chartH - fh, barW, fh),
-            const Radius.circular(4),
+            const Radius.circular(6),
           ),
           firstPaint,
         );
       }
-      final sh = chartH * second[i] / maxVal;
+      final sh = chartH * second[i] / niceMax;
       if (sh > 0) {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(cx + 2, topPad + chartH - sh, barW, sh),
-            const Radius.circular(4),
+            const Radius.circular(6),
           ),
           secondPaint,
         );
@@ -166,21 +228,25 @@ class LineChartPainter extends CustomPainter {
     if (values.isEmpty) return;
     final maxVal = values.fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
+    final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 36.0;
+    const leftPad = 44.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
     final chartH = size.height - bottomPad - topPad;
 
-    paintYGrid(canvas, size, maxVal, textColor);
+    paintYGrid(canvas, size, maxVal, textColor,
+        leftPad: leftPad, topPad: topPad, bottomPad: bottomPad);
+    paintVerticalGrid(canvas, size, values.length, textColor,
+        leftPad: leftPad, topPad: topPad, bottomPad: bottomPad);
 
     final n = values.length;
     final pts = <Offset>[];
     for (var i = 0; i < n; i++) {
       final x =
           n == 1 ? leftPad + chartW / 2 : leftPad + chartW * i / (n - 1);
-      final y = topPad + chartH - (chartH * values[i] / maxVal);
+      final y = topPad + chartH - (chartH * values[i] / niceMax);
       pts.add(Offset(x, y));
     }
 
@@ -215,7 +281,7 @@ class LineChartPainter extends CustomPainter {
       linePath,
       Paint()
         ..color = lineColor
-        ..strokeWidth = 2.5
+        ..strokeWidth = 2.0
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
     );
@@ -224,11 +290,11 @@ class LineChartPainter extends CustomPainter {
     final dotFill = Paint()..color = Colors.white;
     final dotStroke = Paint()
       ..color = lineColor
-      ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
     for (final p in pts) {
-      canvas.drawCircle(p, 5, dotFill);
-      canvas.drawCircle(p, 5, dotStroke);
+      canvas.drawCircle(p, 4, dotFill);
+      canvas.drawCircle(p, 4, dotStroke);
     }
 
     // Label.
@@ -261,7 +327,7 @@ class DailyBarsPainter extends CustomPainter {
   DailyBarsPainter({
     required this.values,
     required this.textColor,
-    this.barColor = const Color(0xFFF4A6A6),
+    this.barColor = const Color(0xFFC4B5FD),
   });
 
   @override
@@ -269,8 +335,9 @@ class DailyBarsPainter extends CustomPainter {
     if (values.isEmpty) return;
     final maxVal = values.fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
+    final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 40.0;
+    const leftPad = 44.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -289,7 +356,7 @@ class DailyBarsPainter extends CustomPainter {
     final barW = (slotW * 0.6).clamp(3.0, 12.0);
     final barPaint = Paint()..color = barColor;
     for (var i = 0; i < n; i++) {
-      final h = chartH * values[i] / maxVal;
+      final h = chartH * values[i] / niceMax;
       if (h <= 0) continue;
       final x = leftPad + slotW * i + (slotW - barW) / 2;
       canvas.drawRRect(
