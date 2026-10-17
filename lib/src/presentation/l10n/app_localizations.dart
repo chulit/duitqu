@@ -160,6 +160,15 @@ class AppLocalizations {
   String get insightTitle => _id ? 'Insight' : 'Insight';
   String get expenseThisMonth => _id ? 'Pengeluaran' : 'Expenses';
   String get ofBudget => _id ? 'dari budget' : 'of budget';
+  String get totalExpense => _id ? 'Total Pengeluaran' : 'Total Expenses';
+  String get totalIncome => _id ? 'Total Pemasukan' : 'Total Income';
+  String get expensePerCategory =>
+      _id ? 'Pengeluaran per Kategori' : 'Expenses by Category';
+  String get incomePerCategory =>
+      _id ? 'Pemasukan per Kategori' : 'Income by Category';
+  String get trendExpense => _id ? 'Tren Pengeluaran' : 'Expense Trend';
+  String get trendIncome => _id ? 'Tren Pemasukan' : 'Income Trend';
+  String get fromLastMonth => _id ? 'dari bulan lalu' : 'from last month';
 
   // -- mockup: tujuan --
   String get goalsTitle => _id ? 'Tujuan' : 'Goals';

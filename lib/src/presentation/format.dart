@@ -20,3 +20,22 @@ String formatTanggal(DateTime d, AppLocalizations t) =>
 /// Format bulan panjang sesuai locale. Contoh: Oktober 2026
 String formatBulan(DateTime d, AppLocalizations t) =>
     '${t.longMonth(d.month)} ${d.year}';
+
+/// Format Rupiah singkat untuk ruang sempit (chart).
+/// Contoh: 4350000 -> "Rp 4,35 jt"; 783000 -> "Rp 783 rb"
+String formatRupiahShort(int amount) {
+  if (amount >= 1000000) {
+    final v = amount / 1000000;
+    var s = v.toStringAsFixed(2).replaceAll('.', ',');
+    s = s.replaceAll(RegExp(r',?0+$'), '');
+    return 'Rp $s jt';
+  }
+  if (amount >= 1000) {
+    final v = amount / 1000;
+    final s = v
+        .toStringAsFixed(v == v.roundToDouble() ? 0 : 1)
+        .replaceAll('.', ',');
+    return 'Rp $s rb';
+  }
+  return formatRupiah(amount);
+}

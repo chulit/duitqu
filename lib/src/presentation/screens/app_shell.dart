@@ -202,7 +202,13 @@ class _AppShellState extends State<AppShell> {
           );
         },
       ),
-      InsightScreen(txRepo: widget.txRepo, categoryRepo: widget.categoryRepo),
+      InsightScreen(
+        txRepo: widget.txRepo,
+        accountRepo: widget.accountRepo,
+        categoryRepo: widget.categoryRepo,
+        transferService: widget.transferService,
+        defaults: widget.defaults,
+      ),
       const GoalsScreen(),
       ProfileScreen(
         accountRepo: widget.accountRepo,
