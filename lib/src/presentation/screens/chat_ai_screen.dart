@@ -6,6 +6,7 @@ import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../user_name_store.dart';
+import '../widgets/attachment_menu.dart';
 import '../widgets/chat_message_widgets.dart';
 import '../widgets/mascot_image.dart';
 
@@ -355,6 +356,21 @@ class _ChatAiScreenState extends State<ChatAiScreen>
         ),
         child: Row(
           children: [
+            IconButton(
+              tooltip: t.attachScan,
+              onPressed: () => showAttachmentMenu(
+                context: context,
+                onScan: () => widget.controller.scanReceipt(t: t),
+                onUploadPhoto: () =>
+                    widget.controller.scanReceipt(t: t, source: 'gallery'),
+                onPickFile: () =>
+                    widget.controller.scanReceipt(t: t, source: 'file'),
+              ),
+              icon: Icon(
+                Icons.add_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
             Expanded(
               child: TextField(
                 controller: _textCtrl,

@@ -437,14 +437,23 @@ class ChatAssistantController extends ChangeNotifier {
   }
 
   /// Scan struk via kamera → kartu konfirmasi di chat (bukan Inbox).
-  Future<void> scanReceipt({required AppLocalizations t}) async {
+  /// [source]: 'camera' (default), 'gallery', atau 'file'.
+  Future<void> scanReceipt({
+    required AppLocalizations t,
+    String source = 'camera',
+  }) async {
     final repo = candidateRepo;
     if (repo == null || scanning) return;
     scanning = true;
     notifyListeners();
     _say(t.receiptScanning);
     try {
-      final outcome = await (_scanReceiptFn ?? () => _defaultScan(repo))();
+      final outcome = await (_scanReceiptFn ??
+          () => switch (source) {
+                'gallery' => _defaultGalleryScan(repo),
+                'file' => _defaultFileScan(repo),
+                _ => _defaultScan(repo),
+              })();
       if (outcome.cancelled) return;
       if (outcome.modelNotReady) {
         _say(t.receiptModelNotReady);
@@ -501,6 +510,26 @@ class ChatAssistantController extends ChangeNotifier {
     final service = ReceiptScanService(
       repo,
       capture: ReceiptCapture().captureAndRecognize,
+    );
+    final settings = await AutoRecordSettingsStore().load();
+    return service.scan(settings);
+  }
+
+  Future<ReceiptScanOutcome> _defaultGalleryScan(
+      CandidateRepository repo) async {
+    final service = ReceiptScanService(
+      repo,
+      capture: ReceiptCapture().pickFromGalleryAndRecognize,
+    );
+    final settings = await AutoRecordSettingsStore().load();
+    return service.scan(settings);
+  }
+
+  Future<ReceiptScanOutcome> _defaultFileScan(
+      CandidateRepository repo) async {
+    final service = ReceiptScanService(
+      repo,
+      capture: ReceiptCapture().pickFileAndRecognize,
     );
     final settings = await AutoRecordSettingsStore().load();
     return service.scan(settings);

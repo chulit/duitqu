@@ -14,15 +14,19 @@ class ReceiptCaptureResult {
   final bool modelNotReady;
   final String? error;
 
+  /// Path file gambar (untuk disimpan sebagai bukti, tiket 07).
+  final String? imagePath;
+
   const ReceiptCaptureResult._({
     this.text,
     this.cancelled = false,
     this.modelNotReady = false,
     this.error,
+    this.imagePath,
   });
 
-  const ReceiptCaptureResult.text(String text)
-      : this._(text: text);
+  const ReceiptCaptureResult.text(String text, {String? imagePath})
+      : this._(text: text, imagePath: imagePath);
 
   const ReceiptCaptureResult.cancelled() : this._(cancelled: true);
 

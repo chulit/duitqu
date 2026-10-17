@@ -472,6 +472,12 @@ class AppLocalizations {
       : 'This receipt was already scanned before.';
   String get receiptFailed =>
       _id ? 'Gagal memindai struk. Coba foto lebih jelas.' : 'Failed to scan receipt. Try a clearer photo.';
+  String get attachScan => _id ? 'Scan struk' : 'Scan receipt';
+  String get attachUploadPhoto => _id ? 'Upload foto' : 'Upload photo';
+  String get attachPickFile => _id ? 'Pilih file' : 'Pick file';
+  String get attachComingSoon => _id
+      ? 'Segera hadir di update berikutnya.'
+      : 'Coming soon in the next update.';
   String get chatGreeting => _id
       ? 'Halo! Ada transaksi baru yang mau dicatat? \u{1F60A}'
       : 'Hi! Any new transactions to record? \u{1F60A}';

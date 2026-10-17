@@ -4,6 +4,7 @@ import '../chat/chat_controller.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'attachment_menu.dart';
 import 'chat_message_widgets.dart';
 import 'mascot_image.dart';
 
@@ -89,6 +90,17 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   }
 
   void _submit() => _submitText(_ctrl.text);
+
+  /// Menu lampiran: scan struk / upload foto / pilih file.
+  void _showAttachMenu(AppLocalizations t) {
+    showAttachmentMenu(
+      context: context,
+      onScan: () => widget.controller.scanReceipt(t: t),
+      onUploadPhoto: () =>
+          widget.controller.scanReceipt(t: t, source: 'gallery'),
+      onPickFile: () => widget.controller.scanReceipt(t: t, source: 'file'),
+    );
+  }
 
   void _startListening() {
     setState(() => _listening = true);
@@ -540,7 +552,19 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
               padding: EdgeInsets.only(bottom: 6),
               child: MascotImage.avatar(size: 40),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: IconButton(
+                tooltip: t.attachScan,
+                onPressed: () => _showAttachMenu(t),
+                icon: Icon(
+                  Icons.add_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
             Expanded(
               child: TextField(
                 controller: _ctrl,
