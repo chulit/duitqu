@@ -755,12 +755,22 @@ class _MonthPicker extends StatelessWidget {
           color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          formatBulan(month, t),
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              formatBulan(month, t),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              LucideIcons.chevronDown,
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
@@ -793,12 +803,12 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
   }
 
   static const _monthsId = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
   ];
   static const _monthsEn = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
   @override

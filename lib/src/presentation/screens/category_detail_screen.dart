@@ -342,6 +342,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       painter: MiniBarsPainter(),
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    up ? LucideIcons.trendingUp : LucideIcons.trendingDown,
+                    size: 28,
+                    color: const Color(0xFFEB5757),
+                  ),
                 ],
               ),
             ),
