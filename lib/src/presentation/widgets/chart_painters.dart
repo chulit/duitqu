@@ -72,7 +72,7 @@ void paintYGrid(
   Size size,
   int maxVal,
   Color textColor, {
-  double leftPad = 28,
+  double leftPad = 32,
   double topPad = 8,
   double bottomPad = 24,
 }) {
@@ -106,7 +106,7 @@ void paintVerticalGrid(
   Size size,
   int count,
   Color textColor, {
-  double leftPad = 28,
+  double leftPad = 32,
   double topPad = 8,
   double bottomPad = 24,
 }) {
@@ -151,7 +151,7 @@ class GroupedBarsPainter extends CustomPainter {
         [...first, ...second].fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
 
-    const leftPad = 28.0;
+    const leftPad = 32.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -230,7 +230,7 @@ class LineChartPainter extends CustomPainter {
     if (maxVal <= 0) return;
     final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 28.0;
+    const leftPad = 32.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -337,7 +337,7 @@ class DailyBarsPainter extends CustomPainter {
     if (maxVal <= 0) return;
     final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 28.0;
+    const leftPad = 32.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
