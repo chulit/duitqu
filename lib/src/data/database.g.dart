@@ -70,6 +70,28 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0xFF0E7C5B),
   );
+  static const VerificationMeta _bankNameMeta = const VerificationMeta(
+    'bankName',
+  );
+  @override
+  late final GeneratedColumn<String> bankName = GeneratedColumn<String>(
+    'bank_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountNumberMeta = const VerificationMeta(
+    'accountNumber',
+  );
+  @override
+  late final GeneratedColumn<String> accountNumber = GeneratedColumn<String>(
+    'account_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -89,6 +111,8 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     initialBalance,
     icon,
     color,
+    bankName,
+    accountNumber,
     createdAt,
   ];
   @override
@@ -145,6 +169,21 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         color.isAcceptableOrUnknown(data['color']!, _colorMeta),
       );
     }
+    if (data.containsKey('bank_name')) {
+      context.handle(
+        _bankNameMeta,
+        bankName.isAcceptableOrUnknown(data['bank_name']!, _bankNameMeta),
+      );
+    }
+    if (data.containsKey('account_number')) {
+      context.handle(
+        _accountNumberMeta,
+        accountNumber.isAcceptableOrUnknown(
+          data['account_number']!,
+          _accountNumberMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -186,6 +225,14 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}color'],
       )!,
+      bankName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_name'],
+      ),
+      accountNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_number'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -206,6 +253,8 @@ class Account extends DataClass implements Insertable<Account> {
   final int initialBalance;
   final String icon;
   final int color;
+  final String? bankName;
+  final String? accountNumber;
   final int createdAt;
   const Account({
     required this.id,
@@ -214,6 +263,8 @@ class Account extends DataClass implements Insertable<Account> {
     required this.initialBalance,
     required this.icon,
     required this.color,
+    this.bankName,
+    this.accountNumber,
     required this.createdAt,
   });
   @override
@@ -225,6 +276,12 @@ class Account extends DataClass implements Insertable<Account> {
     map['initial_balance'] = Variable<int>(initialBalance);
     map['icon'] = Variable<String>(icon);
     map['color'] = Variable<int>(color);
+    if (!nullToAbsent || bankName != null) {
+      map['bank_name'] = Variable<String>(bankName);
+    }
+    if (!nullToAbsent || accountNumber != null) {
+      map['account_number'] = Variable<String>(accountNumber);
+    }
     map['created_at'] = Variable<int>(createdAt);
     return map;
   }
@@ -237,6 +294,12 @@ class Account extends DataClass implements Insertable<Account> {
       initialBalance: Value(initialBalance),
       icon: Value(icon),
       color: Value(color),
+      bankName: bankName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankName),
+      accountNumber: accountNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumber),
       createdAt: Value(createdAt),
     );
   }
@@ -253,6 +316,8 @@ class Account extends DataClass implements Insertable<Account> {
       initialBalance: serializer.fromJson<int>(json['initialBalance']),
       icon: serializer.fromJson<String>(json['icon']),
       color: serializer.fromJson<int>(json['color']),
+      bankName: serializer.fromJson<String?>(json['bankName']),
+      accountNumber: serializer.fromJson<String?>(json['accountNumber']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
@@ -266,6 +331,8 @@ class Account extends DataClass implements Insertable<Account> {
       'initialBalance': serializer.toJson<int>(initialBalance),
       'icon': serializer.toJson<String>(icon),
       'color': serializer.toJson<int>(color),
+      'bankName': serializer.toJson<String?>(bankName),
+      'accountNumber': serializer.toJson<String?>(accountNumber),
       'createdAt': serializer.toJson<int>(createdAt),
     };
   }
@@ -277,6 +344,8 @@ class Account extends DataClass implements Insertable<Account> {
     int? initialBalance,
     String? icon,
     int? color,
+    Value<String?> bankName = const Value.absent(),
+    Value<String?> accountNumber = const Value.absent(),
     int? createdAt,
   }) => Account(
     id: id ?? this.id,
@@ -285,6 +354,10 @@ class Account extends DataClass implements Insertable<Account> {
     initialBalance: initialBalance ?? this.initialBalance,
     icon: icon ?? this.icon,
     color: color ?? this.color,
+    bankName: bankName.present ? bankName.value : this.bankName,
+    accountNumber: accountNumber.present
+        ? accountNumber.value
+        : this.accountNumber,
     createdAt: createdAt ?? this.createdAt,
   );
   Account copyWithCompanion(AccountsCompanion data) {
@@ -297,6 +370,10 @@ class Account extends DataClass implements Insertable<Account> {
           : this.initialBalance,
       icon: data.icon.present ? data.icon.value : this.icon,
       color: data.color.present ? data.color.value : this.color,
+      bankName: data.bankName.present ? data.bankName.value : this.bankName,
+      accountNumber: data.accountNumber.present
+          ? data.accountNumber.value
+          : this.accountNumber,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -310,14 +387,25 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('initialBalance: $initialBalance, ')
           ..write('icon: $icon, ')
           ..write('color: $color, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, type, initialBalance, icon, color, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    type,
+    initialBalance,
+    icon,
+    color,
+    bankName,
+    accountNumber,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -328,6 +416,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.initialBalance == this.initialBalance &&
           other.icon == this.icon &&
           other.color == this.color &&
+          other.bankName == this.bankName &&
+          other.accountNumber == this.accountNumber &&
           other.createdAt == this.createdAt);
 }
 
@@ -338,6 +428,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<int> initialBalance;
   final Value<String> icon;
   final Value<int> color;
+  final Value<String?> bankName;
+  final Value<String?> accountNumber;
   final Value<int> createdAt;
   const AccountsCompanion({
     this.id = const Value.absent(),
@@ -346,6 +438,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.initialBalance = const Value.absent(),
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -355,6 +449,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     required int initialBalance,
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
     required int createdAt,
   }) : name = Value(name),
        type = Value(type),
@@ -367,6 +463,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<int>? initialBalance,
     Expression<String>? icon,
     Expression<int>? color,
+    Expression<String>? bankName,
+    Expression<String>? accountNumber,
     Expression<int>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -376,6 +474,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (initialBalance != null) 'initial_balance': initialBalance,
       if (icon != null) 'icon': icon,
       if (color != null) 'color': color,
+      if (bankName != null) 'bank_name': bankName,
+      if (accountNumber != null) 'account_number': accountNumber,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -387,6 +487,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<int>? initialBalance,
     Value<String>? icon,
     Value<int>? color,
+    Value<String?>? bankName,
+    Value<String?>? accountNumber,
     Value<int>? createdAt,
   }) {
     return AccountsCompanion(
@@ -396,6 +498,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       initialBalance: initialBalance ?? this.initialBalance,
       icon: icon ?? this.icon,
       color: color ?? this.color,
+      bankName: bankName ?? this.bankName,
+      accountNumber: accountNumber ?? this.accountNumber,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -421,6 +525,12 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (color.present) {
       map['color'] = Variable<int>(color.value);
     }
+    if (bankName.present) {
+      map['bank_name'] = Variable<String>(bankName.value);
+    }
+    if (accountNumber.present) {
+      map['account_number'] = Variable<String>(accountNumber.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -436,6 +546,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('initialBalance: $initialBalance, ')
           ..write('icon: $icon, ')
           ..write('color: $color, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2725,6 +2837,8 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   required int initialBalance,
   Value<String> icon,
   Value<int> color,
+  Value<String?> bankName,
+  Value<String?> accountNumber,
   required int createdAt,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -2734,6 +2848,8 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<int> initialBalance,
   Value<String> icon,
   Value<int> color,
+  Value<String?> bankName,
+  Value<String?> accountNumber,
   Value<int> createdAt,
 });
 
@@ -2773,6 +2889,16 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get color => $composableBuilder(
     column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2821,6 +2947,16 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -2855,6 +2991,14 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get bankName =>
+      $composableBuilder(column: $table.bankName, builder: (column) => column);
+
+  GeneratedColumn<String> get accountNumber => $composableBuilder(
+    column: $table.accountNumber,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2894,6 +3038,8 @@ class $$AccountsTableTableManager
                 Value<int> initialBalance = const Value.absent(),
                 Value<String> icon = const Value.absent(),
                 Value<int> color = const Value.absent(),
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
@@ -2902,6 +3048,8 @@ class $$AccountsTableTableManager
                 initialBalance: initialBalance,
                 icon: icon,
                 color: color,
+                bankName: bankName,
+                accountNumber: accountNumber,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -2912,6 +3060,8 @@ class $$AccountsTableTableManager
                 required int initialBalance,
                 Value<String> icon = const Value.absent(),
                 Value<int> color = const Value.absent(),
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumber = const Value.absent(),
                 required int createdAt,
               }) => AccountsCompanion.insert(
                 id: id,
@@ -2920,6 +3070,8 @@ class $$AccountsTableTableManager
                 initialBalance: initialBalance,
                 icon: icon,
                 color: color,
+                bankName: bankName,
+                accountNumber: accountNumber,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

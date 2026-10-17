@@ -24,6 +24,8 @@ void main() {
       expect(db.transactions.toAccountId.name, 'to_account_id');
       expect(db.transactions.accountId.name, 'account_id');
       expect(db.accounts.initialBalance.name, 'initial_balance');
+      expect(db.accounts.bankName.name, 'bank_name');
+      expect(db.accounts.accountNumber.name, 'account_number');
       expect(db.transactionItems.qty.name, 'qty');
       expect(db.transactionItems.transactionId.name, 'transaction_id');
     });

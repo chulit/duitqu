@@ -424,6 +424,44 @@ class AppLocalizations {
   String deleteAccountMessage(String name) => _id
       ? 'Akun "$name" beserta seluruh transaksinya akan dihapus.'
       : 'Account "$name" and all its transactions will be deleted.';
+
+  // --- Akun Keuangan (redesign) ---
+  String get accountsTitle => _id ? 'Akun Keuangan' : 'Financial Accounts';
+  String get accountsSubtitle => _id
+      ? 'Kelola semua rekening, e-wallet, dan akun keuangan kamu.'
+      : 'Manage all your bank accounts, e-wallets, and financial accounts.';
+  String get addAccountBtn => _id ? 'Tambah Akun' : 'Add Account';
+  String get selectAccountType =>
+      _id ? 'Pilih Jenis Akun' : 'Select Account Type';
+  String get accountTypeBank => _id ? 'Rekening Bank' : 'Bank Account';
+  String get accountTypeEwallet => _id ? 'E-Wallet' : 'E-Wallet';
+  String get accountTypeCreditCard =>
+      _id ? 'Kartu Kredit' : 'Credit Card';
+  String get accountTypeCash => _id ? 'Tunai' : 'Cash';
+  String get accountTypeOther => _id ? 'Lainnya' : 'Other';
+  String get accountDetailTitle => _id ? 'Detail Akun' : 'Account Details';
+  String get bankLabel => _id ? 'Bank' : 'Bank';
+  String get accountNumberLabel =>
+      _id ? 'Nomor Rekening (opsional)' : 'Account Number (optional)';
+  String get accountNumberHint =>
+      _id ? 'Contoh: 1234 5678 9012 3456' : 'E.g. 1234 5678 9012 3456';
+  String get initialBalanceOptional =>
+      _id ? 'Saldo Awal (opsional)' : 'Initial Balance (optional)';
+  String get colorAndIcon => _id ? 'Warna & Icon' : 'Color & Icon';
+  String get saveAccount => _id ? 'Simpan' : 'Save';
+  String get detailAccountTitle => _id ? 'Detail Akun' : 'Account Detail';
+  String get currentBalance => _id ? 'Saldo Saat Ini' : 'Current Balance';
+  String get accountTypeLabel => _id ? 'Jenis Akun' : 'Account Type';
+  String get colorLabel => _id ? 'Warna' : 'Color';
+  String get balanceHistory => _id ? 'Riwayat Saldo' : 'Balance History';
+  String get editAccountBtn => _id ? 'Edit Akun' : 'Edit Account';
+  String get deleteAccountBtn => _id ? 'Hapus Akun' : 'Delete Account';
+  String get colorBlue => _id ? 'Biru' : 'Blue';
+  String get colorGreen => _id ? 'Hijau' : 'Green';
+  String get colorPurple => _id ? 'Ungu' : 'Purple';
+  String get colorRed => _id ? 'Merah' : 'Red';
+  String get colorOrange => _id ? 'Oranye' : 'Orange';
+  String get colorGray => _id ? 'Abu-abu' : 'Gray';
   String get categoriesTitle => _id ? 'Kategori' : 'Categories';
   String get backupTitle => _id ? 'Backup' : 'Backup';
   String get aboutTitle => _id ? 'Tentang' : 'About';
@@ -771,45 +809,6 @@ class AppLocalizations {
       : 'Goal "$name" and its saved funds will be deleted.';
 
   // -- profil --
-  String get accountTitle => _id ? 'Akun' : 'Account';
-  String get accountSubtitle =>
-      _id ? 'Kelola akun dan preferensi kamu' : 'Manage your account and preferences';
-  String get editProfile => _id ? 'Edit Profil' : 'Edit Profile';
-  String get financeSection => _id ? 'Keuangan' : 'Finance';
-  String get settingsSection => _id ? 'Pengaturan' : 'Settings';
-  String get aboutAppSection => _id ? 'Tentang Aplikasi' : 'About This App';
-  String get accountsMenu => _id ? 'Akun Keuangan' : 'Financial Accounts';
-  String get accountsMenuDesc => _id
-      ? 'Kelola rekening, e-wallet, dan lainnya'
-      : 'Manage bank accounts, e-wallets, and more';
-  String get categoriesMenuDesc => _id
-      ? 'Atur kategori pemasukan dan pengeluaran'
-      : 'Manage income and expense categories';
-  String get paymentMethodMenu => _id ? 'Metode Pembayaran' : 'Payment Methods';
-  String get paymentMethodMenuDesc => _id
-      ? 'Kelola metode pembayaran yang sering digunakan'
-      : 'Manage your frequently used payment methods';
-  String get notifMenu => _id ? 'Notifikasi' : 'Notifications';
-  String get notifMenuDesc => _id
-      ? 'Atur pengingat dan notifikasi penting'
-      : 'Set reminders and important notifications';
-  String get displayMenu => _id ? 'Tampilan' : 'Display';
-  String get displayMenuDesc => _id
-      ? 'Mode aplikasi dan preferensi tampilan'
-      : 'App mode and display preferences';
-  String get privacyMenu => _id ? 'Privasi & Keamanan' : 'Privacy & Security';
-  String get privacyMenuDesc => _id
-      ? 'Kelola data dan keamanan akun'
-      : 'Manage your data and account security';
-  String get otherMenu => _id ? 'Lainnya' : 'Other';
-  String get otherMenuDesc => _id
-      ? 'Bahasa, mata uang, dan pengaturan lainnya'
-      : 'Language, currency, and other settings';
-  String get helpCenterMenu => _id ? 'Pusat Bantuan' : 'Help Center';
-  String get helpCenterMenuDesc => _id
-      ? 'Pertanyaan umum dan panduan penggunaan'
-      : 'FAQs and usage guides';
-  String get logoutMenu => _id ? 'Keluar dari Akun' : 'Log Out';
   String get menuAccounts => _id ? 'Akun & Saldo' : 'Accounts & Balance';
   String get menuCategories => _id ? 'Kategori' : 'Categories';
   String get menuBudget => _id ? 'Budget' : 'Budget';
