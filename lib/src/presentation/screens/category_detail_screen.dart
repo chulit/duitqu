@@ -668,10 +668,13 @@ class _TxRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final title = tx.merchant ?? tx.note ?? '—';
-    // Initial merchant untuk avatar (S = Starbucks).
+    // Initial 2 huruf untuk avatar (IB = Isi Bensin).
+    final words = title.trim().split(RegExp(r'\s+'));
     final initial = title.trim().isEmpty
         ? '—'
-        : title.trim().substring(0, 1).toUpperCase();
+        : words.length > 1
+            ? '${words[0][0]}${words[1][0]}'.toUpperCase()
+            : words[0].substring(0, words[0].length >= 2 ? 2 : 1).toUpperCase();
     // Warna avatar stabil dari nama merchant.
     final avatarColor = _avatarColor(title);
     final row = Padding(
