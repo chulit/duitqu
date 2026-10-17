@@ -15,32 +15,37 @@ String shortAxis(int value) {
   return '$value';
 }
 
-/// Bulatkan max ke angka "cantik" agar label Y rapi (kelipatan 1/2/2.5/5 x 10^n).
-/// Memastikan max/3 juga cantik untuk 4 garis grid.
-int niceCeiling(int value) {
-  if (value <= 0) return 1;
+/// Bulatkan interval ke angka "cantik" (1, 2, 2.5, 5 x 10^n).
+int _niceInterval(int rawInterval) {
+  if (rawInterval <= 0) return 1;
   int magnitude = 1;
-  int v = value;
+  int v = rawInterval;
   while (v >= 10) {
     v ~/= 10;
     magnitude *= 10;
   }
-  // Coba kelipatan cantik dari kecil ke besar.
-  const steps = [1.0, 2.0, 2.5, 5.0, 10.0];
-  for (final s in steps) {
-    final candidate = (s * magnitude).round();
-    if (candidate < value) continue;
-    // Pastikan candidate/3 juga "cantik" (tidak desimal aneh).
-    final third = candidate / 3;
-    final thirdNormalized = third / magnitude;
-    // third cantik jika kelipatan 1, 2, 2.5, 5, 10 (toleransi kecil).
-    const niceThirds = [1.0, 2.0, 2.5, 5.0, 10.0];
-    final isNice = niceThirds.any(
-      (n) => (thirdNormalized - n).abs() < 0.01,
-    );
-    if (isNice) return candidate;
+  final normalized = rawInterval / magnitude;
+  double nice;
+  if (normalized <= 1) {
+    nice = 1;
+  } else if (normalized <= 2) {
+    nice = 2;
+  } else if (normalized <= 2.5) {
+    nice = 2.5;
+  } else if (normalized <= 5) {
+    nice = 5;
+  } else {
+    nice = 10;
   }
-  return 10 * magnitude;
+  return (nice * magnitude).round();
+}
+
+/// Bulatkan max ke angka "cantik" agar label Y rapi.
+/// max = niceInterval(max/3) * 3, jadi label selalu bulat.
+int niceCeiling(int value) {
+  if (value <= 0) return 1;
+  final interval = _niceInterval((value / 3).ceil());
+  return interval * 3;
 }
 
 /// Gambar label teks di canvas.
@@ -322,7 +327,7 @@ class DailyBarsPainter extends CustomPainter {
   DailyBarsPainter({
     required this.values,
     required this.textColor,
-    this.barColor = const Color(0xFFF4A6A6),
+    this.barColor = const Color(0xFFC4B5FD),
   });
 
   @override
@@ -330,8 +335,9 @@ class DailyBarsPainter extends CustomPainter {
     if (values.isEmpty) return;
     final maxVal = values.fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
+    final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 40.0;
+    const leftPad = 44.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -350,7 +356,7 @@ class DailyBarsPainter extends CustomPainter {
     final barW = (slotW * 0.6).clamp(3.0, 12.0);
     final barPaint = Paint()..color = barColor;
     for (var i = 0; i < n; i++) {
-      final h = chartH * values[i] / maxVal;
+      final h = chartH * values[i] / niceMax;
       if (h <= 0) continue;
       final x = leftPad + slotW * i + (slotW - barW) / 2;
       canvas.drawRRect(

@@ -463,41 +463,37 @@ class _InsightScreenState extends State<InsightScreen> {
       monthLabels.add(_shortMonth(d.month, t));
     }
     return [
-      // 1. Grouped bar: Pemasukan vs Pengeluaran.
+      // 1. Grouped bar: Pemasukan vs Pengeluaran (legend di kanan atas).
       _ChartCard(
         title: t.trendIncomeVsExpense,
-        rangeLabel: t.monthsLabel(_trendRange),
-        onRangeTap: () => _pickTrendRange(context, t),
-        child: Column(
+        rangeLabel: '',
+        onRangeTap: null,
+        icon: Icons.trending_up_rounded,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 180,
-              child: CustomPaint(
-                painter: GroupedBarsPainter(
-                  first: _trendIncome,
-                  second: _trendExpense,
-                  labels: monthLabels,
-                  textColor: scheme.onSurfaceVariant,
-                ),
-                child: const SizedBox.expand(),
-              ),
+            _DotLegend(
+              color: const Color(0xFF22C55E),
+              label: t.incomeTab,
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _DotLegend(
-                  color: const Color(0xFF27AE60),
-                  label: t.incomeTab,
-                ),
-                const SizedBox(width: 16),
-                _DotLegend(
-                  color: const Color(0xFFEB5757),
-                  label: t.expenseTab,
-                ),
-              ],
+            const SizedBox(width: 12),
+            _DotLegend(
+              color: const Color(0xFFF87171),
+              label: t.expenseTab,
             ),
           ],
+        ),
+        child: SizedBox(
+          height: 180,
+          child: CustomPaint(
+            painter: GroupedBarsPainter(
+              first: _trendIncome,
+              second: _trendExpense,
+              labels: monthLabels,
+              textColor: scheme.onSurfaceVariant,
+            ),
+            child: const SizedBox.expand(),
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -506,6 +502,7 @@ class _InsightScreenState extends State<InsightScreen> {
         title: t.trendExpenseTitle,
         rangeLabel: t.monthsLabel(_trendRange),
         onRangeTap: () => _pickTrendRange(context, t),
+        icon: Icons.show_chart_rounded,
         child: SizedBox(
           height: 180,
           child: CustomPaint(
@@ -524,6 +521,7 @@ class _InsightScreenState extends State<InsightScreen> {
         title: t.dailyExpenseTitle,
         rangeLabel: formatBulan(_month, t),
         onRangeTap: null,
+        icon: Icons.calendar_month_rounded,
         child: SizedBox(
           height: 160,
           child: CustomPaint(
@@ -1411,12 +1409,16 @@ class _ChartCard extends StatelessWidget {
   final String rangeLabel;
   final VoidCallback? onRangeTap;
   final Widget child;
+  final IconData? icon;
+  final Widget? trailing;
 
   const _ChartCard({
     required this.title,
     required this.rangeLabel,
     required this.onRangeTap,
     required this.child,
+    this.icon,
+    this.trailing,
   });
 
   @override
@@ -1430,6 +1432,10 @@ class _ChartCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: DuitQuTheme.primaryBlue),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     title,
@@ -1439,7 +1445,9 @@ class _ChartCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (onRangeTap != null)
+                if (trailing != null)
+                  trailing!
+                else if (onRangeTap != null)
                   GestureDetector(
                     onTap: onRangeTap,
                     child: Container(
