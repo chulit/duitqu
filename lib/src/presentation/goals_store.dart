@@ -2,45 +2,138 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Model ringan untuk tujuan nabung (UI mockup; v4 boleh ganti).
+/// Kategori tujuan predefinisi (dari mockup).
+enum GoalCategory {
+  rumah('Rumah', '🏠', 0xFFF2994A),
+  laptop('Laptop', '💻', 0xFF9B51E0),
+  liburan('Liburan', '✈️', 0xFF2E9BFF),
+  mobil('Mobil', '🚗', 0xFF2D9CDB),
+  pendidikan('Pendidikan', '🎓', 0xFF27AE60),
+  barangImpian('Barang Impian', '👜', 0xFFEB5757),
+  danaDarurat('Dana Darurat', '🐷', 0xFFF2C94C),
+  lainnya('Lainnya', '⋯', 0xFFBDBDBD);
+
+  final String label;
+  final String emoji;
+  final int color;
+
+  const GoalCategory(this.label, this.emoji, this.color);
+}
+
+/// Model tujuan nabung.
 class SavingGoal {
   final String id;
   final String name;
   final int target;
   final int saved;
-  final int color;
+  final GoalCategory category;
+  final DateTime? deadline;
+  final String? note;
+  /// Riwayat kontribusi: tanggal -> nominal (untuk chart Perkembangan).
+  final List<GoalContribution> contributions;
 
   const SavingGoal({
     required this.id,
     required this.name,
     required this.target,
     required this.saved,
-    required this.color,
+    required this.category,
+    this.deadline,
+    this.note,
+    this.contributions = const [],
   });
+
+  int get color => category.color;
+  double get progress => target <= 0 ? 0 : (saved / target).clamp(0.0, 1.0);
+  bool get isCompleted => saved >= target && target > 0;
+  bool get isExpired {
+    if (deadline == null || isCompleted) return false;
+    final now = DateTime.now();
+    final d = DateTime(deadline!.year, deadline!.month, deadline!.day);
+    final n = DateTime(now.year, now.month, now.day);
+    return d.isBefore(n);
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
     'target': target,
     'saved': saved,
+    'category': category.name,
+    'deadline': deadline?.toIso8601String(),
+    'note': note,
+    'contributions': contributions.map((c) => c.toJson()).toList(),
+    // Kompatibel dengan format lama.
     'color': color,
   };
 
-  factory SavingGoal.fromJson(Map<String, dynamic> j) => SavingGoal(
-    id: j['id'] as String,
-    name: j['name'] as String,
-    target: (j['target'] as num).toInt(),
-    saved: (j['saved'] as num).toInt(),
-    color: (j['color'] as num).toInt(),
-  );
+  factory SavingGoal.fromJson(Map<String, dynamic> j) {
+    final catName = j['category'] as String?;
+    final category = catName == null
+        ? GoalCategory.lainnya
+        : GoalCategory.values.firstWhere(
+            (c) => c.name == catName,
+            orElse: () => GoalCategory.lainnya,
+          );
+    return SavingGoal(
+      id: j['id'] as String,
+      name: j['name'] as String,
+      target: (j['target'] as num).toInt(),
+      saved: (j['saved'] as num).toInt(),
+      category: category,
+      deadline: j['deadline'] == null
+          ? null
+          : DateTime.parse(j['deadline'] as String),
+      note: j['note'] as String?,
+      contributions: (j['contributions'] as List? ?? [])
+          .map((e) => GoalContribution.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 
-  SavingGoal copyWith({int? saved}) => SavingGoal(
-    id: id,
-    name: name,
-    target: target,
-    saved: saved ?? this.saved,
-    color: color,
-  );
+  SavingGoal copyWith({
+    int? saved,
+    int? target,
+    DateTime? deadline,
+    String? note,
+    List<GoalContribution>? contributions,
+  }) =>
+      SavingGoal(
+        id: id,
+        name: name,
+        target: target ?? this.target,
+        saved: saved ?? this.saved,
+        category: category,
+        deadline: deadline ?? this.deadline,
+        note: note ?? this.note,
+        contributions: contributions ?? this.contributions,
+      );
+}
+
+/// Satu kontribusi tabungan.
+class GoalContribution {
+  final DateTime date;
+  final int amount;
+  final String? source; // "Transfer", "Tabungan", dst.
+
+  const GoalContribution({
+    required this.date,
+    required this.amount,
+    this.source,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'date': date.toIso8601String(),
+    'amount': amount,
+    'source': source,
+  };
+
+  factory GoalContribution.fromJson(Map<String, dynamic> j) =>
+      GoalContribution(
+        date: DateTime.parse(j['date'] as String),
+        amount: (j['amount'] as num).toInt(),
+        source: j['source'] as String?,
+      );
 }
 
 const _goalsKey = 'duitqu.goals';
@@ -71,11 +164,30 @@ class GoalsStore {
     await _write(goals);
   }
 
-  Future<void> addFunds(String id, int amount) async {
+  Future<void> addFunds(String id, int amount, {String? source}) async {
     final goals = await list();
     final i = goals.indexWhere((g) => g.id == id);
     if (i < 0) return;
-    goals[i] = goals[i].copyWith(saved: goals[i].saved + amount);
+    final g = goals[i];
+    goals[i] = g.copyWith(
+      saved: g.saved + amount,
+      contributions: [
+        ...g.contributions,
+        GoalContribution(
+          date: DateTime.now(),
+          amount: amount,
+          source: source,
+        ),
+      ],
+    );
+    await _write(goals);
+  }
+
+  Future<void> update(SavingGoal goal) async {
+    final goals = await list();
+    final i = goals.indexWhere((g) => g.id == goal.id);
+    if (i < 0) return;
+    goals[i] = goal;
     await _write(goals);
   }
 
