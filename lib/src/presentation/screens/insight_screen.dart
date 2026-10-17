@@ -234,11 +234,6 @@ class _InsightScreenState extends State<InsightScreen> {
   }) {
     return [
       // Kartu insight maskot (tanpa chevron, sesuai keputusan).
-      _InsightMascotCard(
-        pct: expensePct,
-        topCategory: topExpenseCat,
-      ),
-      const SizedBox(height: 12),
       // Dua mini card: Pemasukan | Pengeluaran.
       Row(
         children: [
@@ -249,6 +244,7 @@ class _InsightScreenState extends State<InsightScreen> {
               pct: incomePct,
               isExpense: false,
               pctColor: _pctColor(incomePct, false, scheme),
+              onTap: () => _setTab(_Tab.kategori),
             ),
           ),
           const SizedBox(width: 12),
@@ -259,6 +255,7 @@ class _InsightScreenState extends State<InsightScreen> {
               pct: expensePct,
               isExpense: true,
               pctColor: _pctColor(expensePct, true, scheme),
+              onTap: () => _setTab(_Tab.kategori),
             ),
           ),
         ],
@@ -341,6 +338,8 @@ class _InsightScreenState extends State<InsightScreen> {
                               total: expenseTotal,
                               amount: expenseEntries[i].value,
                               color: _brightColor(i),
+                              onTap: () => _openCategory(
+                                  context, expenseEntries[i].key),
                             ),
                         ],
                       ),
@@ -627,6 +626,12 @@ class _InsightScreenState extends State<InsightScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // Kartu maskot selalu di atas pill (ala mockup).
+                    _InsightMascotCard(
+                      pct: expensePct,
+                      topCategory: topExpenseCat,
+                    ),
+                    const SizedBox(height: 16),
                     _InsightTabBar(
                       tab: _tab,
                       onChanged: _setTab,
@@ -672,12 +677,12 @@ class _InsightScreenState extends State<InsightScreen> {
       _brightPalette[index % _brightPalette.length];
 
   static const _brightPalette = [
-    Color(0xFF2E9BFF), // biru cerah
-    Color(0xFF27AE60), // hijau
-    Color(0xFF9B51E0), // ungu
-    Color(0xFFF2C94C), // kuning
-    Color(0xFFEB5757), // merah coral
-    Color(0xFFBDBDBD), // abu terang (Lainnya)
+    Color(0xFF64B5F6), // biru soft
+    Color(0xFF81C784), // hijau soft
+    Color(0xFFBA68C8), // ungu soft
+    Color(0xFFFFD54F), // kuning soft
+    Color(0xFFE57373), // merah coral soft
+    Color(0xFFE0E0E0), // abu terang (Lainnya)
   ];
 
   /// Agregasi nominal per kategori untuk satu tipe transaksi.
@@ -828,7 +833,7 @@ class _InsightMascotCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            const MascotImage.tips(size: 96),
+            const MascotImage.chart(size: 96),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -870,12 +875,15 @@ class _MiniTotalCard extends StatelessWidget {
   final bool isExpense;
   final Color pctColor;
 
+  final VoidCallback? onTap;
+
   const _MiniTotalCard({
     required this.label,
     required this.total,
     required this.pct,
     required this.isExpense,
     required this.pctColor,
+    this.onTap,
   });
 
   @override
@@ -883,7 +891,7 @@ class _MiniTotalCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final up = (pct ?? 0) >= 0;
-    return Card(
+    final card = Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -936,6 +944,12 @@ class _MiniTotalCard extends StatelessWidget {
         ),
       ),
     );
+    if (onTap == null) return card;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: card,
+    );
   }
 }
 
@@ -946,17 +960,20 @@ class _LegendDot extends StatelessWidget {
   final int total;
   final Color color;
 
+  final VoidCallback? onTap;
+
   const _LegendDot({
     required this.name,
     required this.amount,
     required this.total,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final pct = total <= 0 ? 0 : (amount / total * 100).round();
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
@@ -987,6 +1004,12 @@ class _LegendDot extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: row,
     );
   }
 }
