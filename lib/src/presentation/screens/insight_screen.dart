@@ -12,10 +12,10 @@ import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
+import '../widgets/chart_painters.dart';
 import '../widgets/donut_chart.dart';
-import '../widgets/empty_state.dart';
 import '../widgets/mascot_image.dart';
-import 'all_transactions_screen.dart';
+import 'category_detail_screen.dart';
 
 /// Insight ala mockup: header, pilih bulan, tab Pengeluaran/Pemasukan,
 /// donut + breakdown kategori, dan kartu tips maskot dari data asli.
@@ -39,19 +39,19 @@ class InsightScreen extends StatefulWidget {
   State<InsightScreen> createState() => _InsightScreenState();
 }
 
-enum _Tab { expense, income }
+enum _Tab { ringkasan, kategori, tren }
 
 class _InsightScreenState extends State<InsightScreen> {
   static const _summaryService = SummaryService();
 
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
-  _Tab _tab = _Tab.expense;
+  _Tab _tab = _Tab.ringkasan;
+  // Mode tampilan tab Kategori: true = Jumlah (nominal), false = Persentase.
+  bool _kategoriByAmount = true;
   final _categories = <int, Category>{};
   List<Transaction> _prevTxs = [];
   bool _ready = false;
   Stream<List<Transaction>>? _txStream;
-  // Total per bulan Jan..bulan terpilih untuk tab aktif (tren).
-  List<int> _trendTotals = [];
 
   Stream<List<Transaction>> _makeStream() {
     return widget.txRepo.watch(
@@ -91,33 +91,63 @@ class _InsightScreenState extends State<InsightScreen> {
   void _setTab(_Tab tab) {
     if (_tab == tab) return;
     setState(() => _tab = tab);
+  }
+
+  void _setTrendRange(int range) {
+    if (_trendRange == range) return;
+    setState(() => _trendRange = range);
     _loadTrend();
   }
 
-  /// Muat total per bulan (Jan s.d. bulan terpilih) untuk tab aktif.
+  // Total per bulan untuk N bulan terakhir (tren).
+  List<int> _trendIncome = [];
+  List<int> _trendExpense = [];
+  // Total pengeluaran per hari untuk bulan terpilih.
+  List<int> _dailyExpense = [];
+  // Rentang tren: 3 / 6 / 12 bulan.
+  int _trendRange = 6;
+
+  /// Muat tren pemasukan & pengeluaran untuk [_trendRange] bulan terakhir,
+  /// plus pengeluaran harian bulan terpilih.
   Future<void> _loadTrend() async {
-    final year = _month.year;
-    final tab = _tab;
+    final range = _trendRange;
+    final endMonth = DateTime(_month.year, _month.month);
+    final startMonth = DateTime(_month.year, _month.month - range + 1);
     final txs = await widget.txRepo.list(
       TransactionQuery(
-        dateFrom: DateTime(year, 1, 1),
-        dateTo: DateTime(year, _month.month + 1).subtract(
+        dateFrom: DateTime(startMonth.year, startMonth.month),
+        dateTo: DateTime(endMonth.year, endMonth.month + 1).subtract(
           const Duration(milliseconds: 1),
         ),
       ),
     );
-    final type = tab == _Tab.expense
-        ? TransactionType.expense
-        : TransactionType.income;
-    final totals = List<int>.filled(_month.month, 0);
+    final income = List<int>.filled(range, 0);
+    final expense = List<int>.filled(range, 0);
     for (final tx in txs) {
-      if (tx.type != type) continue;
-      final m = tx.date.month;
-      if (m >= 1 && m <= _month.month) totals[m - 1] += tx.amount;
+      final idx = (tx.date.year - startMonth.year) * 12 +
+          (tx.date.month - startMonth.month);
+      if (idx < 0 || idx >= range) continue;
+      if (tx.type == TransactionType.income) {
+        income[idx] += tx.amount;
+      } else if (tx.type == TransactionType.expense) {
+        expense[idx] += tx.amount;
+      }
+    }
+    // Harian: agregasi pengeluaran per tanggal di bulan terpilih.
+    final daysInMonth =
+        DateTime(_month.year, _month.month + 1, 0).day;
+    final daily = List<int>.filled(daysInMonth, 0);
+    for (final tx in txs) {
+      if (tx.type != TransactionType.expense) continue;
+      if (tx.date.year == _month.year && tx.date.month == _month.month) {
+        daily[tx.date.day - 1] += tx.amount;
+      }
     }
     if (!mounted) return;
     setState(() {
-      _trendTotals = totals;
+      _trendIncome = income;
+      _trendExpense = expense;
+      _dailyExpense = daily;
     });
   }
 
@@ -167,10 +197,12 @@ class _InsightScreenState extends State<InsightScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AllTransactionsScreen(
+        builder: (_) => CategoryDetailScreen(
+          categoryId: categoryId,
+          month: _month,
           txRepo: widget.txRepo,
-          accountRepo: widget.accountRepo,
           categoryRepo: widget.categoryRepo,
+          accountRepo: widget.accountRepo,
           transferService: widget.transferService,
           defaults: widget.defaults,
         ),
@@ -178,193 +210,453 @@ class _InsightScreenState extends State<InsightScreen> {
     );
   }
 
+  /// Warna badge %: expense naik=merah (boros), turun=hijau (hemat);
+  /// income kebalikannya.
+  Color _pctColor(int? pct, bool isExpense, ColorScheme scheme) {
+    if (pct == null || pct == 0) return scheme.onSurfaceVariant;
+    final up = pct > 0;
+    final good = isExpense ? !up : up;
+    return good ? const Color(0xFF27AE60) : const Color(0xFFEB5757);
+  }
+
+  /// Tab Ringkasan ala mockup: kartu insight + 2 mini card +
+  /// donut pengeluaran + kartu tips.
+  List<Widget> _buildRingkasan({
+    required BuildContext context,
+    required AppLocalizations t,
+    required ColorScheme scheme,
+    required List<MapEntry<int, int>> expenseEntries,
+    required int expenseTotal,
+    required int incomeTotal,
+    required int? expensePct,
+    required int? incomePct,
+    required String? topExpenseCat,
+  }) {
+    return [
+      // Kartu insight maskot (tanpa chevron, sesuai keputusan).
+      _InsightMascotCard(
+        pct: expensePct,
+        topCategory: topExpenseCat,
+      ),
+      const SizedBox(height: 12),
+      // Dua mini card: Pemasukan | Pengeluaran.
+      Row(
+        children: [
+          Expanded(
+            child: _MiniTotalCard(
+              label: t.incomeTab,
+              total: incomeTotal,
+              pct: incomePct,
+              isExpense: false,
+              pctColor: _pctColor(incomePct, false, scheme),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _MiniTotalCard(
+              label: t.expenseTab,
+              total: expenseTotal,
+              pct: expensePct,
+              isExpense: true,
+              pctColor: _pctColor(expensePct, true, scheme),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      if (expenseEntries.isEmpty)
+        _EmptyInsight(t: t)
+      else ...[
+        // Donut pengeluaran (tanpa "Lihat Semua").
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.expensePerCategory,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 150,
+                      height: 150,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          DonutChart(
+                            values: [
+                              for (final e in expenseEntries)
+                                e.value.toDouble(),
+                            ],
+                            colors: [
+                              for (var i = 0;
+                                  i < expenseEntries.length;
+                                  i++)
+                                _brightColor(i),
+                            ],
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                formatRupiah(expenseTotal),
+                                style: DuitQuTheme.amountStyle(
+                                  context,
+                                  16,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                t.totalLabel,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0;
+                              i < expenseEntries.length;
+                              i++)
+                            _LegendDot(
+                              name: _categories[expenseEntries[i].key]
+                                      ?.name ??
+                                  '—',
+                              total: expenseTotal,
+                              amount: expenseEntries[i].value,
+                              color: _brightColor(i),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Kartu tips: tap -> pindah ke tab Kategori.
+        _TipCard(
+          categoryName: topExpenseCat,
+          onTap: () => _setTab(_Tab.kategori),
+        ),
+      ],
+    ];
+  }
+
+  /// Tab Kategori ala mockup: judul + toggle Jumlah/Persentase +
+  /// daftar lengkap + kartu tips.
+  Widget _buildKategori({
+    required BuildContext context,
+    required AppLocalizations t,
+    required ColorScheme scheme,
+    required List<MapEntry<int, int>> entries,
+    required int total,
+    required String? topCategoryName,
+  }) {
+
+
+    if (entries.isEmpty) return _EmptyInsight(t: t);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                t.expensePerCategory,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            _JumlahToggle(
+              byAmount: _kategoriByAmount,
+              onChanged: (v) => setState(() => _kategoriByAmount = v),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              children: [
+                for (var i = 0; i < entries.length; i++)
+                  _KategoriRow(
+                    name: _categories[entries[i].key]?.name ?? '—',
+                    icon: categoryIcon(
+                      _categories[entries[i].key]?.icon,
+                    ),
+                    amount: entries[i].value,
+                    total: total,
+                    color: _brightColor(i),
+                    byAmount: _kategoriByAmount,
+                    onTap: () => _openCategory(context, entries[i].key),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _TipCard(
+          categoryName: topCategoryName,
+          onTap: () {},
+        ),
+      ],
+    );
+  }
+
+  /// Tab Tren ala mockup: 3 kartu chart.
+  List<Widget> _buildTren({
+    required BuildContext context,
+    required AppLocalizations t,
+    required ColorScheme scheme,
+  }) {
+    // Label bulan untuk N bulan terakhir (Mei..Okt).
+    final monthLabels = <String>[];
+    for (var i = _trendRange - 1; i >= 0; i--) {
+      final d = DateTime(_month.year, _month.month - i);
+      monthLabels.add(_shortMonth(d.month, t));
+    }
+    return [
+      // 1. Grouped bar: Pemasukan vs Pengeluaran.
+      _ChartCard(
+        title: t.trendIncomeVsExpense,
+        rangeLabel: t.monthsLabel(_trendRange),
+        onRangeTap: () => _pickTrendRange(context, t),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 180,
+              child: CustomPaint(
+                painter: GroupedBarsPainter(
+                  first: _trendIncome,
+                  second: _trendExpense,
+                  labels: monthLabels,
+                  textColor: scheme.onSurfaceVariant,
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _DotLegend(
+                  color: const Color(0xFF27AE60),
+                  label: t.incomeTab,
+                ),
+                const SizedBox(width: 16),
+                _DotLegend(
+                  color: const Color(0xFFEB5757),
+                  label: t.expenseTab,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      // 2. Line chart: Tren Pengeluaran.
+      _ChartCard(
+        title: t.trendExpenseTitle,
+        rangeLabel: t.monthsLabel(_trendRange),
+        onRangeTap: () => _pickTrendRange(context, t),
+        child: SizedBox(
+          height: 180,
+          child: CustomPaint(
+            painter: LineChartPainter(
+              values: _trendExpense,
+              labels: monthLabels,
+              textColor: scheme.onSurfaceVariant,
+            ),
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      // 3. Daily bars: Pengeluaran per Hari.
+      _ChartCard(
+        title: t.dailyExpenseTitle,
+        rangeLabel: formatBulan(_month, t),
+        onRangeTap: null,
+        child: SizedBox(
+          height: 160,
+          child: CustomPaint(
+            painter: DailyBarsPainter(
+              values: _dailyExpense,
+              textColor: scheme.onSurfaceVariant,
+            ),
+            child: const SizedBox.expand(),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// Nama bulan singkat: Jan, Feb, ... (ID) / Jan, Feb, ... (EN).
+  String _shortMonth(int month, AppLocalizations t) {
+    const id = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    const en = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return t.isIndonesian ? id[month - 1] : en[month - 1];
+  }
+
+  /// Pilih rentang tren: 3 / 6 / 12 bulan.
+  Future<void> _pickTrendRange(BuildContext context, AppLocalizations t) async {
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final r in [3, 6, 12])
+              ListTile(
+                title: Text(t.monthsLabel(r)),
+                trailing: r == _trendRange
+                    ? const Icon(Icons.check_rounded)
+                    : null,
+                onTap: () => Navigator.pop(ctx, r),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) _setTrendRange(picked);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final isExpense = _tab == _Tab.expense;
     return Scaffold(
-      appBar: AppBar(title: Text(t.insightTitle)),
       body: !_ready
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<List<Transaction>>(
               stream: _txStream,
               builder: (context, snapshot) {
                 final txs = snapshot.data ?? [];
-                final byCat = isExpense
-                    ? _summaryService.expenseByCategory(txs)
-                    : _byCategory(txs, TransactionType.income);
-                final prevByCat = isExpense
-                    ? _summaryService.expenseByCategory(_prevTxs)
-                    : _byCategory(_prevTxs, TransactionType.income);
-                final entries = _sortedEntries(byCat);
-                final total = entries.fold<int>(0, (a, e) => a + e.value);
-                final prevTotal = prevByCat.values.fold<int>(0, (a, v) => a + v);
-                final pct = _pctChange(total, prevTotal);
-                // Warna %: expense naik=merah (boros), turun=hijau (hemat);
-                // income kebalikannya.
-                final pctUp = (pct ?? 0) > 0;
-                final pctGood = isExpense ? !pctUp : pctUp;
-                final pctColor = pct == null
-                    ? scheme.onSurfaceVariant
-                    : pct == 0
-                        ? scheme.onSurfaceVariant
-                        : pctGood
-                            ? const Color(0xFF27AE60)
-                            : const Color(0xFFEB5757);
+                final expenseByCat =
+                    _summaryService.expenseByCategory(txs);
+                final incomeByCat =
+                    _byCategory(txs, TransactionType.income);
+                final prevExpenseByCat =
+                    _summaryService.expenseByCategory(_prevTxs);
+                final prevIncomeByCat =
+                    _byCategory(_prevTxs, TransactionType.income);
+
+                final expenseEntries = _sortedEntries(expenseByCat);
+                final expenseTotal =
+                    expenseEntries.fold<int>(0, (a, e) => a + e.value);
+                final incomeTotal =
+                    incomeByCat.values.fold<int>(0, (a, v) => a + v);
+                final prevExpenseTotal =
+                    prevExpenseByCat.values.fold<int>(0, (a, v) => a + v);
+                final prevIncomeTotal =
+                    prevIncomeByCat.values.fold<int>(0, (a, v) => a + v);
+                final expensePct =
+                    _pctChange(expenseTotal, prevExpenseTotal);
+                final incomePct =
+                    _pctChange(incomeTotal, prevIncomeTotal);
+                // Kategori pengeluaran terbesar (untuk kartu insight).
+                final topExpenseCat = expenseEntries.isEmpty
+                    ? null
+                    : _categories[expenseEntries.first.key]?.name;
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
                   children: [
-                    _MonthNav(
-                      month: _month,
-                      onPrev: () => _changeMonth(-1),
-                      onNext: () => _changeMonth(1),
-                    ),
-                    const SizedBox(height: 12),
-                    _TabSwitch(
-                      expenseLabel: t.expenseTab,
-                      incomeLabel: t.incomeTab,
-                      tab: _tab,
-                      onChanged: _setTab,
-                    ),
-                    const SizedBox(height: 16),
-                    // Kartu ringkasan ala mockup: total + % vs bulan lalu + maskot.
-                    _SummaryCard(
-                      title: isExpense ? t.totalExpense : t.totalIncome,
-                      total: total,
-                      pct: pct,
-                      pctColor: pctColor,
-                      pctUp: pctUp,
-                      subtitle: t.fromLastMonth,
-                    ),
-                    const SizedBox(height: 12),
-                    if (entries.isEmpty)
-                      _EmptyInsight(t: t)
-                    else ...[
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    // Header ala mockup: judul + subtitle + pilih bulan.
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isExpense
-                                    ? t.expensePerCategory
-                                    : t.incomePerCategory,
+                                t.insightTitle,
                                 style: const TextStyle(
-                                  fontSize: 17,
+                                  fontSize: 28,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 150,
-                                    height: 150,
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        DonutChart(
-                                          values: [
-                                            for (final e in entries)
-                                              e.value.toDouble(),
-                                          ],
-                                          colors: [
-                                            for (var i = 0;
-                                                i < entries.length;
-                                                i++)
-                                              _colorFor(i, entries[i].key),
-                                          ],
-                                        ),
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              formatRupiahShort(total),
-                                              style: DuitQuTheme.amountStyle(
-                                                context,
-                                                16,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              isExpense
-                                                  ? t.totalExpense
-                                                  : t.totalIncome,
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color:
-                                                    scheme.onSurfaceVariant,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            Text(
-                                              formatBulan(_month, t),
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color:
-                                                    scheme.onSurfaceVariant,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        for (var i = 0;
-                                            i < entries.length;
-                                            i++)
-                                          _LegendRow(
-                                            name:
-                                                _categories[entries[i].key]
-                                                        ?.name ??
-                                                    '—',
-                                            icon: categoryIcon(
-                                              _categories[entries[i].key]?.icon,
-                                            ),
-                                            amount: entries[i].value,
-                                            total: total,
-                                            color: _colorFor(
-                                              i,
-                                              entries[i].key,
-                                            ),
-                                            onTap: () => _openCategory(
-                                              context,
-                                              entries[i].key,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(height: 4),
+                              Text(
+                                t.insightSubtitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: scheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _TrendCard(
-                        title: isExpense ? t.trendExpense : t.trendIncome,
-                        totals: _trendTotals,
-                        selectedMonth: _month.month,
-                        onBarTap: (m) {
-                          final delta = m - _month.month;
-                          if (delta != 0) _changeMonth(delta);
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    MascotTipCard(
-                      message: _tipMessage(t, byCat, prevByCat),
+                        _MonthPicker(
+                          month: _month,
+                          onPrev: () => _changeMonth(-1),
+                          onNext: () => _changeMonth(1),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16),
+                    _InsightTabBar(
+                      tab: _tab,
+                      onChanged: _setTab,
+                    ),
+                    const SizedBox(height: 16),
+                    if (_tab == _Tab.ringkasan)
+                      ..._buildRingkasan(
+                        context: context,
+                        t: t,
+                        scheme: scheme,
+                        expenseEntries: expenseEntries,
+                        expenseTotal: expenseTotal,
+                        incomeTotal: incomeTotal,
+                        expensePct: expensePct,
+                        incomePct: incomePct,
+                        topExpenseCat: topExpenseCat,
+                      ),
+                    if (_tab == _Tab.kategori)
+                      _buildKategori(
+                        context: context,
+                        t: t,
+                        scheme: scheme,
+                        entries: expenseEntries,
+                        total: expenseTotal,
+                        topCategoryName: topExpenseCat,
+                      ),
+                    if (_tab == _Tab.tren)
+                      ..._buildTren(
+                        context: context,
+                        t: t,
+                        scheme: scheme,
+                      ),
                   ],
                 );
               },
@@ -372,20 +664,17 @@ class _InsightScreenState extends State<InsightScreen> {
     );
   }
 
-  /// Warna segmen: pakai warna kategori bila ada, palet cadangan bila tidak.
-  Color _colorFor(int index, int categoryId) {
-    final cat = _categories[categoryId];
-    if (cat != null) return Color(cat.color);
-    return _palette[index % _palette.length];
-  }
+  /// Warna cerah ala mockup, dipetakan menurut urutan legend (desc).
+  Color _brightColor(int index) =>
+      _brightPalette[index % _brightPalette.length];
 
-  static const _palette = [
-    Color(0xFF2E9BFF), // biru
-    Color(0xFFF2994A), // oranye
+  static const _brightPalette = [
+    Color(0xFF2E9BFF), // biru cerah
     Color(0xFF27AE60), // hijau
     Color(0xFF9B51E0), // ungu
-    Color(0xFFEB5757), // merah
-    Color(0xFF2D9CDB), // biru muda
+    Color(0xFFF2C94C), // kuning
+    Color(0xFFEB5757), // merah coral
+    Color(0xFFBDBDBD), // abu terang (Lainnya)
   ];
 
   /// Agregasi nominal per kategori untuk satu tipe transaksi.
@@ -403,59 +692,16 @@ class _InsightScreenState extends State<InsightScreen> {
     return out;
   }
 
-  /// Pesan maskot dari data asli: kenaikan terbesar vs bulan lalu,
-  /// kategori baru, atau pesan netral bila data kurang.
-  String _tipMessage(
-    AppLocalizations t,
-    Map<int, int> cur,
-    Map<int, int> prev,
-  ) {
-    if (cur.isEmpty) return t.insightNoData;
-
-    String nameOf(int id) => _categories[id]?.name ?? '—';
-
-    // Kenaikan persen terbesar di kategori yang sudah ada bulan lalu.
-    String? upName;
-    var upPct = 0;
-    for (final e in cur.entries) {
-      final p = prev[e.key] ?? 0;
-      if (p <= 0) continue;
-      final pct = ((e.value - p) / p * 100).round();
-      if (pct > upPct) {
-        upPct = pct;
-        upName = nameOf(e.key);
-      }
-    }
-    if (upName != null && upPct >= 1) {
-      return _tab == _Tab.expense
-          ? t.insightExpenseUp(upName, upPct)
-          : t.insightIncomeUp(upName, upPct);
-    }
-
-    // Kategori yang baru muncul bulan ini: ambil nominal terbesar.
-    MapEntry<int, int>? newest;
-    for (final e in cur.entries) {
-      if ((prev[e.key] ?? 0) > 0) continue;
-      if (newest == null || e.value > newest.value) newest = e;
-    }
-    if (newest != null) {
-      return t.insightNewCategory(
-        nameOf(newest.key),
-        formatRupiah(newest.value),
-      );
-    }
-
-    return t.insightCalm;
-  }
 }
 
 /// Pilih bulan ala mockup: "<  Juli 2025  >".
-class _MonthNav extends StatelessWidget {
+/// Pilih bulan ala mockup: pill "Oktober 2026" dengan chevron.
+class _MonthPicker extends StatelessWidget {
   final DateTime month;
   final VoidCallback onPrev;
   final VoidCallback onNext;
 
-  const _MonthNav({
+  const _MonthPicker({
     required this.month,
     required this.onPrev,
     required this.onNext,
@@ -464,63 +710,267 @@ class _MonthNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left_rounded),
-          onPressed: onPrev,
-        ),
-        Text(
-          '${t.longMonth(month.month)} ${month.year}',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-        ),
-        IconButton(
-          icon: const Icon(Icons.chevron_right_rounded),
-          onPressed: onNext,
-        ),
-      ],
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left_rounded, size: 20),
+            onPressed: onPrev,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          Text(
+            formatBulan(month, t),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right_rounded, size: 20),
+            onPressed: onNext,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Segmented control ala mockup: pill biru untuk tab aktif, teks abu
-/// untuk tab nonaktif.
-class _TabSwitch extends StatelessWidget {
-  final String expenseLabel;
-  final String incomeLabel;
+/// Tab bar 3 pill ala mockup: Ringkasan | Kategori | Tren.
+class _InsightTabBar extends StatelessWidget {
   final _Tab tab;
   final ValueChanged<_Tab> onChanged;
 
-  const _TabSwitch({
-    required this.expenseLabel,
-    required this.incomeLabel,
+  const _InsightTabBar({
     required this.tab,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    Widget pill(_Tab value, String label) {
+      final active = tab == value;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(value),
+          child: Container(
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active ? DuitQuTheme.primaryBlue : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: active ? Colors.white : DuitQuTheme.inkSoft,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _TabButton(
-              label: expenseLabel,
-              active: tab == _Tab.expense,
-              onTap: () => onChanged(_Tab.expense),
+          pill(_Tab.ringkasan, t.tabRingkasan),
+          pill(_Tab.kategori, t.tabKategori),
+          pill(_Tab.tren, t.tabTren),
+        ],
+      ),
+    );
+  }
+}
+
+/// Kartu insight maskot ala mockup: "Pengeluaranmu naik 15%".
+/// Tanpa chevron (sesuai keputusan).
+class _InsightMascotCard extends StatelessWidget {
+  final int? pct;
+  final String? topCategory;
+
+  const _InsightMascotCard({
+    required this.pct,
+    required this.topCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final pctStr = pct == null ? '—' : '${pct!.abs()}%';
+    final naik = (pct ?? 0) >= 0;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const MascotImage.tips(size: 84),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.insightExpenseChange(pctStr, naik),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    t.insightExpenseDetail(topCategory ?? '—'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mini card total ala mockup: label + nominal + % vs bulan lalu.
+/// Panah selalu ke atas bila naik (sesuai keputusan).
+class _MiniTotalCard extends StatelessWidget {
+  final String label;
+  final int total;
+  final int? pct;
+  final bool isExpense;
+  final Color pctColor;
+
+  const _MiniTotalCard({
+    required this.label,
+    required this.total,
+    required this.pct,
+    required this.isExpense,
+    required this.pctColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final up = (pct ?? 0) >= 0;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: pctColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                    size: 16,
+                    color: pctColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              formatRupiah(total),
+              style: DuitQuTheme.amountStyle(context, 18),
+            ),
+            if (pct != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                t.pctFromLastMonth('${pct!.abs()}%', up),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: pctColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Legend donut ala mockup: dot warna + nama + persen (tanpa nominal).
+class _LegendDot extends StatelessWidget {
+  final String name;
+  final int amount;
+  final int total;
+  final Color color;
+
+  const _LegendDot({
+    required this.name,
+    required this.amount,
+    required this.total,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total <= 0 ? 0 : (amount / total * 100).round();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
-            child: _TabButton(
-              label: incomeLabel,
-              active: tab == _Tab.income,
-              onTap: () => onChanged(_Tab.income),
+            child: Text(
+              name,
+              style: const TextStyle(fontSize: 13),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            '$pct%',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -529,34 +979,65 @@ class _TabSwitch extends StatelessWidget {
   }
 }
 
-class _TabButton extends StatelessWidget {
-  final String label;
-  final bool active;
+/// Kartu tips ala mockup: tap -> pindah ke tab Kategori.
+class _TipCard extends StatelessWidget {
+  final String? categoryName;
   final VoidCallback onTap;
 
-  const _TabButton({
-    required this.label,
-    required this.active,
+  const _TipCard({
+    required this.categoryName,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final t = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        height: 40,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: active ? DuitQuTheme.primaryBlue : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: active ? Colors.white : DuitQuTheme.inkSoft,
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const MascotImage.idea(size: 72),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(text: t.tipBiggestCategoryPrefix),
+                          TextSpan(
+                            text: categoryName ?? '—',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: DuitQuTheme.primaryBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      t.tipSetBudget,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
           ),
         ),
       ),
@@ -564,139 +1045,51 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-
-/// Kartu ringkasan ala mockup: label total, nominal besar,
-/// persen perubahan vs bulan lalu, dan maskot di kanan.
-class _SummaryCard extends StatelessWidget {
-  final String title;
-  final int total;
-  final int? pct;
-  final Color pctColor;
-  final bool pctUp;
-  final String subtitle;
-
-  const _SummaryCard({
-    required this.title,
-    required this.total,
-    required this.pct,
-    required this.pctColor,
-    required this.pctUp,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    formatRupiah(total),
-                    style: DuitQuTheme.amountStyle(context, 28),
-                  ),
-                  const SizedBox(height: 8),
-                  if (pct != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: pctColor.withValues(alpha: 0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            pctUp
-                                ? Icons.arrow_upward_rounded
-                                : Icons.arrow_downward_rounded,
-                            size: 14,
-                            color: pctColor,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${pct!.abs()}%',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: pctColor,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-            const MascotImage.tips(size: 88),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Baris legend ala mockup: ikon bulat berwarna, nama + nominal,
-/// persen di kanan. Bisa di-tap.
-class _LegendRow extends StatelessWidget {
+/// Baris kategori tab Kategori: ikon + nama + nominal + progress + persen.
+/// Tap -> daftar transaksi.
+class _KategoriRow extends StatelessWidget {
   final String name;
   final IconData icon;
   final int amount;
   final int total;
   final Color color;
+  final bool byAmount;
   final VoidCallback onTap;
 
-  const _LegendRow({
+  const _KategoriRow({
     required this.name,
     required this.icon,
     required this.amount,
     required this.total,
     required this.color,
+    required this.byAmount,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final pct = total <= 0 ? 0 : (amount / total * 100).round();
+    final fraction = total <= 0 ? 0.0 : (amount / total).clamp(0.0, 1.0);
+    final pct = (fraction * 100).round();
+    // Mode Jumlah: nominal tegas, persen redup. Mode Persentase: sebaliknya.
+    final primary = byAmount ? formatRupiah(amount) : '$pct%';
+    final secondary = byAmount ? '$pct%' : formatRupiah(amount);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: color,
+                color: color.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.white, size: 18),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,30 +1097,50 @@ class _LegendRow extends StatelessWidget {
                   Text(
                     name,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    formatRupiah(amount),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: fraction,
+                      minHeight: 6,
+                      backgroundColor: scheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   ),
                 ],
               ),
             ),
-            Text(
-              '$pct%',
-              style: DuitQuTheme.amountStyle(
-                context,
-                14,
-                weight: FontWeight.w800,
-              ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  primary,
+                  style: DuitQuTheme.amountStyle(
+                    context,
+                    14,
+                    weight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  secondary,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+              size: 20,
             ),
           ],
         ),
@@ -736,100 +1149,149 @@ class _LegendRow extends StatelessWidget {
   }
 }
 
-/// Bar chart tren bulanan: Jan s.d. bulan terpilih.
-/// Tap bar untuk pindah ke bulan tersebut.
-class _TrendCard extends StatelessWidget {
-  final String title;
-  final List<int> totals;
-  final int selectedMonth;
-  final ValueChanged<int> onBarTap;
+/// Toggle kecil ala mockup: Jumlah | Persentase.
+class _JumlahToggle extends StatelessWidget {
+  final bool byAmount;
+  final ValueChanged<bool> onChanged;
 
-  const _TrendCard({
-    required this.title,
-    required this.totals,
-    required this.selectedMonth,
-    required this.onBarTap,
+  const _JumlahToggle({
+    required this.byAmount,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final maxVal = totals.fold<int>(0, (a, v) => v > a ? v : a);
+    Widget opt(bool value, String label) {
+      final active = byAmount == value;
+      return GestureDetector(
+        onTap: () => onChanged(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: active ? DuitQuTheme.primaryBlue : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final t = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          opt(true, t.kategoriJumlahLabel),
+          opt(false, t.percentLabel),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Kartu chart ala mockup: judul + dropdown range + konten.
+class _ChartCard extends StatelessWidget {
+  final String title;
+  final String rangeLabel;
+  final VoidCallback? onRangeTap;
+  final Widget child;
+
+  const _ChartCard({
+    required this.title,
+    required this.rangeLabel,
+    required this.onRangeTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 180,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (var i = 0; i < totals.length; i++)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => onBarTap(i + 1),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (i + 1 == selectedMonth &&
-                                totals[i] > 0)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  formatRupiahShort(totals[i]),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: DuitQuTheme.primaryBlue,
-                                  ),
-                                ),
-                              ),
-                            Container(
-                              height: maxVal <= 0
-                                  ? 8
-                                  : (totals[i] / maxVal * 120)
-                                          .clamp(8.0, 120.0),
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: i + 1 == selectedMonth
-                                    ? DuitQuTheme.primaryBlue
-                                    : DuitQuTheme.primaryBlue.withValues(
-                                        alpha: 0.18,
-                                      ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (onRangeTap != null)
+                  GestureDetector(
+                    onTap: onRangeTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            rangeLabel,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              t.shortMonth(i + 1),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: scheme.onSurfaceVariant,
-                                fontWeight: i + 1 == selectedMonth
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      rangeLabel,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
+            const SizedBox(height: 12),
+            child,
           ],
         ),
       ),
@@ -837,12 +1299,43 @@ class _TrendCard extends StatelessWidget {
   }
 }
 
-/// Empty state dengan maskot bila bulan ini belum ada transaksi.
+/// Legend dot kecil: "● Pemasukan".
+class _DotLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _DotLegend({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Format singkat untuk sumbu Y: 6jt, 300rb.
 class _EmptyInsight extends StatelessWidget {
   final AppLocalizations t;
-
   const _EmptyInsight({required this.t});
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
