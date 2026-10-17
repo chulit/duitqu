@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/entities/transaction.dart';
+import '../../domain/repositories/account_repository.dart';
+import '../../domain/repositories/category_repository.dart';
+import '../../domain/repositories/transaction_repository.dart';
 import '../chat/chat_controller.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
@@ -7,6 +11,20 @@ import '../theme.dart';
 import 'attachment_menu.dart';
 import 'chat_message_widgets.dart';
 import 'mascot_image.dart';
+import 'scan_edit_sheet.dart';
+
+/// Ref repo untuk form edit scan.
+class _AppRefs {
+  final TransactionRepository txRepo;
+  final CategoryRepository categoryRepo;
+  final AccountRepository accountRepo;
+
+  const _AppRefs({
+    required this.txRepo,
+    required this.categoryRepo,
+    required this.accountRepo,
+  });
+}
 
 /// Isi bottom sheet chat assistant: sapaan maskot, chip saran cepat,
 /// riwayat chat (scroll), dan input bar. Sheet ini ukurannya mengikuti
@@ -20,11 +38,15 @@ class ChatAssistantSheet extends StatefulWidget {
   final VoidCallback onExpand;
   final VoidCallback onClose;
 
+  /// Dipanggil saat tap "Lihat transaksi" (navigasi ke detail).
+  final void Function(Transaction? tx)? onViewTransaction;
+
   const ChatAssistantSheet({
     super.key,
     required this.controller,
     required this.onExpand,
     required this.onClose,
+    this.onViewTransaction,
   });
 
   @override
@@ -99,6 +121,50 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       onUploadPhoto: () =>
           widget.controller.scanReceipt(t: t, source: 'gallery'),
       onPickFile: () => widget.controller.scanReceipt(t: t, source: 'file'),
+    );
+  }
+
+  /// Tombol Edit: form khusus untuk hasil scan, form biasa untuk teks.
+  void _onEdit(ChatMsg msg) {
+    if (msg.isScan) {
+      final app = _appRefs;
+      if (app == null) return;
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (_) => ScanEditSheet(
+          msg: msg,
+          txRepo: app.txRepo,
+          categoryRepo: app.categoryRepo,
+          accountRepo: app.accountRepo,
+          onSaved: (savedTx) => widget.controller.markScanSaved(
+            msg,
+            AppLocalizations.of(context),
+            savedTx,
+          ),
+        ),
+      );
+    } else {
+      widget.controller.editConfirm(msg);
+    }
+  }
+
+  /// Akses repo via ancestor AppShell (disuntik via controller).
+  _AppRefs? get _appRefs {
+    // Controller menyimpan repo; widget membaca dari sana.
+    final c = widget.controller;
+    if (c.txRepo == null ||
+        c.categoryRepo == null ||
+        c.accountRepo == null) {
+      return null;
+    }
+    return _AppRefs(
+      txRepo: c.txRepo!,
+      categoryRepo: c.categoryRepo!,
+      accountRepo: c.accountRepo!,
     );
   }
 
@@ -250,9 +316,99 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
         return UserBubble(text: msg.text);
       case MsgKind.confirm:
         return _confirmCard(msg, t);
+      case MsgKind.success:
+        return _successCard(msg, t);
       case MsgKind.assistant:
         return AssistantBubble(text: msg.text);
     }
+  }
+
+  /// Kartu sukses setelah simpan: ringkasan + Lihat transaksi + Catat lagi.
+  Widget _successCard(ChatMsg msg, AppLocalizations t) {
+    final tx = msg.savedTx;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, right: 24),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: DuitQuTheme.cardDecoration(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF22B07D),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    t.savedSuccess,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (tx != null) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              Text(
+                tx.merchant ?? t.chatNoteDefault,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_smartDate(tx.date, t)} • ${formatRupiah(tx.amount)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => widget.onViewTransaction?.call(tx),
+                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                    label: Text(t.viewTransaction),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      _ctrl.clear();
+                      _focus.requestFocus();
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: Text(t.recordAgain),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Kartu konfirmasi transaksi: judul + nominal + Edit,
@@ -296,7 +452,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 TextButton(
                   onPressed: msg.done
                       ? null
-                      : () => widget.controller.editConfirm(msg),
+                      : () => _onEdit(msg),
                   child: Text(
                     t.edit,
                     style: const TextStyle(color: DuitQuTheme.primaryBlue),

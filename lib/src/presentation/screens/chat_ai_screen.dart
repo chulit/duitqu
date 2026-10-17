@@ -328,6 +328,8 @@ class _ChatAiScreenState extends State<ChatAiScreen>
         );
       case MsgKind.confirm:
         return _ConfirmCard(msg: msg, controller: widget.controller);
+      case MsgKind.success:
+        return AssistantBubble(text: AppLocalizations.of(context).savedSuccess);
       case MsgKind.assistant:
         return AssistantBubble(text: msg.text);
     }
