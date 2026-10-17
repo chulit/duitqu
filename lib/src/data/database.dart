@@ -60,6 +60,10 @@ class Transactions extends Table {
   /// Grup transfer: kedua sisi transfer berbagi nilai ini.
   TextColumn get transferGroupId =>
       text().named('transfer_group_id').nullable()();
+
+  /// Path gambar struk di app-private storage (tiket chat-ai 07).
+  TextColumn get receiptImagePath =>
+      text().named('receipt_image_path').nullable()();
 }
 
 /// Rincian produk dalam satu transaksi belanja (struk). Opsional.
@@ -109,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -124,6 +128,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(transactions, transactions.origin);
         await m.addColumn(transactions, transactions.sourceCandidateId);
         await m.addColumn(transactions, transactions.transferGroupId);
+      }
+      if (from < 4) {
+        await m.addColumn(transactions, transactions.receiptImagePath);
       }
     },
   );

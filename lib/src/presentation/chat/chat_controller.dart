@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../data/auto_record_settings_store.dart';
 import '../../data/receipt_capture.dart';
@@ -31,7 +35,7 @@ class QuickParse {
   });
 }
 
-enum MsgKind { assistant, user, confirm }
+enum MsgKind { assistant, user, confirm, success }
 
 /// Satu entri riwayat chat.
 class ChatMsg {
@@ -51,6 +55,12 @@ class ChatMsg {
   /// True bila dari hasil scan struk/gambar (Edit buka form khusus).
   final bool isScan;
 
+  /// Transaksi yang berhasil disimpan (untuk kartu sukses).
+  final domain.Transaction? savedTx;
+
+  /// Path gambar struk hasil scan (disalin ke app storage saat simpan).
+  final String? imagePath;
+
   ChatMsg({
     required this.kind,
     this.text = '',
@@ -62,6 +72,8 @@ class ChatMsg {
     this.accountId,
     this.accountName,
     this.isScan = false,
+    this.savedTx,
+    this.imagePath,
   }) : occurredAt = occurredAt ?? DateTime.now();
 
   /// True bila semua field penting sudah terisi untuk simpan langsung.
@@ -356,6 +368,11 @@ class ChatAssistantController extends ChangeNotifier {
       'transfer' => domain.TransactionType.transfer,
       _ => domain.TransactionType.expense,
     };
+    // Salin gambar struk ke app-private storage (bila ada).
+    String? receiptPath;
+    if (msg.imagePath != null) {
+      receiptPath = await _storeReceiptImage(msg.imagePath!);
+    }
     final tx = domain.Transaction(
       type: type,
       amount: parsed.amount,
@@ -365,18 +382,52 @@ class ChatAssistantController extends ChangeNotifier {
       date: msg.occurredAt,
       createdAt: DateTime.now(),
       origin: domain.TransactionOrigin.chat,
+      receiptImagePath: receiptPath,
     );
     await txRepo!.save(tx);
     msg.done = true;
-    _say(t.chatSaved);
-    _say(t.chatSavedAsk);
+    // Kartu sukses (ganti bubble teks).
+    _addMsg(ChatMsg(
+      kind: MsgKind.success,
+      savedTx: tx,
+    ));
     notifyListeners();
+  }
+
+  /// Salin gambar struk ke app-private storage, return path baru.
+  Future<String?> _storeReceiptImage(String srcPath) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final receiptsDir = Directory(p.join(dir.path, 'receipts'));
+      if (!await receiptsDir.exists()) {
+        await receiptsDir.create(recursive: true);
+      }
+      final ext = p.extension(srcPath);
+      final name =
+          'struk_${DateTime.now().millisecondsSinceEpoch}$ext';
+      final dest = p.join(receiptsDir.path, name);
+      await File(srcPath).copy(dest);
+      return dest;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Tombol "Edit": buka form yang sama tanpa bubble sukses.
   void editConfirm(ChatMsg msg) {
     msg.done = true;
     onSave(msg.parsed!);
+    notifyListeners();
+  }
+
+  /// Dipanggil setelah form edit scan menyimpan: kartu sukses + refresh.
+  void markScanSaved(
+      ChatMsg msg, AppLocalizations t, domain.Transaction savedTx) {
+    msg.done = true;
+    _addMsg(ChatMsg(
+      kind: MsgKind.success,
+      savedTx: savedTx,
+    ));
     notifyListeners();
   }
 
@@ -499,6 +550,7 @@ class ChatAssistantController extends ChangeNotifier {
         accountId: smartDefaults.accountId,
         accountName: smartDefaults.accountName,
         isScan: true,
+        imagePath: outcome.imagePath,
       ));
     } finally {
       scanning = false;

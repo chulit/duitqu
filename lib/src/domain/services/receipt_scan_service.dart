@@ -48,15 +48,20 @@ class ReceiptScanOutcome {
   final bool modelNotReady;
   final String? error;
 
+  /// Path gambar struk (untuk disimpan, tiket chat-ai 07).
+  final String? imagePath;
+
   const ReceiptScanOutcome._({
     this.candidate,
     this.cancelled = false,
     this.modelNotReady = false,
     this.error,
+    this.imagePath,
   });
 
-  const ReceiptScanOutcome.ok(TransactionCandidate candidate)
-      : this._(candidate: candidate);
+  const ReceiptScanOutcome.ok(TransactionCandidate candidate,
+      {String? imagePath})
+      : this._(candidate: candidate, imagePath: imagePath);
 
   const ReceiptScanOutcome.cancelled() : this._(cancelled: true);
 
@@ -157,6 +162,7 @@ class ReceiptScanService {
     final id = await _candidateRepo.save(candidate);
     return ReceiptScanOutcome.ok(
       (await _candidateRepo.getById(id))!,
+      imagePath: cap.imagePath,
     );
   }
 }

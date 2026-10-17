@@ -253,6 +253,21 @@ class _AppShellState extends State<AppShell> {
                   controller: _chatController,
                   onExpand: _expandChat,
                   onClose: _closeChat,
+                  onViewTransaction: (_) {
+                    _closeChat();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AllTransactionsScreen(
+                          txRepo: widget.txRepo,
+                          accountRepo: widget.accountRepo,
+                          categoryRepo: widget.categoryRepo,
+                          transferService: widget.transferService,
+                          defaults: widget.defaults,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

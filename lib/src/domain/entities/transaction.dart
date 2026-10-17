@@ -38,6 +38,9 @@ class Transaction {
   /// Grup transfer: kedua sisi transfer berbagi nilai ini.
   final String? transferGroupId;
 
+  /// Path gambar struk di app-private storage (tiket chat-ai 07).
+  final String? receiptImagePath;
+
   const Transaction({
     this.id,
     required this.type,
@@ -53,6 +56,7 @@ class Transaction {
     this.origin = TransactionOrigin.manual,
     this.sourceCandidateId,
     this.transferGroupId,
+    this.receiptImagePath,
   });
 }
 

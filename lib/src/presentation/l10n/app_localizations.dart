@@ -71,6 +71,12 @@ class AppLocalizations {
   String get itemsSection =>
       _id ? 'Rincian item (opsional)' : 'Item details (optional)';
   String get addItem => _id ? 'Tambah item' : 'Add item';
+  String get itemsLabel =>
+      _id ? 'Item (opsional)' : 'Items (optional)';
+  String get formIncomplete =>
+      _id ? 'Lengkapi nominal dan akun dulu.' : 'Fill amount and account first.';
+  String get savedSuccess => _id ? 'Berhasil disimpan!' : 'Saved successfully!';
+  String get viewTransaction => _id ? 'Lihat transaksi' : 'View transaction';
   String get itemName => _id ? 'Nama barang' : 'Item name';
   String get price => _id ? 'Harga' : 'Price';
   String get qty => 'Qty';

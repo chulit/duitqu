@@ -40,6 +40,7 @@ class DriftTransactionRepository implements TransactionRepository {
                 origin: Value(t.origin.name),
                 sourceCandidateId: Value(t.sourceCandidateId),
                 transferGroupId: Value(t.transferGroupId),
+                receiptImagePath: Value(t.receiptImagePath),
               ),
             );
       } else {
@@ -59,6 +60,7 @@ class DriftTransactionRepository implements TransactionRepository {
             origin: Value(t.origin.name),
             sourceCandidateId: Value(t.sourceCandidateId),
             transferGroupId: Value(t.transferGroupId),
+            receiptImagePath: Value(t.receiptImagePath),
           ),
         );
         await (_db.delete(
@@ -263,5 +265,6 @@ class DriftTransactionRepository implements TransactionRepository {
     origin: domain.TransactionOrigin.values.byName(r.origin),
     sourceCandidateId: r.sourceCandidateId,
     transferGroupId: r.transferGroupId,
+    receiptImagePath: r.receiptImagePath,
   );
 }
