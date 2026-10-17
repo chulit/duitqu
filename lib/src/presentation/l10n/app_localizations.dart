@@ -169,6 +169,45 @@ class AppLocalizations {
   String get trendExpense => _id ? 'Tren Pengeluaran' : 'Expense Trend';
   String get trendIncome => _id ? 'Tren Pemasukan' : 'Income Trend';
   String get fromLastMonth => _id ? 'dari bulan lalu' : 'from last month';
+  String get insightSubtitle =>
+      _id ? 'Ringkasan keuanganmu dalam satu tampilan.' : 'Your financial summary at a glance.';
+  String get tabRingkasan => _id ? 'Ringkasan' : 'Summary';
+  String get tabKategori => _id ? 'Kategori' : 'Categories';
+  String get tabTren => _id ? 'Tren' : 'Trend';
+  String get totalLabel => _id ? 'Total' : 'Total';
+  String insightExpenseChange(String pct, bool naik) => _id
+      ? 'Pengeluaranmu ${naik ? 'naik' : 'turun'} $pct'
+      : 'Your expenses ${naik ? 'rose' : 'fell'} $pct';
+  String insightExpenseDetail(String category) => _id
+      ? 'dibanding bulan lalu. Terutama untuk $category.'
+      : 'compared to last month. Mostly for $category.';
+  String pctFromLastMonth(String pct, bool up) =>
+      '${up ? '\u2191' : '\u2193'} $pct $fromLastMonth';
+  String get tipBiggestCategoryPrefix =>
+      _id ? 'Kategori terbesar bulan ini adalah ' : 'This month\u2019s biggest category is ';
+  String get tipSetBudget => _id
+      ? 'Coba atur budget agar pengeluaran lebih terkontrol.'
+      : 'Try setting a budget to keep spending under control.';
+  String get kategoriJumlahLabel => _id ? 'Jumlah' : 'Amount';
+  String get percentLabel => _id ? 'Persentase' : 'Percentage';
+  String get trendIncomeVsExpense =>
+      _id ? 'Tren Pemasukan vs Pengeluaran' : 'Income vs Expense Trend';
+  String get trendExpenseTitle =>
+      _id ? 'Tren Pengeluaran' : 'Expense Trend';
+  String get dailyExpenseTitle =>
+      _id ? 'Pengeluaran per Hari' : 'Daily Expenses';
+  String monthsLabel(int n) => _id ? '$n Bulan' : '$n Months';
+  bool get isIndonesian => _id;
+  String shareOfExpense(String pct) =>
+      _id ? '$pct dari total pengeluaran' : '$pct of total expenses';
+  String get upLabel => _id ? 'Naik' : 'Up';
+  String get downLabel => _id ? 'Turun' : 'Down';
+  String expenseChangeBy(String direction, String amount) =>
+      _id ? '$direction $amount' : '$direction $amount';
+  String compareLastMonths(int n) =>
+      _id ? 'Perbandingan $n Bulan Terakhir' : 'Last $n Months Comparison';
+  String get compareWithOthers =>
+      _id ? 'Perbandingan dengan Kategori Lain' : 'Comparison with Other Categories';
 
   // -- mockup: tujuan --
   String get goalsTitle => _id ? 'Tujuan' : 'Goals';
