@@ -188,6 +188,8 @@ class AppLocalizations {
   String get tipSetBudget => _id
       ? 'Coba atur budget agar pengeluaran lebih terkontrol.'
       : 'Try setting a budget to keep spending under control.';
+  String get backToThisMonth =>
+      _id ? 'Kembali ke bulan ini' : 'Back to this month';
   String get kategoriJumlahLabel => _id ? 'Jumlah' : 'Amount';
   String get percentLabel => _id ? 'Persentase' : 'Percentage';
   String get trendIncomeVsExpense =>
@@ -198,99 +200,6 @@ class AppLocalizations {
       _id ? 'Pengeluaran per Hari' : 'Daily Expenses';
   String monthsLabel(int n) => _id ? '$n Bulan' : '$n Months';
   bool get isIndonesian => _id;
-  // Tujuan (goals).
-  String get goalsTitle => _id ? 'Tujuan' : 'Goals';
-  String get goalsSubtitle =>
-      _id ? 'Capai rencana keuanganmu' : 'Achieve your financial plans';
-  String get goalsActive => _id ? 'Tujuan Aktif' : 'Active Goals';
-  String get goalsExpired => _id ? 'Tujuan Kadaluarsa' : 'Expired Goals';
-  String get goalsCompleted => _id ? 'Tujuan Selesai' : 'Completed Goals';
-  String get createGoal => _id ? 'Buat Tujuan Baru' : 'Create New Goal';
-  String get primarySavings => _id ? 'Tabungan Utama' : 'Main Savings';
-  String fromTarget(String target) =>
-      _id ? 'dari $target' : 'of $target';
-  String targetDate(String date) => _id ? 'Target: $date' : 'Target: $date';
-  String goalProgress(String saved, String target) =>
-      _id ? '$saved dari $target' : '$saved of $target';
-  String get completedLabel => _id ? 'Selesai' : 'Done';
-  String get expiredLabel => _id ? 'Kadaluarsa' : 'Expired';
-  String shortMonthYear(DateTime d) =>
-      '${_shortMonthName(d.month)} ${d.year}';
-  String expiredInfo(String date, String late) =>
-      _id ? 'Target: $date  |  $late' : 'Target: $date  |  $late';
-  String lateDays(int n) => _id ? 'Terlambat $n hari' : '$n days overdue';
-  String lateMonths(int n) => _id ? 'Terlambat $n bulan' : '$n months overdue';
-  String lateYearsMonths(int y, int m) =>
-      _id ? 'Terlambat $y thn $m bln' : '$y y $m m overdue';
-  String get goalsEmptyTitle =>
-      _id ? 'Belum ada tujuan' : 'No goals yet';
-  String get goalsEmptySubtitle => _id
-      ? 'Buat tujuan pertamamu dan mulai menabung!'
-      : 'Create your first goal and start saving!';
-  // Form & detail tujuan.
-  String get createGoalTitle => _id ? 'Buat Tujuan' : 'Create Goal';
-  String get editGoalTitle => _id ? 'Ubah Tujuan' : 'Edit Goal';
-  String get createGoalSubtitle => _id
-      ? 'Isi detail tujuan yang ingin kamu capai.'
-      : 'Fill in the details of your goal.';
-  String get goalCategory => _id ? 'Kategori Tujuan' : 'Goal Category';
-  String get goalName => _id ? 'Nama Tujuan' : 'Goal Name';
-  String get goalNameHint => _id ? 'cth: Renovasi Rumah' : 'e.g. Home Renovation';
-  String get goalTargetAmount => _id ? 'Target Nominal' : 'Target Amount';
-  String get goalTargetDate => _id ? 'Target Tanggal' : 'Target Date';
-  String get goalDateHint => _id ? 'Pilih tanggal' : 'Pick a date';
-  String get goalNoteOptional => _id ? 'Catatan (opsional)' : 'Note (optional)';
-  String get goalNoteHint => _id ? 'Tulis catatan...' : 'Write a note...';
-  String get goalSummary => _id ? 'Ringkasan Tujuan' : 'Goal Summary';
-  String get editLabel => _id ? 'Ubah' : 'Edit';
-  String get saveLabel => _id ? 'Simpan' : 'Save';
-  String get cancelLabel => _id ? 'Batal' : 'Cancel';
-  String get yesLabel => _id ? 'Ya' : 'Yes';
-  String get goalFormInvalid => _id
-      ? 'Isi nama dan target nominal yang valid.'
-      : 'Fill in a valid name and target amount.';
-  String get goalTipTitle => _id ? 'Siap membuat tujuan?' : 'Ready to create a goal?';
-  String get goalTipBody => _id
-      ? 'Konsisten menabung sedikit demi sedikit dapat membantumu mencapai tujuan ini!'
-      : 'Saving consistently, little by little, will help you reach this goal!';
-  String get collectedLabel => _id ? 'Terkumpul' : 'Saved';
-  String get targetLabel => _id ? 'Target' : 'Target';
-  String get progressTitle => _id ? 'Perkembangan' : 'Progress';
-  String get addFunds => _id ? 'Tambah Tabungan' : 'Add Savings';
-  String get addFundsTitle => _id ? 'Tambah Tabungan' : 'Add Savings';
-  String fundsAdded(String amount) =>
-      _id ? '$amount ditambahkan!' : '$amount added!';
-  String get editTarget => _id ? 'Ubah Target' : 'Edit Target';
-  String get markComplete => _id ? 'Tandai Selesai' : 'Mark Complete';
-  String get markCompleteTitle => _id ? 'Tandai selesai?' : 'Mark as complete?';
-  String get markCompleteBody => _id
-      ? 'Tujuan akan ditandai selesai dan terkumpul dianggap mencapai target.'
-      : 'The goal will be marked complete.';
-  String get savingsLabel => _id ? 'Tabungan' : 'Savings';
-  String lastMonths(int n) => _id ? '$n Bulan Terakhir' : 'Last $n Months';
-  String goalMotivationTitle(int pct) {
-    if (pct >= 75) {
-      return _id ? 'Sedikit lagi sampai!' : 'Almost there!';
-    }
-    if (pct >= 50) {
-      return _id ? 'Kamu masih di jalur yang baik!' : 'You\u2019re on track!';
-    }
-    return _id ? 'Ayo mulai menabung!' : 'Let\u2019s start saving!';
-  }
-  String get goalMotivationBody => _id
-      ? 'Konsisten menabung sedikit demi sedikit bisa membantumu mencapai tujuan ini.'
-      : 'Saving consistently, little by little, will help you reach this goal.';
-  String _shortMonthName(int m) {
-    const id = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-    ];
-    const en = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return _id ? id[m - 1] : en[m - 1];
-  }
   String shareOfExpense(String pct) =>
       _id ? '$pct dari total pengeluaran' : '$pct of total expenses';
   String get upLabel => _id ? 'Naik' : 'Up';
@@ -301,6 +210,17 @@ class AppLocalizations {
       _id ? 'Perbandingan $n Bulan Terakhir' : 'Last $n Months Comparison';
   String get compareWithOthers =>
       _id ? 'Perbandingan dengan Kategori Lain' : 'Comparison with Other Categories';
+
+  // -- mockup: tujuan --
+  String get goalsTitle => _id ? 'Tujuan' : 'Goals';
+  String get addGoal => _id ? 'Tambah tujuan' : 'Add goal';
+  String get goalName => _id ? 'Nama tujuan' : 'Goal name';
+  String get targetAmount => _id ? 'Target (Rp)' : 'Target (Rp)';
+  String get savedAmount => _id ? 'Terkumpul' : 'Saved';
+  String get addFunds => _id ? 'Tambah dana' : 'Add funds';
+  String get noGoals => _id
+      ? 'Belum ada tujuan. Yuk buat target nabung pertamamu!'
+      : 'No goals yet. Create your first saving target!';
 
   // -- mockup: inbox --
   String get inboxTitle => _id ? 'Inbox Auto-Catat' : 'Auto-Record Inbox';
@@ -743,6 +663,7 @@ class AppLocalizations {
   String get noGoalsSubtitle => _id
       ? 'Mulai menabung untuk rencana besar kamu di masa depan.'
       : 'Start saving for your big plans ahead.';
+  String get createGoal => _id ? 'Buat Tujuan' : 'Create Goal';
   String get deleteGoalTitle => _id ? 'Hapus tujuan?' : 'Delete goal?';
   String deleteGoalMessage(String name) => _id
       ? 'Tujuan "$name" beserta dana terkumpulnya akan dihapus.'

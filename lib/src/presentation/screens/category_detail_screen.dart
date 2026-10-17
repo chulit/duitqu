@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../widgets/chart_painters.dart';
 import 'all_transactions_screen.dart';
+import 'add_transaction_sheet.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/services/transfer_service.dart';
 import '../quick_add_defaults.dart';
@@ -398,49 +399,63 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          // Transaksi terbaru.
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  t.recentTransactions,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AllTransactionsScreen(
-                      txRepo: widget.txRepo,
-                      accountRepo: widget.accountRepo,
-                      categoryRepo: widget.categoryRepo,
-                      transferService: widget.transferService,
-                      defaults: widget.defaults,
+          // Transaksi terbaru: 1 card berisi label + item (ala mockup).
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            t.recentTransactions,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AllTransactionsScreen(
+                                txRepo: widget.txRepo,
+                                accountRepo: widget.accountRepo,
+                                categoryRepo: widget.categoryRepo,
+                                transferService: widget.transferService,
+                                defaults: widget.defaults,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(t.seeAll),
+                              const Icon(Icons.chevron_right_rounded, size: 18),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(t.seeAll),
-                    const Icon(Icons.chevron_right_rounded, size: 18),
+                  for (var i = 0; i < recent5.length; i++) ...[
+                    _TxRow(
+                      tx: recent5[i],
+                      onTap: () => _editTransaction(context, recent5[i]),
+                    ),
+                    if (i < recent5.length - 1)
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        color: const Color(0xFFF0F0F0),
+                      ),
                   ],
-                ),
-              ),
-            ],
-          ),
-          Card(
-            child: Column(
-              children: [
-                for (var i = 0; i < recent5.length; i++) ...[
-                  _TxRow(tx: recent5[i]),
-                  if (i < recent5.length - 1) const Divider(height: 1),
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -458,6 +473,23 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return t.isIndonesian ? id[month - 1] : en[month - 1];
+  }
+
+  /// Buka form edit untuk transaksi yang di-tap.
+  Future<void> _editTransaction(
+      BuildContext context, Transaction tx) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AddTransactionSheet(
+        txRepo: widget.txRepo,
+        accountRepo: widget.accountRepo,
+        categoryRepo: widget.categoryRepo,
+        transferService: widget.transferService,
+        defaults: widget.defaults,
+        existing: tx,
+      ),
+    );
   }
 
   Future<void> _pickTrendRange(BuildContext context, AppLocalizations t) async {
@@ -627,8 +659,9 @@ class _DotLegend extends StatelessWidget {
 /// Baris transaksi: initial merchant + nama + tanggal + nominal.
 class _TxRow extends StatelessWidget {
   final Transaction tx;
+  final VoidCallback? onTap;
 
-  const _TxRow({required this.tx});
+  const _TxRow({required this.tx, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -640,7 +673,7 @@ class _TxRow extends StatelessWidget {
         : title.trim().substring(0, 1).toUpperCase();
     // Warna avatar stabil dari nama merchant.
     final avatarColor = _avatarColor(title);
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
@@ -669,7 +702,7 @@ class _TxRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                   maxLines: 1,
@@ -700,6 +733,11 @@ class _TxRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      child: row,
     );
   }
 
