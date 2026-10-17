@@ -1,3 +1,6 @@
+// ignore_for_file: unused_element, unused_field
+// Helper backup/sinkronisasi & auto-record di bawah sengaja dipertahankan
+// untuk wiring ulang berikutnya (tidak ditampilkan di UI mockup saat ini).
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -14,19 +17,17 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../backup_sheet.dart';
 import '../l10n/app_localizations.dart';
-import '../theme.dart';
 import '../locale_store.dart';
 import '../theme_mode_store.dart';
 import '../user_name_store.dart';
 import '../widgets/mascot_image.dart';
 import 'accounts_screen.dart';
 import 'categories_screen.dart';
-import 'goals_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _autoRecordKey = 'duitqu.auto_record';
 
-/// Profil & Lainnya ala mockup: menu ke semua bagian aplikasi.
+/// Halaman Akun ala mockup: header, kartu profil, menu berkelompok, logout.
 class ProfileScreen extends StatefulWidget {
   final AccountRepository accountRepo;
   final CategoryRepository categoryRepo;
@@ -314,252 +315,311 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.profileTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.settings),
-            tooltip: t.menuSettings,
-            onPressed: () => _push(const AutoRecordSettingsScreen()),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
-        children: [
-          Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DuitQuTheme.radius),
-              onTap: _editName,
-              child: Padding(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
+          children: [
+            // Header: judul + gear.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.accountTitle,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t.accountSubtitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(LucideIcons.settings, size: 22),
+                    tooltip: t.menuSettings,
+                    onPressed: () =>
+                        _push(const AutoRecordSettingsScreen()),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Kartu profil.
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F2FF),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const MascotImage.avatar(size: 72),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ValueListenableBuilder<String?>(
+                          valueListenable: widget.nameStore,
+                          builder: (context, name, _) => Text(
+                            (name == null || name.isEmpty)
+                                ? 'Dinda'
+                                : name,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          // Placeholder: belum ada auth.
+                          'dinda@gmail.com',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: _editName,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  LucideIcons.pencil,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  t.editProfile,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  LucideIcons.chevronRight,
+                                  size: 16,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Section Keuangan.
+            _SectionTitle(t.financeSection),
+            const SizedBox(height: 8),
+            _MenuCard(
+              children: [
+                _MenuRow(
+                  icon: LucideIcons.wallet,
+                  iconColor: const Color(0xFF2E9BFF),
+                  title: t.accountsMenu,
+                  subtitle: t.accountsMenuDesc,
+                  onTap: () => _push(
+                    AccountsScreen(
+                      accountRepo: widget.accountRepo,
+                      txRepo: widget.txRepo,
+                    ),
+                  ),
+                ),
+                _MenuRow(
+                  icon: LucideIcons.refreshCw,
+                  iconColor: const Color(0xFF27AE60),
+                  title: t.menuCategories,
+                  subtitle: t.categoriesMenuDesc,
+                  onTap: () => _push(
+                    CategoriesScreen(categoryRepo: widget.categoryRepo),
+                  ),
+                ),
+                _MenuRow(
+                  icon: LucideIcons.tag,
+                  iconColor: const Color(0xFF9B51E0),
+                  title: t.paymentMethodMenu,
+                  subtitle: t.paymentMethodMenuDesc,
+                  onTap: _comingSoon,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Section Pengaturan.
+            _SectionTitle(t.settingsSection),
+            const SizedBox(height: 8),
+            _MenuCard(
+              children: [
+                _MenuRow(
+                  icon: LucideIcons.bell,
+                  iconColor: const Color(0xFFF2994A),
+                  title: t.notifMenu,
+                  subtitle: t.notifMenuDesc,
+                  onTap: _comingSoon,
+                ),
+                _MenuRow(
+                  icon: LucideIcons.palette,
+                  iconColor: const Color(0xFF2E9BFF),
+                  title: t.displayMenu,
+                  subtitle: t.displayMenuDesc,
+                  onTap: _pickTheme,
+                ),
+                _MenuRow(
+                  icon: LucideIcons.shieldCheck,
+                  iconColor: const Color(0xFF27AE60),
+                  title: t.privacyMenu,
+                  subtitle: t.privacyMenuDesc,
+                  onTap: _comingSoon,
+                ),
+                _MenuRow(
+                  icon: LucideIcons.settings,
+                  iconColor: const Color(0xFFBDBDBD),
+                  title: t.otherMenu,
+                  subtitle: t.otherMenuDesc,
+                  onTap: _pickLanguage,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Section Tentang Aplikasi.
+            _SectionTitle(t.aboutAppSection),
+            const SizedBox(height: 8),
+            _MenuCard(
+              children: [
+                _MenuRow(
+                  icon: LucideIcons.info,
+                  iconColor: const Color(0xFF2E9BFF),
+                  title: t.menuAbout,
+                  subtitle: '${t.versionLabel} 1.0.0',
+                  onTap: _showAbout,
+                ),
+                _MenuRow(
+                  icon: LucideIcons.helpCircle,
+                  iconColor: const Color(0xFF9B51E0),
+                  title: t.helpCenterMenu,
+                  subtitle: t.helpCenterMenuDesc,
+                  onTap: _comingSoon,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Logout.
+            InkWell(
+              onTap: _comingSoon,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8E8),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: DuitQuTheme.primaryBlue.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(child: MascotImage.avatar(size: 40)),
+                    const Icon(
+                      LucideIcons.logOut,
+                      size: 22,
+                      color: Color(0xFFEB5757),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ValueListenableBuilder<String?>(
-                            valueListenable: widget.nameStore,
-                            builder: (context, name, _) => Text(
-                              (name == null || name.isEmpty)
-                                  ? t.setName
-                                  : name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 17,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            t.userNameHint,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    Text(
+                      t.logoutMenu,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFEB5757),
                       ),
-                    ),
-                    Icon(
-                      LucideIcons.chevronRight,
-                      color: scheme.onSurfaceVariant,
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _MenuCard(
-            children: [
-              _MenuRow(
-                icon: LucideIcons.wallet,
-                iconColor: const Color(0xFFF2994A),
-                label: t.menuAccounts,
-                onTap: () => _push(
-                  AccountsScreen(
-                    accountRepo: widget.accountRepo,
-                    txRepo: widget.txRepo,
-                  ),
-                ),
-              ),
-              _MenuRow(
-                icon: LucideIcons.layoutGrid,
-                iconColor: const Color(0xFF27AE60),
-                label: t.menuCategories,
-                onTap: () =>
-                    _push(CategoriesScreen(categoryRepo: widget.categoryRepo)),
-              ),
-              _MenuRow(
-                icon: LucideIcons.piggyBank,
-                iconColor: DuitQuTheme.primaryBlue,
-                label: t.menuBudget,
-                onTap: _comingSoon,
-              ),
-              _MenuRow(
-                icon: LucideIcons.flag,
-                iconColor: const Color(0xFF9B51E0),
-                label: t.menuGoals,
-                onTap: () => _push(const GoalsScreen()),
-              ),
-              _MenuRow(
-                icon: LucideIcons.sparkles,
-                iconColor: const Color(0xFFF2994A),
-                label: t.menuAutoRecord,
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DuitQuTheme.income.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _autoRecord ? t.active : 'v4',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: DuitQuTheme.income,
-                    ),
-                  ),
-                ),
-                onTap: () => _toggleAutoRecord(!_autoRecord),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _MenuCard(
-            children: [
-              _MenuRow(
-                icon: LucideIcons.hardDrive,
-                iconColor: const Color(0xFF27AE60),
-                label: t.menuBackupSync,
-                onTap: _openBackup,
-              ),
-              _MenuRow(
-                icon: LucideIcons.cloud,
-                iconColor: const Color(0xFF2D9CDB),
-                label: t.cloudSync,
-                onTap: _openSync,
-              ),
-              _MenuRow(
-                icon: LucideIcons.shield,
-                iconColor: const Color(0xFFEB5757),
-                label: t.menuSecurity,
-                onTap: _comingSoon,
-              ),
-              _MenuRow(
-                icon: LucideIcons.settings,
-                iconColor: scheme.onSurfaceVariant,
-                label: t.menuSettings,
-                onTap: () => _push(const AutoRecordSettingsScreen()),
-              ),
-              _MenuRow(
-                icon: LucideIcons.sunMoon,
-                iconColor: const Color(0xFFF2994A),
-                label: t.theme,
-                trailing: ValueListenableBuilder<ThemeMode>(
-                  valueListenable: widget.themeStore,
-                  builder: (context, mode, _) => Text(
-                    switch (mode) {
-                      ThemeMode.light => t.themeLight,
-                      ThemeMode.dark => t.themeDark,
-                      ThemeMode.system => t.themeSystem,
-                    },
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                onTap: _pickTheme,
-              ),
-              _MenuRow(
-                icon: LucideIcons.languages,
-                iconColor: const Color(0xFF9B51E0),
-                label: t.language,
-                trailing: ValueListenableBuilder<Locale?>(
-                  valueListenable: widget.localeStore,
-                  builder: (context, locale, _) => Text(
-                    switch (locale?.languageCode) {
-                      'id' => t.languageIndonesian,
-                      'en' => t.languageEnglish,
-                      _ => t.languageSystem,
-                    },
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                onTap: _pickLanguage,
-              ),
-              _MenuRow(
-                icon: LucideIcons.helpCircle,
-                iconColor: DuitQuTheme.primaryBlue,
-                label: t.menuHelp,
-                onTap: _comingSoon,
-              ),
-              _MenuRow(
-                icon: LucideIcons.info,
-                iconColor: const Color(0xFF9B51E0),
-                label: t.menuAbout,
-                onTap: _showAbout,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  t.appTitle,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  t.aboutText,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
 }
 
 class _MenuCard extends StatelessWidget {
-  final List<Widget> children;
+  final List<_MenuRow> children;
 
   const _MenuCard({required this.children});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(children: children),
+        child: Column(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 72,
+                  endIndent: 16,
+                  color:
+                      scheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              children[i],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -568,40 +628,68 @@ class _MenuCard extends StatelessWidget {
 class _MenuRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
-  final String label;
-  final Widget? trailing;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   const _MenuRow({
     required this.icon,
     required this.iconColor,
-    required this.label,
-    this.trailing,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 20,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ],
         ),
-        child: Icon(icon, color: iconColor, size: 22),
       ),
-      title: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-      ),
-      trailing:
-          trailing ??
-          Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant),
     );
   }
 }
