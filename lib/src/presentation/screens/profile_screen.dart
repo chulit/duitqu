@@ -15,6 +15,7 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../backup_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import '../locale_store.dart';
 import '../theme_mode_store.dart';
 import '../user_name_store.dart';
 import '../widgets/mascot_image.dart';
@@ -31,6 +32,7 @@ class ProfileScreen extends StatefulWidget {
   final TransactionRepository txRepo;
   final BackupService backup;
   final ThemeModeStore themeStore;
+  final LocaleStore localeStore;
   final UserNameStore nameStore;
 
   const ProfileScreen({
@@ -40,6 +42,7 @@ class ProfileScreen extends StatefulWidget {
     required this.txRepo,
     required this.backup,
     required this.themeStore,
+    required this.localeStore,
     required this.nameStore,
   });
 
@@ -129,6 +132,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (picked != null) await widget.themeStore.setMode(picked);
+  }
+
+  Future<void> _pickLanguage() async {
+    final t = AppLocalizations.of(context);
+    Locale? chosen;
+    var didChoose = false;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: RadioGroup<Locale?>(
+          groupValue: widget.localeStore.value,
+          onChanged: (v) {
+            chosen = v;
+            didChoose = true;
+            Navigator.pop(ctx);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<Locale?>(
+                title: Text(t.languageIndonesian),
+                value: const Locale('id'),
+              ),
+              RadioListTile<Locale?>(
+                title: Text(t.languageEnglish),
+                value: const Locale('en'),
+              ),
+              RadioListTile<Locale?>(
+                title: Text(t.languageSystem),
+                value: null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (didChoose) await widget.localeStore.setLocale(chosen);
   }
 
   void _openSync() {
@@ -445,6 +485,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 onTap: _pickTheme,
+              ),
+              _MenuRow(
+                icon: Icons.language_outlined,
+                iconColor: const Color(0xFF9B51E0),
+                label: t.language,
+                trailing: ValueListenableBuilder<Locale?>(
+                  valueListenable: widget.localeStore,
+                  builder: (context, locale, _) => Text(
+                    switch (locale?.languageCode) {
+                      'id' => t.languageIndonesian,
+                      'en' => t.languageEnglish,
+                      _ => t.languageSystem,
+                    },
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                onTap: _pickLanguage,
               ),
               _MenuRow(
                 icon: Icons.help_outline_rounded,

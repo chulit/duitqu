@@ -8,6 +8,7 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/repositories/candidate_repository.dart';
 import '../chat/chat_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../locale_store.dart';
 import '../theme_mode_store.dart';
 import '../../domain/services/financial_query_service.dart';
 import '../../domain/services/transfer_service.dart';
@@ -34,6 +35,7 @@ class AppShell extends StatefulWidget {
   final BackupService backup;
   final QuickAddDefaults defaults;
   final ThemeModeStore themeStore;
+  final LocaleStore localeStore;
 
   const AppShell({
     super.key,
@@ -45,6 +47,7 @@ class AppShell extends StatefulWidget {
     required this.backup,
     required this.defaults,
     required this.themeStore,
+    required this.localeStore,
   });
 
   @override
@@ -207,6 +210,7 @@ class _AppShellState extends State<AppShell> {
         txRepo: widget.txRepo,
         backup: widget.backup,
         themeStore: widget.themeStore,
+        localeStore: widget.localeStore,
         nameStore: _nameStore,
       ),
     ];
@@ -214,10 +218,12 @@ class _AppShellState extends State<AppShell> {
     // ("full nyambung"): tidak ada margin/jarak.
     // Backdrop meredupkan konten; "dock" putih di belakang navbar membuat
     // seluruh area bawah (sheet + navbar) satu permukaan putih tersambung.
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    // Navbar top di 92px dari bawah (20 margin + 72 tinggi).
-    // Sheet dioverlap 2px agar tidak ada hairline gap.
-    final sheetBottom = viewInsets > 0 ? viewInsets : 90.0;
+    //
+    // NOTE: Scaffold resizeToAvoidBottomInset=true (default), jadi saat
+    // keyboard terbuka Stack sudah menyusut — sheetBottom tetap 90 agar
+    // tidak ada gap ganda (bug: viewInsets ditambah padahal Stack sudah
+    // di atas keyboard).
+    final sheetBottom = 90.0;
     final surface = Theme.of(context).colorScheme.surface;
     return Scaffold(
       extendBody: true,

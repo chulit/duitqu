@@ -299,6 +299,7 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
       );
 
   Widget _itemRow(_ItemRow item, VoidCallback onDelete) {
+    final t = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -307,11 +308,11 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
             flex: 3,
             child: TextField(
               controller: item.nameCtrl,
-              decoration: const InputDecoration(
-                hintText: 'Nama item',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: t.itemName,
+                border: const OutlineInputBorder(),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ),
           ),
@@ -320,11 +321,11 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
             child: TextField(
               controller: item.qtyCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'Qty',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: t.qty,
+                border: const OutlineInputBorder(),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ),
           ),
@@ -334,11 +335,11 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
             child: TextField(
               controller: item.priceCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'Harga',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: t.price,
+                border: const OutlineInputBorder(),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ),
           ),
