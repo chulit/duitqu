@@ -4,20 +4,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Kategori tujuan predefinisi (dari mockup).
 enum GoalCategory {
-  rumah('Rumah', '🏠', 0xFFF2994A),
-  laptop('Laptop', '💻', 0xFF9B51E0),
-  liburan('Liburan', '✈️', 0xFF2E9BFF),
-  mobil('Mobil', '🚗', 0xFF2D9CDB),
-  pendidikan('Pendidikan', '🎓', 0xFF27AE60),
-  barangImpian('Barang Impian', '👜', 0xFFEB5757),
-  danaDarurat('Dana Darurat', '🐷', 0xFFF2C94C),
-  lainnya('Lainnya', '⋯', 0xFFBDBDBD);
+  rumah('Home', 'assets/icons/goals/home.webp', 0xFFF2994A),
+  laptop('Electronic', 'assets/icons/goals/electronic.webp', 0xFF9B51E0),
+  liburan('Vacation', 'assets/icons/goals/vacation.webp', 0xFF2E9BFF),
+  mobil('Vehicle', 'assets/icons/goals/vehicle.webp', 0xFF2D9CDB),
+  pendidikan('Education', 'assets/icons/goals/study.webp', 0xFF27AE60),
+  barangImpian('Wishlist', 'assets/icons/goals/wishlist.webp', 0xFFEB5757),
+  danaDarurat('Emergency Fund', 'assets/icons/goals/emergency_fund.webp', 0xFFF2C94C),
+  lainnya('Other', 'assets/icons/goals/other.webp', 0xFFBDBDBD);
 
   final String label;
-  final String emoji;
+  final String iconAsset;
   final int color;
 
-  const GoalCategory(this.label, this.emoji, this.color);
+  const GoalCategory(this.label, this.iconAsset, this.color);
 }
 
 /// Model tujuan nabung.
