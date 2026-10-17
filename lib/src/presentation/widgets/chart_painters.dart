@@ -151,7 +151,7 @@ class GroupedBarsPainter extends CustomPainter {
         [...first, ...second].fold<int>(0, (a, b) => a > b ? a : b);
     if (maxVal <= 0) return;
 
-    const leftPad = 44.0;
+    const leftPad = 34.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -230,7 +230,7 @@ class LineChartPainter extends CustomPainter {
     if (maxVal <= 0) return;
     final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 44.0;
+    const leftPad = 34.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;
@@ -337,7 +337,7 @@ class DailyBarsPainter extends CustomPainter {
     if (maxVal <= 0) return;
     final niceMax = niceCeiling(maxVal);
 
-    const leftPad = 44.0;
+    const leftPad = 34.0;
     const bottomPad = 24.0;
     const topPad = 8.0;
     final chartW = size.width - leftPad;

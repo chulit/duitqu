@@ -374,12 +374,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               children: [
                 _DotLegend(
                   color: scheme.surfaceContainerHighest,
-                  label: formatBulan(prevMonth, t),
+                  label: '${t.shortMonth(prevMonth.month)} ${prevMonth.year}',
                 ),
                 const SizedBox(width: 12),
                 _DotLegend(
                   color: DuitQuTheme.primaryBlue,
-                  label: formatBulan(_month, t),
+                  label: '${t.shortMonth(_month.month)} ${_month.year}',
                 ),
               ],
             ),
