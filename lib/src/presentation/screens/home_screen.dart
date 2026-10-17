@@ -434,6 +434,19 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
+          // Awan dekorasi ala mockup.
+          Positioned(
+            right: -30,
+            bottom: -10,
+            child: Opacity(
+              opacity: 0.5,
+              child: Image.asset(
+                'assets/mascot/hero/cloud.webp',
+                width: 220,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           Positioned(
             right: -24,
             top: -24,
@@ -457,6 +470,12 @@ class _HeroCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
+          ),
+          // Maskot hero agak nongol ke bawah ala mockup.
+          Positioned(
+            right: 8,
+            bottom: -16,
+            child: const MascotImage.hero(size: 128),
           ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -489,13 +508,21 @@ class _HeroCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        hidden ? 'Rp \u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : formatRupiah(balance),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                      // FittedBox: saldo besar mengecil otomatis, tidak
+                      // overflow tertutup maskot.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          hidden
+                              ? 'Rp \u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'
+                              : formatRupiah(balance),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
                       const Spacer(),
@@ -534,8 +561,6 @@ class _HeroCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                const MascotImage.coin(size: 112),
               ],
             ),
           ),
