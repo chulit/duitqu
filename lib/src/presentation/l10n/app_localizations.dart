@@ -461,6 +461,9 @@ class AppLocalizations {
   String get receiptModelNotReady => _id
       ? 'Model OCR belum ter-download (\u224830 MB, butuh internet sekali). Hubungkan internet lalu coba scan lagi.'
       : 'OCR model not downloaded yet (\u224830 MB, needs internet once). Connect and try scanning again.';
+  String get receiptReadOk => _id
+      ? 'Aku sudah membaca struknya. Berikut hasilnya:'
+      : 'I have read the receipt. Here is the result:';
   String receiptToInbox(String amount) => _id
       ? 'Struk terbaca: $amount. Cek Inbox untuk konfirmasi sebelum disimpan \u{1F4E5}'
       : 'Receipt read: $amount. Check Inbox to confirm before saving \u{1F4E5}';

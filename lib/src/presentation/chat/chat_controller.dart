@@ -48,6 +48,9 @@ class ChatMsg {
   int? accountId;
   String? accountName;
 
+  /// True bila dari hasil scan struk/gambar (Edit buka form khusus).
+  final bool isScan;
+
   ChatMsg({
     required this.kind,
     this.text = '',
@@ -58,6 +61,7 @@ class ChatMsg {
     this.categoryName,
     this.accountId,
     this.accountName,
+    this.isScan = false,
   }) : occurredAt = occurredAt ?? DateTime.now();
 
   /// True bila semua field penting sudah terisi untuk simpan langsung.
@@ -432,7 +436,7 @@ class ChatAssistantController extends ChangeNotifier {
     _say(t.aiTopExpense(name, formatRupiah(top.value)));
   }
 
-  /// Scan struk via kamera → kandidat (tiket 13).
+  /// Scan struk via kamera → kartu konfirmasi di chat (bukan Inbox).
   Future<void> scanReceipt({required AppLocalizations t}) async {
     final repo = candidateRepo;
     if (repo == null || scanning) return;
@@ -455,10 +459,38 @@ class ChatAssistantController extends ChangeNotifier {
         _say(t.receiptDuplicate);
         return;
       }
-      final amount = c.parsedPayload['amount'];
-      final formatted =
-          amount is num ? 'Rp${amount.toInt()}' : 'nominal terbaca';
-      _say(t.receiptToInbox(formatted));
+      // Buat kartu konfirmasi di chat dari hasil scan.
+      final payload = c.parsedPayload;
+      final amount = payload['amount'];
+      if (amount is! num || amount <= 0) {
+        _say(t.receiptFailed);
+        return;
+      }
+      final merchant = payload['merchant'] as String?;
+      final desc = (merchant != null && merchant.isNotEmpty)
+          ? merchant[0].toUpperCase() + merchant.substring(1)
+          : t.chatNoteDefault;
+      final occurredMs = payload['occurred_at'];
+      final occurredAt = occurredMs is int
+          ? DateTime.fromMillisecondsSinceEpoch(occurredMs)
+          : DateTime.now();
+      final parsed = QuickParse(
+        amount: amount.toInt(),
+        description: desc,
+        transactionType: 'expense',
+      );
+      _say(t.receiptReadOk);
+      final smartDefaults = await _smartDefaults(desc);
+      _addMsg(ChatMsg(
+        kind: MsgKind.confirm,
+        parsed: parsed,
+        occurredAt: occurredAt,
+        categoryId: smartDefaults.categoryId,
+        categoryName: smartDefaults.categoryName,
+        accountId: smartDefaults.accountId,
+        accountName: smartDefaults.accountName,
+        isScan: true,
+      ));
     } finally {
       scanning = false;
       notifyListeners();
