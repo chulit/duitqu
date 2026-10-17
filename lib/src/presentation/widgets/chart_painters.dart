@@ -79,7 +79,7 @@ void paintYGrid(
   final niceMax = niceCeiling(maxVal);
   final chartH = size.height - bottomPad - topPad;
   final gridPaint = Paint()
-    ..color = textColor.withValues(alpha: 0.12)
+    ..color = textColor.withValues(alpha: 0.06)
     ..strokeWidth = 1;
   for (var i = 0; i <= 3; i++) {
     final y = topPad + chartH - (chartH * i / 3);
@@ -114,7 +114,7 @@ void paintVerticalGrid(
   final chartW = size.width - leftPad;
   final chartH = size.height - bottomPad - topPad;
   final gridPaint = Paint()
-    ..color = textColor.withValues(alpha: 0.08)
+    ..color = textColor.withValues(alpha: 0.04)
     ..strokeWidth = 1;
   for (var i = 0; i < count; i++) {
     final x = leftPad + chartW * i / (count - 1);
@@ -220,7 +220,7 @@ class LineChartPainter extends CustomPainter {
     required this.values,
     required this.labels,
     required this.textColor,
-    this.lineColor = const Color(0xFFEB5757),
+    this.lineColor = const Color(0xFFE8A0A0),
   });
 
   @override
