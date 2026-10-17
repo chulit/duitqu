@@ -4,6 +4,7 @@ import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../category_icons.dart';
 import '../l10n/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Kelola kategori: daftar + tambah + hapus (bawaan read-only).
 class CategoriesScreen extends StatefulWidget {
@@ -100,7 +101,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: Text(t.categoriesTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_rounded),
+            icon: const Icon(LucideIcons.plus),
             onPressed: _addCategory,
           ),
         ],
@@ -141,7 +142,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   trailing: c.isDefault
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded),
+                          icon: const Icon(LucideIcons.trash2),
                           color: scheme.onSurfaceVariant,
                           onPressed: () => _delete(c),
                         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Maskot DuitQu (karakter biru hoodie) dari `assets/mascot/`.
 ///
@@ -89,7 +90,7 @@ class MascotImage extends StatelessWidget {
       height: h,
       fit: fit,
       errorBuilder: (_, _, _) => Icon(
-        Icons.pets_rounded,
+        LucideIcons.dog,
         size: size ?? 48,
         color: Theme.of(context).colorScheme.primary,
       ),

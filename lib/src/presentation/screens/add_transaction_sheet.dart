@@ -13,6 +13,7 @@ import '../format.dart';
 import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Satu baris item belanja pada form (draft yang bisa diedit).
 class _ItemDraft {
@@ -439,7 +440,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                               child: OutlinedButton.icon(
                                 onPressed: _pickDate,
                                 icon: const Icon(
-                                  Icons.calendar_today_rounded,
+                                  LucideIcons.calendar,
                                   size: 18,
                                 ),
                                 label: Text(formatTanggal(_date, t)),
@@ -501,7 +502,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                                   _itemDrafts.add(_ItemDraft());
                                   _syncAmountFromItems();
                                 }),
-                                icon: const Icon(Icons.add_rounded, size: 18),
+                                icon: const Icon(LucideIcons.plus, size: 18),
                                 label: Text(t.addItem),
                               ),
                             ],
@@ -567,7 +568,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           TextButton.icon(
                             key: const Key('deleteButton'),
                             onPressed: _delete,
-                            icon: const Icon(Icons.delete_outline_rounded),
+                            icon: const Icon(LucideIcons.trash2),
                             label: Text(t.deleteTransaction),
                             style: TextButton.styleFrom(
                               foregroundColor: Theme.of(context)
@@ -624,19 +625,19 @@ class _TypeSelector extends StatelessWidget {
       (
         TransactionType.expense,
         t.expense,
-        Icons.arrow_upward_rounded,
+        LucideIcons.arrowUp,
         DuitQuTheme.expenseColor(context),
       ),
       (
         TransactionType.income,
         t.income,
-        Icons.arrow_downward_rounded,
+        LucideIcons.arrowDown,
         DuitQuTheme.incomeColor(context),
       ),
       (
         TransactionType.transfer,
         t.transfer,
-        Icons.swap_horiz_rounded,
+        LucideIcons.arrowLeftRight,
         scheme.primary,
       ),
     ];
@@ -861,7 +862,7 @@ class _ItemRow extends StatelessWidget {
           ),
           IconButton(
             key: Key('itemDelete_$index'),
-            icon: const Icon(Icons.remove_circle_outline_rounded),
+            icon: const Icon(LucideIcons.minusCircle),
             onPressed: onDelete,
           ),
         ],

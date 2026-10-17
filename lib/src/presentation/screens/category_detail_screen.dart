@@ -14,6 +14,7 @@ import 'add_transaction_sheet.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/services/transfer_service.dart';
 import '../quick_add_defaults.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Halaman detail kategori ala mockup: hero + banner perubahan +
 /// perbandingan 6 bulan + perbandingan antar kategori + transaksi terbaru.
@@ -281,8 +282,8 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ),
                     child: Icon(
                       up
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded,
+                          ? LucideIcons.arrowUp
+                          : LucideIcons.arrowDown,
                       color: const Color(0xFFEB5757),
                       size: 24,
                     ),
@@ -435,7 +436,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(t.seeAll),
-                              const Icon(Icons.chevron_right_rounded, size: 18),
+                              const Icon(LucideIcons.chevronRight, size: 18),
                             ],
                           ),
                         ),
@@ -503,7 +504,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               ListTile(
                 title: Text(t.monthsLabel(r)),
                 trailing: r == _trendRange
-                    ? const Icon(Icons.check_rounded)
+                    ? const Icon(LucideIcons.check)
                     : null,
                 onTap: () => Navigator.pop(ctx, r),
               ),
@@ -606,7 +607,7 @@ class _ChartCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           const Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            LucideIcons.chevronDown,
                             size: 16,
                           ),
                         ],
@@ -727,7 +728,7 @@ class _TxRow extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Icon(
-            Icons.chevron_right_rounded,
+            LucideIcons.chevronRight,
             color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
             size: 20,
           ),

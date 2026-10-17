@@ -9,6 +9,7 @@ import '../user_name_store.dart';
 import '../widgets/attachment_menu.dart';
 import '../widgets/chat_message_widgets.dart';
 import '../widgets/mascot_image.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Halaman penuh "DuitQu AI" (mockup panel kanan): header dengan tombol back,
 /// sapaan maskot + chip aksi cepat, riwayat chat ala messenger, dan input bar.
@@ -129,7 +130,7 @@ class _ChatAiScreenState extends State<ChatAiScreen>
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const Icon(LucideIcons.arrowLeft),
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
@@ -171,7 +172,7 @@ class _ChatAiScreenState extends State<ChatAiScreen>
             ),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_horiz_rounded),
+            icon: const Icon(LucideIcons.moreHorizontal),
             tooltip: t.more,
             onSelected: (v) {
               if (v == 'clear') widget.controller.clear();
@@ -369,7 +370,7 @@ class _ChatAiScreenState extends State<ChatAiScreen>
                     widget.controller.scanReceipt(t: t, source: 'file'),
               ),
               icon: Icon(
-                Icons.add_rounded,
+                LucideIcons.plus,
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -391,7 +392,7 @@ class _ChatAiScreenState extends State<ChatAiScreen>
             IconButton(
               onPressed: _startListening,
               icon: Icon(
-                Icons.mic_rounded,
+                LucideIcons.mic,
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -402,7 +403,7 @@ class _ChatAiScreenState extends State<ChatAiScreen>
                 foregroundColor: Colors.white,
                 fixedSize: const Size(48, 48),
               ),
-              icon: const Icon(Icons.send_rounded, size: 20),
+              icon: const Icon(LucideIcons.send, size: 20),
             ),
           ],
         ),
@@ -457,7 +458,7 @@ class _ConfirmCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.receipt_long_rounded,
+                    LucideIcons.receipt,
                     color: DuitQuTheme.primaryBlue,
                     size: 24,
                   ),
@@ -499,21 +500,21 @@ class _ConfirmCard extends StatelessWidget {
             const Divider(height: 1),
             _metaRow(
               context,
-              icon: Icons.calendar_month_rounded,
+              icon: LucideIcons.calendarDays,
               iconColor: const Color(0xFFF59E0B),
               label: t.dateLabel,
               value: dateText,
             ),
             _metaRow(
               context,
-              icon: Icons.account_balance_wallet_rounded,
+              icon: LucideIcons.wallet,
               iconColor: DuitQuTheme.primaryBlue,
               label: t.accountLabel,
               value: _displayAccount(msg.accountHint),
             ),
             _metaRow(
               context,
-              icon: Icons.sell_outlined,
+              icon: LucideIcons.tag,
               iconColor: DuitQuTheme.income,
               label: t.categoryLabel,
               value: category,

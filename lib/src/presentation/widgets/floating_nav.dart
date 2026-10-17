@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Total footprint vertikal navbar dari bawah layar
 /// (margin atas untuk tombol raised + tinggi container + margin bawah).
@@ -29,10 +30,10 @@ class FloatingNav extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final items = [
       // Label persis mockup (Home/Insight sama di ID & EN).
-      _NavData('Home', Icons.home_rounded),
-      _NavData(t.navInsight, Icons.bar_chart_rounded),
-      _NavData(t.navGoals, Icons.flag_rounded),
-      _NavData(t.navAccounts, Icons.person_rounded),
+      _NavData('Home', LucideIcons.home),
+      _NavData(t.navInsight, LucideIcons.barChart3),
+      _NavData(t.navGoals, LucideIcons.flag),
+      _NavData(t.navAccounts, LucideIcons.user),
     ];
     return Container(
       // Margin atas memberi ruang untuk tombol tengah yang menonjol ke atas.
@@ -185,7 +186,7 @@ class _ChatButton extends StatelessWidget {
               ],
             ),
             child: const Icon(
-              Icons.auto_awesome_rounded,
+              LucideIcons.sparkles,
               color: Colors.white,
               size: 26,
             ),

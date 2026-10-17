@@ -4,6 +4,7 @@ import 'package:duitqu/src/presentation/widgets/chat_assistant_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
   Future<void> pumpSheet(
@@ -65,7 +66,7 @@ void main() {
     await pumpSheet(tester);
     await tester.enterText(
         find.byType(TextField), 'makan siang 35 ribu pakai GoPay');
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(LucideIcons.send));
     await tester.pumpAndSettle();
 
     // Kartu konfirmasi muncul (auto-scroll ke bawah) dengan hasil parse
@@ -81,7 +82,7 @@ void main() {
     QuickParse? saved;
     await pumpSheet(tester, onSave: (p) => saved = p);
     await tester.enterText(find.byType(TextField), 'makan siang 35 ribu');
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(LucideIcons.send));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Simpan Transaksi'));
@@ -97,7 +98,7 @@ void main() {
   testWidgets('teks tanpa nominal dijawab dengan ramah', (tester) async {
     await pumpSheet(tester);
     await tester.enterText(find.byType(TextField), 'halo apa kabar');
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(LucideIcons.send));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('belum paham'), findsOneWidget);

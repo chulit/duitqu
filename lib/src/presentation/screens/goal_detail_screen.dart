@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/chart_painters.dart';
 import '../widgets/mascot_image.dart';
 import 'goal_form_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Detail tujuan ala mockup: progress + chart + transaksi + aksi.
 class GoalDetailScreen extends StatefulWidget {
@@ -193,7 +194,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
         actions: [
           TextButton.icon(
             onPressed: _editGoal,
-            icon: const Icon(Icons.edit_outlined, size: 16),
+            icon: const Icon(LucideIcons.pencil, size: 16),
             label: Text(t.editLabel),
           ),
         ],
@@ -291,7 +292,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             children: [
               Expanded(
                 child: _InfoCard(
-                  icon: Icons.calendar_today_outlined,
+                  icon: LucideIcons.calendar,
                   label: t.goalTargetDate,
                   value: goal.deadline == null
                       ? '—'
@@ -302,7 +303,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _InfoCard(
-                  icon: Icons.category_outlined,
+                  icon: LucideIcons.layoutGrid,
                   label: t.goalCategory,
                   value: goal.category.label,
                 ),
@@ -397,7 +398,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(t.seeAll),
-                    const Icon(Icons.chevron_right_rounded, size: 18),
+                    const Icon(LucideIcons.chevronRight, size: 18),
                   ],
                 ),
               ),
@@ -412,7 +413,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             height: 56,
             child: FilledButton.icon(
               onPressed: goal.isCompleted ? null : _addFunds,
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(LucideIcons.plus),
               label: Text(t.addFunds),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -427,7 +428,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _editGoal,
-                  icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                  icon: const Icon(LucideIcons.calendar, size: 18),
                   label: Text(t.editTarget),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -441,7 +442,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: goal.isCompleted ? null : _markComplete,
-                  icon: const Icon(Icons.check_circle_outlined, size: 18),
+                  icon: const Icon(LucideIcons.checkCircle, size: 18),
                   label: Text(t.markComplete),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -512,7 +513,7 @@ class _InfoCard extends StatelessWidget {
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.chevron_right_rounded, size: 18),
+              const Icon(LucideIcons.chevronRight, size: 18),
           ],
         ),
       ),
@@ -559,7 +560,7 @@ class _RangePicker extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+            const Icon(LucideIcons.chevronDown, size: 16),
           ],
         ),
       ),
@@ -588,7 +589,7 @@ class _ContributionRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
-              Icons.savings_outlined,
+              LucideIcons.piggyBank,
               color: DuitQuTheme.primaryBlue,
             ),
           ),

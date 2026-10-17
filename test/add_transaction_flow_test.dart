@@ -18,6 +18,7 @@ import 'package:duitqu/src/presentation/screens/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Pompa AppShell dengan database in-memory.
 Future<Harness> pumpApp(WidgetTester tester) async {
@@ -118,13 +119,13 @@ void main() {
     expect(find.textContaining('Belum ada transaksi'), findsOneWidget);
 
     // Ketuk tombol chat bulat di tengah nav.
-    await tester.tap(find.byIcon(Icons.auto_awesome_rounded));
+    await tester.tap(find.byIcon(LucideIcons.sparkles));
     await tester.pumpAndSettle();
 
     // Ketik + kirim.
     await tester.enterText(find.byType(TextField).first, 'bensin 50 ribu');
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.tap(find.byIcon(LucideIcons.send));
     await tester.pumpAndSettle();
 
     // Hasil cepat muncul dengan nominal terparse.

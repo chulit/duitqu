@@ -22,6 +22,7 @@ import '../widgets/mascot_image.dart';
 import 'accounts_screen.dart';
 import 'categories_screen.dart';
 import 'goals_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _autoRecordKey = 'duitqu.auto_record';
 
@@ -317,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(t.profileTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(LucideIcons.settings),
             tooltip: t.menuSettings,
             onPressed: () => _push(const AutoRecordSettingsScreen()),
           ),
@@ -372,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
                     ),
                   ],
@@ -384,7 +385,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _MenuCard(
             children: [
               _MenuRow(
-                icon: Icons.account_balance_wallet_outlined,
+                icon: LucideIcons.wallet,
                 iconColor: const Color(0xFFF2994A),
                 label: t.menuAccounts,
                 onTap: () => _push(
@@ -395,26 +396,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               _MenuRow(
-                icon: Icons.grid_view_rounded,
+                icon: LucideIcons.layoutGrid,
                 iconColor: const Color(0xFF27AE60),
                 label: t.menuCategories,
                 onTap: () =>
                     _push(CategoriesScreen(categoryRepo: widget.categoryRepo)),
               ),
               _MenuRow(
-                icon: Icons.savings_outlined,
+                icon: LucideIcons.piggyBank,
                 iconColor: DuitQuTheme.primaryBlue,
                 label: t.menuBudget,
                 onTap: _comingSoon,
               ),
               _MenuRow(
-                icon: Icons.flag_outlined,
+                icon: LucideIcons.flag,
                 iconColor: const Color(0xFF9B51E0),
                 label: t.menuGoals,
                 onTap: () => _push(const GoalsScreen()),
               ),
               _MenuRow(
-                icon: Icons.auto_awesome_outlined,
+                icon: LucideIcons.sparkles,
                 iconColor: const Color(0xFFF2994A),
                 label: t.menuAutoRecord,
                 trailing: Container(
@@ -443,31 +444,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _MenuCard(
             children: [
               _MenuRow(
-                icon: Icons.backup_outlined,
+                icon: LucideIcons.hardDrive,
                 iconColor: const Color(0xFF27AE60),
                 label: t.menuBackupSync,
                 onTap: _openBackup,
               ),
               _MenuRow(
-                icon: Icons.cloud_outlined,
+                icon: LucideIcons.cloud,
                 iconColor: const Color(0xFF2D9CDB),
                 label: t.cloudSync,
                 onTap: _openSync,
               ),
               _MenuRow(
-                icon: Icons.shield_outlined,
+                icon: LucideIcons.shield,
                 iconColor: const Color(0xFFEB5757),
                 label: t.menuSecurity,
                 onTap: _comingSoon,
               ),
               _MenuRow(
-                icon: Icons.settings_outlined,
+                icon: LucideIcons.settings,
                 iconColor: scheme.onSurfaceVariant,
                 label: t.menuSettings,
                 onTap: () => _push(const AutoRecordSettingsScreen()),
               ),
               _MenuRow(
-                icon: Icons.brightness_6_outlined,
+                icon: LucideIcons.sunMoon,
                 iconColor: const Color(0xFFF2994A),
                 label: t.theme,
                 trailing: ValueListenableBuilder<ThemeMode>(
@@ -487,7 +488,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: _pickTheme,
               ),
               _MenuRow(
-                icon: Icons.language_outlined,
+                icon: LucideIcons.languages,
                 iconColor: const Color(0xFF9B51E0),
                 label: t.language,
                 trailing: ValueListenableBuilder<Locale?>(
@@ -507,13 +508,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: _pickLanguage,
               ),
               _MenuRow(
-                icon: Icons.help_outline_rounded,
+                icon: LucideIcons.helpCircle,
                 iconColor: DuitQuTheme.primaryBlue,
                 label: t.menuHelp,
                 onTap: _comingSoon,
               ),
               _MenuRow(
-                icon: Icons.info_outline_rounded,
+                icon: LucideIcons.info,
                 iconColor: const Color(0xFF9B51E0),
                 label: t.menuAbout,
                 onTap: _showAbout,
@@ -600,7 +601,7 @@ class _MenuRow extends StatelessWidget {
       ),
       trailing:
           trailing ??
-          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+          Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant),
     );
   }
 }

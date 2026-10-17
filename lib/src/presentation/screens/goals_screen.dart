@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import 'goal_detail_screen.dart';
 import 'goal_form_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Layar Tujuan ala mockup: hero Tabungan Utama + Aktif + Kadaluarsa + Selesai.
 class GoalsScreen extends StatefulWidget {
@@ -151,7 +152,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                           children: [
                             Text(t.seeAll),
                             const Icon(
-                              Icons.chevron_right_rounded,
+                              LucideIcons.chevronRight,
                               size: 18,
                             ),
                           ],
@@ -206,7 +207,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   height: 56,
                   child: FilledButton.icon(
                     onPressed: () => _openForm(),
-                    icon: const Icon(Icons.add_rounded),
+                    icon: const Icon(LucideIcons.plus),
                     label: Text(t.createGoal),
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -300,7 +301,7 @@ class _HeroGoalCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.calendar_today_outlined,
+                            LucideIcons.calendar,
                             size: 16,
                             color: scheme.onSurfaceVariant,
                           ),
@@ -408,13 +409,13 @@ class _GoalCard extends StatelessWidget {
                   ),
                   if (completed)
                     _Badge(
-                      icon: Icons.check_circle_rounded,
+                      icon: LucideIcons.checkCircle,
                       label: t.completedLabel,
                       color: const Color(0xFF27AE60),
                     )
                   else if (expired)
                     _Badge(
-                      icon: Icons.access_time_rounded,
+                      icon: LucideIcons.clock,
                       label: t.expiredLabel,
                       color: const Color(0xFFEB5757),
                     )
@@ -433,7 +434,7 @@ class _GoalCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.calendar_today_outlined,
+                            LucideIcons.calendar,
                             size: 14,
                             color: scheme.onSurfaceVariant,
                           ),
@@ -450,7 +451,7 @@ class _GoalCard extends StatelessWidget {
                     ),
                   const SizedBox(width: 4),
                   Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
                 ],
@@ -485,7 +486,7 @@ class _GoalCard extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(
-                      Icons.calendar_today_outlined,
+                      LucideIcons.calendar,
                       size: 14,
                       color: Color(0xFFEB5757),
                     ),
@@ -591,8 +592,8 @@ class _SectionHeader extends StatelessWidget {
             ),
             Icon(
               expanded
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+                  ? LucideIcons.chevronUp
+                  : LucideIcons.chevronDown,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ],
@@ -651,7 +652,7 @@ class _EmptyGoals extends StatelessWidget {
               height: 56,
               child: FilledButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(LucideIcons.plus),
                 label: Text(t.createGoal),
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(

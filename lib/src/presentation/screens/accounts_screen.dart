@@ -8,6 +8,7 @@ import '../category_icons.dart';
 import '../l10n/app_localizations.dart';
 import '../format.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Daftar akun: kartu saldo + tambah/ubah/hapus.
 class AccountsScreen extends StatefulWidget {
@@ -57,7 +58,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openEditor(null).then((_) => setState(() {})),
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(LucideIcons.plus),
         label: Text(AppLocalizations.of(context).addAccount),
       ),
     );
@@ -183,7 +184,7 @@ class _AccountCard extends StatelessWidget {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline_rounded),
+                icon: const Icon(LucideIcons.trash2),
                 color: scheme.onSurfaceVariant,
                 onPressed: () => _confirmDelete(context),
               ),
