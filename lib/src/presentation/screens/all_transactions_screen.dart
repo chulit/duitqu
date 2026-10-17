@@ -13,6 +13,7 @@ import '../l10n/app_localizations.dart';
 import '../quick_add_defaults.dart';
 import '../theme.dart';
 import 'add_transaction_sheet.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Daftar seluruh transaksi (dari "Lihat semua").
 class AllTransactionsScreen extends StatefulWidget {
@@ -130,7 +131,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                           ),
                           child: Icon(
                             tx.type == TransactionType.transfer
-                                ? Icons.swap_horiz_rounded
+                                ? LucideIcons.arrowLeftRight
                                 : categoryIcon(cat?.icon),
                             color: catColor,
                           ),

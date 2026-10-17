@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/notification_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Aplikasi umum yang mengirim notifikasi transaksi (untuk allowlist).
 const Map<String, String> commonSourceApps = {
@@ -153,7 +154,7 @@ class _ExplanationCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(
-                  Icons.notifications_outlined,
+                  LucideIcons.bell,
                   color: DuitQuTheme.primaryBlue,
                 ),
                 const SizedBox(width: 8),
@@ -212,7 +213,7 @@ class _StepTile extends StatelessWidget {
                   child: Center(
                     child: done
                         ? const Icon(
-                            Icons.check,
+                            LucideIcons.check,
                             size: 16,
                             color: DuitQuTheme.income,
                           )

@@ -6,6 +6,7 @@ import '../goals_store.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../widgets/mascot_image.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Form Buat/Edit Tujuan ala mockup.
 class GoalFormScreen extends StatefulWidget {
@@ -88,7 +89,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -192,7 +193,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
               suffixIcon: _nameCtrl.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 18),
+                      icon: const Icon(LucideIcons.x, size: 18),
                       onPressed: () =>
                           setState(() => _nameCtrl.clear()),
                     ),
@@ -234,7 +235,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.calendar_today_outlined,
+                    LucideIcons.calendar,
                     size: 20,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -255,7 +256,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                   ),
                   if (_deadline != null)
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 18),
+                      icon: const Icon(LucideIcons.x, size: 18),
                       onPressed: () =>
                           setState(() => _deadline = null),
                     ),
@@ -303,7 +304,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                     ),
                     TextButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      icon: const Icon(LucideIcons.pencil, size: 16),
                       label: Text(t.editLabel),
                     ),
                   ],
@@ -349,7 +350,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                   children: [
                     Expanded(
                       child: _SummaryItem(
-                        icon: Icons.track_changes_outlined,
+                        icon: LucideIcons.crosshair,
                         label: t.goalTargetAmount,
                         value: _targetCtrl.text.isEmpty
                             ? '—'
@@ -358,7 +359,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                     ),
                     Expanded(
                       child: _SummaryItem(
-                        icon: Icons.calendar_today_outlined,
+                        icon: LucideIcons.calendar,
                         label: t.goalTargetDate,
                         value: _deadline == null
                             ? '—'
@@ -367,7 +368,7 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                     ),
                     Expanded(
                       child: _SummaryItem(
-                        icon: Icons.category_outlined,
+                        icon: LucideIcons.layoutGrid,
                         label: t.goalCategory,
                         value: _category.label,
                       ),

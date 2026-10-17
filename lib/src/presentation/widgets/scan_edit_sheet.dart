@@ -13,6 +13,7 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../chat/chat_controller.dart';
 import '../format.dart';
 import '../l10n/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Form edit khusus hasil scan struk (mockup Screen 5).
 /// Field: Merchant, Jumlah, Tanggal, Akun, Kategori, Catatan, Items.
@@ -250,7 +251,7 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () => setState(() => _items.add(_ItemRow())),
-                  icon: const Icon(Icons.add_rounded, size: 18),
+                  icon: const Icon(LucideIcons.plus, size: 18),
                   label: Text(t.addItem),
                 ),
               ],
@@ -345,7 +346,7 @@ class _ScanEditSheetState extends State<ScanEditSheet> {
           ),
           IconButton(
             onPressed: onDelete,
-            icon: const Icon(Icons.remove_circle_outline_rounded,
+            icon: const Icon(LucideIcons.minusCircle,
                 color: Colors.red, size: 20),
           ),
         ],

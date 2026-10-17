@@ -7,6 +7,7 @@ import '../../domain/repositories/candidate_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Inbox Auto-Catat: daftar kandidat butuh konfirmasi (tiket 05, spec v2).
 ///
@@ -218,7 +219,7 @@ class _EmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Icon(
-                Icons.mark_email_read_outlined,
+                LucideIcons.mailCheck,
                 size: 40,
                 color: DuitQuTheme.primaryBlue,
               ),
@@ -409,7 +410,7 @@ class _CandidateCard extends StatelessWidget {
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.info_outline,
+                      LucideIcons.info,
                       size: 14,
                       color: DuitQuTheme.expense,
                     ),
@@ -458,15 +459,15 @@ class _CandidateCard extends StatelessWidget {
   IconData _sourceIcon(CandidateSourceType s) {
     switch (s) {
       case CandidateSourceType.manual:
-        return Icons.edit_outlined;
+        return LucideIcons.pencil;
       case CandidateSourceType.chat:
-        return Icons.chat_bubble_outline;
+        return LucideIcons.messageCircle;
       case CandidateSourceType.androidNotification:
-        return Icons.notifications_outlined;
+        return LucideIcons.bell;
       case CandidateSourceType.receiptScan:
-        return Icons.receipt_long_outlined;
+        return LucideIcons.receipt;
       case CandidateSourceType.statementImport:
-        return Icons.upload_file_outlined;
+        return LucideIcons.fileUp;
     }
   }
 

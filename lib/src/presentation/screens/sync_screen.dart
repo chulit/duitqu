@@ -6,6 +6,7 @@ import '../../data/backup_service.dart';
 import '../../data/drive_sync_backend.dart';
 import '../../data/sync_backend.dart';
 import '../../data/sync_crypto.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Sinkronisasi cloud: backup terenkripsi end-to-end ke Google Drive.
 ///
@@ -259,8 +260,8 @@ class _SyncScreenState extends State<SyncScreen> {
                           children: [
                             Icon(
                               _connected == true
-                                  ? Icons.cloud_done_outlined
-                                  : Icons.cloud_off_outlined,
+                                  ? LucideIcons.cloud
+                                  : LucideIcons.cloudOff,
                               color: _connected == true
                                   ? scheme.primary
                                   : scheme.outline,
@@ -288,7 +289,7 @@ class _SyncScreenState extends State<SyncScreen> {
                         if (_connected != true)
                           FilledButton.icon(
                             onPressed: _busy ? null : _connect,
-                            icon: const Icon(Icons.login),
+                            icon: const Icon(LucideIcons.logIn),
                             label: const Text('Hubungkan Google'),
                           )
                         else
@@ -296,7 +297,7 @@ class _SyncScreenState extends State<SyncScreen> {
                             children: [
                               FilledButton.icon(
                                 onPressed: _busy ? null : _backupNow,
-                                icon: const Icon(Icons.cloud_upload_outlined),
+                                icon: const Icon(LucideIcons.uploadCloud),
                                 label: const Text('Backup Sekarang'),
                               ),
                               const SizedBox(width: 8),
@@ -340,7 +341,7 @@ class _SyncScreenState extends State<SyncScreen> {
                   for (final b in _cloud)
                     Card(
                       child: ListTile(
-                        leading: const Icon(Icons.lock_outline),
+                        leading: const Icon(LucideIcons.lock),
                         title: Text(
                           b.name,
                           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -348,7 +349,7 @@ class _SyncScreenState extends State<SyncScreen> {
                         subtitle: Text(
                           '${_fmtSize(b.sizeBytes)} • ${_fmtDate(b.modifiedTime)}',
                         ),
-                        trailing: const Icon(Icons.cloud_download_outlined),
+                        trailing: const Icon(LucideIcons.downloadCloud),
                         onTap: _busy ? null : () => _restore(b),
                       ),
                     ),

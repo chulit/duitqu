@@ -16,6 +16,7 @@ import '../widgets/chart_painters.dart';
 import '../widgets/donut_chart.dart';
 import '../widgets/mascot_image.dart';
 import 'category_detail_screen.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Insight ala mockup: header, pilih bulan, tab Pengeluaran/Pemasukan,
 /// donut + breakdown kategori, dan kartu tips maskot dari data asli.
@@ -468,7 +469,7 @@ class _InsightScreenState extends State<InsightScreen> {
         title: t.trendIncomeVsExpense,
         rangeLabel: '',
         onRangeTap: null,
-        icon: Icons.trending_up_rounded,
+        icon: LucideIcons.trendingUp,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -502,7 +503,7 @@ class _InsightScreenState extends State<InsightScreen> {
         title: t.trendExpenseTitle,
         rangeLabel: t.monthsLabel(_trendRange),
         onRangeTap: () => _pickTrendRange(context, t),
-        icon: Icons.show_chart_rounded,
+        icon: LucideIcons.lineChart,
         child: SizedBox(
           height: 180,
           child: CustomPaint(
@@ -521,7 +522,7 @@ class _InsightScreenState extends State<InsightScreen> {
         title: t.dailyExpenseTitle,
         rangeLabel: formatBulan(_month, t),
         onRangeTap: null,
-        icon: Icons.calendar_month_rounded,
+        icon: LucideIcons.calendarDays,
         child: SizedBox(
           height: 160,
           child: CustomPaint(
@@ -561,7 +562,7 @@ class _InsightScreenState extends State<InsightScreen> {
               ListTile(
                 title: Text(t.monthsLabel(r)),
                 trailing: r == _trendRange
-                    ? const Icon(Icons.check_rounded)
+                    ? const Icon(LucideIcons.check)
                     : null,
                 onTap: () => Navigator.pop(ctx, r),
               ),
@@ -816,7 +817,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(LucideIcons.chevronLeft),
                   onPressed: _year <= widget.minYear
                       ? null
                       : () => setState(() => _year--),
@@ -832,7 +833,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right_rounded),
+                  icon: const Icon(LucideIcons.chevronRight),
                   onPressed: _year >= widget.now.year
                       ? null
                       : () => setState(() => _year++),
@@ -1069,8 +1070,8 @@ class _MiniTotalCard extends StatelessWidget {
                   ),
                   child: Icon(
                     up
-                        ? Icons.arrow_upward_rounded
-                        : Icons.arrow_downward_rounded,
+                        ? LucideIcons.arrowUp
+                        : LucideIcons.arrowDown,
                     size: 20,
                     color: pctColor,
                   ),
@@ -1234,7 +1235,7 @@ class _TipCard extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: scheme.onSurfaceVariant,
               ),
             ],
@@ -1338,7 +1339,7 @@ class _KategoriRow extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Icon(
-              Icons.chevron_right_rounded,
+              LucideIcons.chevronRight,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
               size: 20,
             ),
@@ -1472,7 +1473,7 @@ class _ChartCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           const Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            LucideIcons.chevronDown,
                             size: 16,
                           ),
                         ],

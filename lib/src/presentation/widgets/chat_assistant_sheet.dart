@@ -12,6 +12,7 @@ import 'attachment_menu.dart';
 import 'chat_message_widgets.dart';
 import 'mascot_image.dart';
 import 'scan_edit_sheet.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Ref repo untuk form edit scan.
 class _AppRefs {
@@ -294,7 +295,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           IconButton(
             tooltip: t.expandChat,
             onPressed: widget.onExpand,
-            icon: const Icon(Icons.open_in_full_rounded, size: 20),
+            icon: const Icon(LucideIcons.maximize2, size: 20),
           ),
         ],
       ),
@@ -336,7 +337,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.check_rounded,
+                    LucideIcons.check,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -379,7 +380,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => widget.onViewTransaction?.call(tx),
-                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                    icon: const Icon(LucideIcons.receipt, size: 18),
                     label: Text(t.viewTransaction),
                   ),
                 ),
@@ -390,7 +391,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                       _ctrl.clear();
                       _focus.requestFocus();
                     },
-                    icon: const Icon(Icons.add_rounded, size: 18),
+                    icon: const Icon(LucideIcons.plus, size: 18),
                     label: Text(t.recordAgain),
                   ),
                 ),
@@ -455,7 +456,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
             const Divider(height: 1),
             const SizedBox(height: 4),
             _infoRow(
-              icon: Icons.restaurant_rounded,
+              icon: LucideIcons.utensils,
               iconBg: const Color(0xFF22B07D),
               label: t.categoryLabel,
               value: msg.categoryName ?? '—',
@@ -464,7 +465,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                   : () => widget.controller.editConfirm(msg),
             ),
             _infoRow(
-              icon: Icons.account_balance_wallet_rounded,
+              icon: LucideIcons.wallet,
               iconBg: DuitQuTheme.primaryBlue,
               label: t.accountLabel,
               value: msg.accountName ?? _displayAccount(msg.accountHint),
@@ -473,7 +474,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                   : () => widget.controller.editConfirm(msg),
             ),
             _infoRow(
-              icon: Icons.calendar_month_rounded,
+              icon: LucideIcons.calendarDays,
               iconBg: const Color(0xFFF59E0B),
               label: t.dateLabel,
               value: dateText,
@@ -569,7 +570,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
               ),
             ),
             Icon(
-              Icons.chevron_right_rounded,
+              LucideIcons.chevronRight,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ],
@@ -703,7 +704,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                 isLight: isLight,
                 tooltip: t.attachScan,
                 onTap: () => _showAttachMenu(t),
-                icon: Icons.add_rounded,
+                icon: LucideIcons.plus,
               ),
             ),
             const SizedBox(width: 4),
@@ -793,7 +794,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       isLight: isLight,
       tooltip: '',
       onTap: _startListening,
-      icon: Icons.mic_rounded,
+      icon: LucideIcons.mic,
     );
   }
 
@@ -817,7 +818,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           ],
         ),
         child: const Icon(
-          Icons.send_rounded,
+          LucideIcons.send,
           color: Colors.white,
           size: 24,
         ),

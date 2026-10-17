@@ -6,6 +6,7 @@ import '../../domain/entities/transaction_candidate.dart';
 import '../../domain/services/auto_record_policy.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Pengaturan kebijakan auto-catat (tiket 04, spec v2).
 ///
@@ -66,7 +67,7 @@ class _AutoRecordSettingsScreenState
                           const NotificationSetupScreen(),
                     ),
                   ),
-                  icon: const Icon(Icons.notifications_outlined),
+                  icon: const Icon(LucideIcons.bell),
                   label: Text(t.notifSetupTitle),
                 ),
                 const SizedBox(height: 16),
@@ -176,7 +177,7 @@ class _ExplanationCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(
-                  Icons.auto_awesome_outlined,
+                  LucideIcons.sparkles,
                   color: DuitQuTheme.income,
                 ),
                 const SizedBox(width: 8),

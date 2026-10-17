@@ -12,6 +12,7 @@ import 'package:duitqu/src/presentation/user_name_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
   late schema.AppDatabase db;
@@ -102,7 +103,7 @@ void main() {
 
     expect(find.text('DuitQu AI'), findsOneWidget);
     expect(find.text('Siap membantu'), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.arrowLeft), findsOneWidget);
     expect(find.text('Hai! \u{1F44B}'), findsOneWidget);
     expect(find.textContaining('cek kondisi keuanganmu'), findsOneWidget);
     expect(find.textContaining('Catat pengeluaran'), findsOneWidget);
@@ -164,7 +165,7 @@ void main() {
 
     await pumpPage(tester, controller);
 
-    expect(find.byIcon(Icons.done_all_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.checkCheck), findsOneWidget);
   });
 
   testWidgets('kartu konfirmasi: Simpan memanggil onSave', (tester) async {

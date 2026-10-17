@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'l10n/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Bottom sheet backup manual: ekspor / impor satu file CSV.
 /// Dumb view — logika ekspor/impor dipegang pemanggil via callback.
@@ -21,7 +22,7 @@ class BackupSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.upload),
+            leading: const Icon(LucideIcons.upload),
             title: Text(AppLocalizations.of(context).exportCsv),
             subtitle: Text(AppLocalizations.of(context).exportCsvSubtitle),
             onTap: () {
@@ -30,7 +31,7 @@ class BackupSheet extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.download),
+            leading: const Icon(LucideIcons.download),
             title: Text(AppLocalizations.of(context).importCsv),
             subtitle: Text(AppLocalizations.of(context).importCsvSubtitle),
             onTap: () {

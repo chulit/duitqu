@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Menu lampiran bottom sheet: Scan struk / Upload foto / Pilih file.
 /// Dipakai di panel chat (Home) dan full chat (DuitQu AI) — satu desain.
@@ -37,7 +38,7 @@ Future<void> showAttachmentMenu({
               children: [
                 _menuItem(
                   context,
-                  icon: Icons.document_scanner_rounded,
+                  icon: LucideIcons.scanLine,
                   iconBg: const Color(0xFF347AFF),
                   label: t.attachScan,
                   onTap: () {
@@ -47,7 +48,7 @@ Future<void> showAttachmentMenu({
                 ),
                 _menuItem(
                   context,
-                  icon: Icons.photo_rounded,
+                  icon: LucideIcons.image,
                   iconBg: const Color(0xFF22B07D),
                   label: t.attachUploadPhoto,
                   onTap: () {
@@ -57,7 +58,7 @@ Future<void> showAttachmentMenu({
                 ),
                 _menuItem(
                   context,
-                  icon: Icons.insert_drive_file_rounded,
+                  icon: LucideIcons.file,
                   iconBg: const Color(0xFFF59E0B),
                   label: t.attachPickFile,
                   onTap: () {

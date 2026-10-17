@@ -1,38 +1,39 @@
 import 'package:flutter/material.dart';
 
 import '../domain/entities/account.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Mapping nama ikon kategori (disimpan sebagai string di DB, gaya Lucide)
 /// ke [IconData] Material. Kategori kustom tanpa nama yang dikenal
-/// jatuh ke [Icons.category].
+/// jatuh ke [LucideIcons.layoutGrid].
 IconData categoryIcon(String? name) {
   switch (name) {
     case 'utensils':
-      return Icons.restaurant_rounded;
+      return LucideIcons.utensils;
     case 'car':
-      return Icons.directions_car_rounded;
+      return LucideIcons.car;
     case 'shopping-bag':
-      return Icons.shopping_bag_rounded;
+      return LucideIcons.shoppingBag;
     case 'receipt':
-      return Icons.receipt_long_rounded;
+      return LucideIcons.receipt;
     case 'smartphone':
-      return Icons.smartphone_rounded;
+      return LucideIcons.smartphone;
     case 'heart-pulse':
-      return Icons.favorite_rounded;
+      return LucideIcons.heart;
     case 'clapperboard':
-      return Icons.movie_rounded;
+      return LucideIcons.clapperboard;
     case 'graduation-cap':
-      return Icons.school_rounded;
+      return LucideIcons.graduationCap;
     case 'briefcase':
-      return Icons.work_rounded;
+      return LucideIcons.briefcase;
     case 'gift':
-      return Icons.card_giftcard_rounded;
+      return LucideIcons.gift;
     case 'landmark':
-      return Icons.account_balance_rounded;
+      return LucideIcons.landmark;
     case 'shapes':
-      return Icons.category_rounded;
+      return LucideIcons.layoutGrid;
     default:
-      return Icons.category_rounded;
+      return LucideIcons.layoutGrid;
   }
 }
 
@@ -40,12 +41,12 @@ IconData categoryIcon(String? name) {
 IconData accountIcon(AccountType type) {
   switch (type) {
     case AccountType.bank:
-      return Icons.account_balance_rounded;
+      return LucideIcons.landmark;
     case AccountType.cash:
-      return Icons.wallet_rounded;
+      return LucideIcons.wallet;
     case AccountType.ewallet:
-      return Icons.smartphone_rounded;
+      return LucideIcons.smartphone;
     case AccountType.other:
-      return Icons.account_box_rounded;
+      return LucideIcons.contact;
   }
 }

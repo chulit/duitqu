@@ -20,6 +20,7 @@ import '../user_name_store.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mascot_image.dart';
 import 'add_transaction_sheet.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _budgetKey = 'duitqu.monthly_budget';
 
@@ -369,7 +370,7 @@ class _Header extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(
-                    Icons.notifications_outlined,
+                    LucideIcons.bell,
                     color: DuitQuTheme.ink,
                   ),
                   onPressed: onOpenInbox,
@@ -391,7 +392,7 @@ class _Header extends StatelessWidget {
           },
         ),
         IconButton(
-          icon: Icon(Icons.search_rounded, color: scheme.onSurface),
+          icon: Icon(LucideIcons.search, color: scheme.onSurface),
           onPressed: onSearch,
         ),
       ],
@@ -499,8 +500,8 @@ class _HeroCard extends StatelessWidget {
                             onTap: onToggleHide,
                             child: Icon(
                               hidden
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
+                                  ? LucideIcons.eyeOff
+                                  : LucideIcons.eye,
                               color: Colors.white.withValues(alpha: 0.85),
                               size: 18,
                             ),
@@ -550,7 +551,7 @@ class _HeroCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 2),
                               const Icon(
-                                Icons.chevron_right_rounded,
+                                LucideIcons.chevronRight,
                                 color: DuitQuTheme.primaryBlue,
                                 size: 18,
                               ),
@@ -593,25 +594,25 @@ class _QuickActions extends StatelessWidget {
       child: Row(
         children: [
           _QuickItem(
-            icon: Icons.arrow_downward_rounded,
+            icon: LucideIcons.arrowDown,
             color: DuitQuTheme.income,
             label: t.quickIncome,
             onTap: onIncome,
           ),
           _QuickItem(
-            icon: Icons.arrow_upward_rounded,
+            icon: LucideIcons.arrowUp,
             color: DuitQuTheme.expense,
             label: t.quickExpense,
             onTap: onExpense,
           ),
           _QuickItem(
-            icon: Icons.receipt_long_rounded,
+            icon: LucideIcons.receipt,
             color: DuitQuTheme.primaryBlue,
             label: t.quickTransactions,
             onTap: onTransactions,
           ),
           _QuickItem(
-            icon: Icons.pie_chart_rounded,
+            icon: LucideIcons.pieChart,
             color: const Color(0xFF8B5CF6),
             label: t.quickReport,
             onTap: onReport,
@@ -713,7 +714,7 @@ class _BudgetCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
-                      Icons.account_balance_wallet_rounded,
+                      LucideIcons.wallet,
                       color: purple,
                       size: 22,
                     ),
@@ -742,7 +743,7 @@ class _BudgetCard extends StatelessWidget {
                           ),
                         ),
                         const Icon(
-                          Icons.chevron_right_rounded,
+                          LucideIcons.chevronRight,
                           color: DuitQuTheme.primaryBlue,
                           size: 18,
                         ),
@@ -904,7 +905,7 @@ class _SectionHeader extends StatelessWidget {
                 ),
               ),
               const Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: DuitQuTheme.primaryBlue,
                 size: 18,
               ),
@@ -966,7 +967,7 @@ class _TransactionRow extends StatelessWidget {
               ),
               child: Icon(
                 tx.type == TransactionType.transfer
-                    ? Icons.swap_horiz_rounded
+                    ? LucideIcons.arrowLeftRight
                     : categoryIcon(category?.icon),
                 color: catColor,
               ),
@@ -1116,7 +1117,7 @@ class _CtaCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: DuitQuTheme.primaryBlue,
                 size: 26,
               ),

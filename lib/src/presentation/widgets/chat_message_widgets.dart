@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import 'mascot_image.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Bubble pesan asisten (kiri, dengan avatar maskot).
 /// Dipakai bottom sheet dan halaman penuh "DuitQu AI".
@@ -96,7 +97,7 @@ class UserBubble extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Icon(
-                          Icons.done_all_rounded,
+                          LucideIcons.checkCheck,
                           size: 14,
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
