@@ -731,6 +731,7 @@ class _MonthPicker extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
@@ -739,20 +740,23 @@ class _MonthPicker extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, size: 20),
+            icon: const Icon(Icons.chevron_left_rounded, size: 18),
             onPressed: onPrev,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
-          Text(
-            formatBulan(month, t),
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              formatBulan(month, t),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right_rounded, size: 20),
+            icon: const Icon(Icons.chevron_right_rounded, size: 18),
             onPressed: onNext,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
