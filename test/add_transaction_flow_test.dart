@@ -126,7 +126,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Hasil cepat muncul dengan nominal terparse.
-    expect(find.text('Rp 50.000'), findsOneWidget);
+    expect(find.text('− Rp 50.000'), findsOneWidget);
 
     // Smart save: kategori "Transport" (keyword "bensin") + akun "Cash"
     // terisi otomatis → tap Simpan langsung nyimpen tanpa buka form.

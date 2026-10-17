@@ -55,7 +55,7 @@ void main() {
 
     // Auto-scroll ke kartu konfirmasi (bubble awal terscroll ke atas);
     // chip saran hilang setelah ada pesan user.
-    expect(find.text('Rp 28.000'), findsOneWidget);
+    expect(find.text('− Rp 28.000'), findsOneWidget);
     expect(find.text('Simpan Transaksi'), findsOneWidget);
     expect(find.text('Lainnya...'), findsNothing);
   });
@@ -71,7 +71,7 @@ void main() {
     // Kartu konfirmasi muncul (auto-scroll ke bawah) dengan hasil parse
     // dari data ASLI.
     expect(find.text('Siang'), findsOneWidget);
-    expect(find.text('Rp 35.000'), findsOneWidget);
+    expect(find.text('− Rp 35.000'), findsOneWidget);
     expect(find.text('Gopay'), findsOneWidget);
     expect(find.text('Simpan Transaksi'), findsOneWidget);
   });

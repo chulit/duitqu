@@ -249,8 +249,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     final parsed = msg.parsed!;
     final scheme = Theme.of(context).colorScheme;
     final time = msg.occurredAt;
-    final dateText =
-        '${t.todayAt} ${time.hour}.${time.minute.toString().padLeft(2, '0')}';
+    final dateText = _smartDate(time, t);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, right: 24),
       child: Container(
@@ -275,7 +274,8 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        formatRupiah(parsed.amount),
+                        // Pengeluaran pakai minus (keputusan desain).
+                        '${parsed.transactionType == 'income' ? '' : '− '}${formatRupiah(parsed.amount)}',
                         style: DuitQuTheme.amountStyle(context, 18),
                       ),
                     ],
@@ -347,6 +347,20 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   String _displayAccount(String? hint) {
     if (hint == null || hint.isEmpty) return '—';
     return hint[0].toUpperCase() + hint.substring(1);
+  }
+
+  /// Format tanggal cerdas: "Hari ini, 14.02" / "Kemarin, 14.02" /
+  /// "16 Okt 2026, 14.02".
+  String _smartDate(DateTime time, AppLocalizations t) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(time.year, time.month, time.day);
+    final diff = today.difference(day).inDays;
+    final hm =
+        '${time.hour}.${time.minute.toString().padLeft(2, '0')}';
+    if (diff == 0) return '${t.todayAt} $hm';
+    if (diff == 1) return '${t.yesterday}, $hm';
+    return '${formatTanggal(time, t)}, $hm';
   }
 
   Widget _infoRow({
