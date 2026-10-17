@@ -79,13 +79,33 @@ class _InsightScreenState extends State<InsightScreen> {
     _load();
   }
 
-  void _changeMonth(int delta) {
+  void _selectMonth(DateTime month) {
     setState(() {
-      _month = DateTime(_month.year, _month.month + delta);
+      _month = DateTime(month.year, month.month);
       _txStream = _makeStream();
     });
     _loadPrevMonth();
     _loadTrend();
+  }
+
+  Future<void> _openMonthPicker(BuildContext context) async {
+    // Cari tahun transaksi pertama untuk batas mundur.
+    final all = await widget.txRepo.list(const TransactionQuery());
+    final minYear = all.isEmpty
+        ? DateTime.now().year
+        : all
+            .map((tx) => tx.date.year)
+            .reduce((a, b) => a < b ? a : b);
+    if (!context.mounted) return;
+    final picked = await showModalBottomSheet<DateTime>(
+      context: context,
+      builder: (ctx) => _MonthPickerSheet(
+        initial: _month,
+        now: DateTime.now(),
+        minYear: minYear,
+      ),
+    );
+    if (picked != null) _selectMonth(picked);
   }
 
   void _setTab(_Tab tab) {
@@ -629,8 +649,7 @@ class _InsightScreenState extends State<InsightScreen> {
                         ),
                         _MonthPicker(
                           month: _month,
-                          onPrev: () => _changeMonth(-1),
-                          onNext: () => _changeMonth(1),
+                          onTap: () => _openMonthPicker(context),
                         ),
                       ],
                     ),
@@ -717,51 +736,180 @@ class _InsightScreenState extends State<InsightScreen> {
 /// Pilih bulan ala mockup: pill "Oktober 2026" dengan chevron.
 class _MonthPicker extends StatelessWidget {
   final DateTime month;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
+  final VoidCallback onTap;
 
   const _MonthPicker({
     required this.month,
-    required this.onPrev,
-    required this.onNext,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, size: 18),
-            onPressed: onPrev,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          formatBulan(month, t),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              formatBulan(month, t),
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet pilih bulan ala mockup: tahun + grid 3x4 + tombol bulan ini.
+class _MonthPickerSheet extends StatefulWidget {
+  final DateTime initial;
+  final DateTime now;
+  final int minYear;
+
+  const _MonthPickerSheet({
+    required this.initial,
+    required this.now,
+    required this.minYear,
+  });
+
+  @override
+  State<_MonthPickerSheet> createState() => _MonthPickerSheetState();
+}
+
+class _MonthPickerSheetState extends State<_MonthPickerSheet> {
+  late int _year;
+
+  @override
+  void initState() {
+    super.initState();
+    _year = widget.initial.year;
+  }
+
+  static const _monthsId = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+  ];
+  static const _monthsEn = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final months = t.isIndonesian ? _monthsId : _monthsEn;
+    final isCurrentYear = _year == widget.now.year;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Navigasi tahun.
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  onPressed: _year <= widget.minYear
+                      ? null
+                      : () => setState(() => _year--),
+                ),
+                Expanded(
+                  child: Text(
+                    '$_year',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  onPressed: _year >= widget.now.year
+                      ? null
+                      : () => setState(() => _year++),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Grid bulan 3x4.
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 2.2,
+              ),
+              itemCount: 12,
+              itemBuilder: (ctx, i) {
+                final selected = _year == widget.initial.year &&
+                    i + 1 == widget.initial.month;
+                // Bulan depan (masa depan) tidak bisa dipilih.
+                final isFuture = _year > widget.now.year ||
+                    (_year == widget.now.year &&
+                        i + 1 > widget.now.month);
+                return InkWell(
+                  onTap: isFuture
+                      ? null
+                      : () => Navigator.pop(
+                            ctx, DateTime(_year, i + 1)),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? DuitQuTheme.primaryBlue
+                          : scheme.surfaceContainerHighest
+                              .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      months[i],
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? Colors.white
+                            : isFuture
+                                ? scheme.onSurfaceVariant
+                                    .withValues(alpha: 0.4)
+                                : scheme.onSurface,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            // Tombol kembali ke bulan ini.
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: isCurrentYear &&
+                        widget.initial.month == widget.now.month
+                    ? null
+                    : () => Navigator.pop(
+                          context,
+                          DateTime(widget.now.year, widget.now.month),
+                        ),
+                child: Text(t.backToThisMonth),
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right_rounded, size: 18),
-            onPressed: onNext,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

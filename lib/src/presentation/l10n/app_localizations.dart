@@ -188,6 +188,8 @@ class AppLocalizations {
   String get tipSetBudget => _id
       ? 'Coba atur budget agar pengeluaran lebih terkontrol.'
       : 'Try setting a budget to keep spending under control.';
+  String get backToThisMonth =>
+      _id ? 'Kembali ke bulan ini' : 'Back to this month';
   String get kategoriJumlahLabel => _id ? 'Jumlah' : 'Amount';
   String get percentLabel => _id ? 'Persentase' : 'Percentage';
   String get trendIncomeVsExpense =>
