@@ -374,12 +374,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               children: [
                 _DotLegend(
                   color: scheme.surfaceContainerHighest,
-                  label: formatBulan(prevMonth, t),
+                  label: '${t.shortMonth(prevMonth.month)} ${prevMonth.year}',
                 ),
                 const SizedBox(width: 12),
                 _DotLegend(
                   color: DuitQuTheme.primaryBlue,
-                  label: formatBulan(_month, t),
+                  label: '${t.shortMonth(_month.month)} ${_month.year}',
                 ),
               ],
             ),
@@ -407,7 +407,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
                     child: Row(
                       children: [
                         Expanded(
@@ -668,10 +668,13 @@ class _TxRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final title = tx.merchant ?? tx.note ?? '—';
-    // Initial merchant untuk avatar (S = Starbucks).
+    // Initial 2 huruf untuk avatar (IB = Isi Bensin).
+    final words = title.trim().split(RegExp(r'\s+'));
     final initial = title.trim().isEmpty
         ? '—'
-        : title.trim().substring(0, 1).toUpperCase();
+        : words.length > 1
+            ? '${words[0][0]}${words[1][0]}'.toUpperCase()
+            : words[0].substring(0, words[0].length >= 2 ? 2 : 1).toUpperCase();
     // Warna avatar stabil dari nama merchant.
     final avatarColor = _avatarColor(title);
     final row = Padding(

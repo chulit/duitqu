@@ -193,9 +193,9 @@ class AppLocalizations {
   String get kategoriJumlahLabel => _id ? 'Jumlah' : 'Amount';
   String get percentLabel => _id ? 'Persentase' : 'Percentage';
   String get trendIncomeVsExpense =>
-      _id ? 'Tren Pemasukan vs Pengeluaran' : 'Income vs Expense Trend';
+      _id ? 'Pemasukan vs Pengeluaran' : 'Income vs Expense';
   String get trendExpenseTitle =>
-      _id ? 'Tren Pengeluaran' : 'Expense Trend';
+      _id ? 'Pengeluaran' : 'Expense';
   String get dailyExpenseTitle =>
       _id ? 'Pengeluaran per Hari' : 'Daily Expenses';
   String monthsLabel(int n) => _id ? '$n Bulan' : '$n Months';

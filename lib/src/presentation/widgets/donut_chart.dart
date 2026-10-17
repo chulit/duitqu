@@ -46,7 +46,6 @@ class _DonutPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2 - strokeWidth / 2;
-    const gap = 0.04; // radian antar segmen
 
     final total = values.fold<double>(0, (a, b) => a + b);
     if (total <= 0) {
@@ -70,8 +69,8 @@ class _DonutPainter extends CustomPainter {
         ..strokeCap = StrokeCap.butt;
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
-        start + gap / 2,
-        math.max(sweep - gap, 0.01),
+        start,
+        math.max(sweep, 0.01),
         false,
         paint,
       );
