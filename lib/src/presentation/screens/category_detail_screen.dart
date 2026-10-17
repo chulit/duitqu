@@ -451,7 +451,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       Container(
                         height: 1,
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        color: const Color(0xFFF0F0F0),
+                        color: const Color(0xFFF7F7F7),
                       ),
                   ],
                 ],
