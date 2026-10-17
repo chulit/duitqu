@@ -60,7 +60,7 @@ class DuitQuTheme {
         iconTheme: IconThemeData(color: isLight ? ink : Colors.white),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 2,
         margin: EdgeInsets.zero,
         color: scheme.surface,
         shape: RoundedRectangleBorder(
