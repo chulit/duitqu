@@ -391,11 +391,11 @@ class DailyBarsPainter extends CustomPainter {
 class MiniBarsPainter extends CustomPainter {
   final Color barColor;
 
-  MiniBarsPainter({this.barColor = const Color(0xFFF4A6A6)});
+  MiniBarsPainter({this.barColor = const Color(0xFFE8A0A0)});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 4 bar menanjak + panah.
+    // 4 bar menanjak, clean tanpa panah.
     final paint = Paint()..color = barColor;
     final heights = [0.35, 0.5, 0.65, 1.0];
     final barW = size.width / (heights.length * 2);
@@ -410,30 +410,6 @@ class MiniBarsPainter extends CustomPainter {
         paint,
       );
     }
-    // Panah naik.
-    final arrowPaint = Paint()
-      ..color = const Color(0xFFEB5757)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    final arrowPath = Path()
-      ..moveTo(4, size.height * 0.35)
-      ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.1,
-        size.width - 8,
-        8,
-      );
-    canvas.drawPath(arrowPath, arrowPaint);
-    // Kepala panah.
-    canvas.drawPath(
-      Path()
-        ..moveTo(size.width - 8, 8)
-        ..lineTo(size.width - 18, 10)
-        ..moveTo(size.width - 8, 8)
-        ..lineTo(size.width - 10, 18),
-      arrowPaint,
-    );
   }
 
   @override
