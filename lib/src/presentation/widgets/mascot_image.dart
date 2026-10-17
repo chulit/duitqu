@@ -64,6 +64,11 @@ class MascotImage extends StatelessWidget {
       : asset = 'assets/mascot/poses/tips.webp',
         fit = BoxFit.contain;
 
+  /// Kartu insight (maskot pegang chart).
+  const MascotImage.chart({super.key, this.size, this.width, this.height})
+      : asset = 'assets/mascot/poses/chart.webp',
+        fit = BoxFit.contain;
+
   /// Hero home: maskot pegang koin Rp.
   const MascotImage.coin({super.key, this.size, this.width, this.height})
       : asset = 'assets/mascot/poses/coin.webp',

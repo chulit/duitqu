@@ -234,11 +234,6 @@ class _InsightScreenState extends State<InsightScreen> {
   }) {
     return [
       // Kartu insight maskot (tanpa chevron, sesuai keputusan).
-      _InsightMascotCard(
-        pct: expensePct,
-        topCategory: topExpenseCat,
-      ),
-      const SizedBox(height: 12),
       // Dua mini card: Pemasukan | Pengeluaran.
       Row(
         children: [
@@ -249,6 +244,7 @@ class _InsightScreenState extends State<InsightScreen> {
               pct: incomePct,
               isExpense: false,
               pctColor: _pctColor(incomePct, false, scheme),
+              onTap: () => _setTab(_Tab.kategori),
             ),
           ),
           const SizedBox(width: 12),
@@ -259,6 +255,7 @@ class _InsightScreenState extends State<InsightScreen> {
               pct: expensePct,
               isExpense: true,
               pctColor: _pctColor(expensePct, true, scheme),
+              onTap: () => _setTab(_Tab.kategori),
             ),
           ),
         ],
@@ -341,6 +338,8 @@ class _InsightScreenState extends State<InsightScreen> {
                               total: expenseTotal,
                               amount: expenseEntries[i].value,
                               color: _brightColor(i),
+                              onTap: () => _openCategory(
+                                  context, expenseEntries[i].key),
                             ),
                         ],
                       ),
@@ -555,9 +554,11 @@ class _InsightScreenState extends State<InsightScreen> {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: !_ready
-          ? const Center(child: CircularProgressIndicator())
-          : StreamBuilder<List<Transaction>>(
+      body: SafeArea(
+        bottom: false,
+        child: !_ready
+            ? const Center(child: CircularProgressIndicator())
+            : StreamBuilder<List<Transaction>>(
               stream: _txStream,
               builder: (context, snapshot) {
                 final txs = snapshot.data ?? [];
@@ -625,6 +626,12 @@ class _InsightScreenState extends State<InsightScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // Kartu maskot selalu di atas pill (ala mockup).
+                    _InsightMascotCard(
+                      pct: expensePct,
+                      topCategory: topExpenseCat,
+                    ),
+                    const SizedBox(height: 16),
                     _InsightTabBar(
                       tab: _tab,
                       onChanged: _setTab,
@@ -661,6 +668,7 @@ class _InsightScreenState extends State<InsightScreen> {
                 );
               },
             ),
+      ),
     );
   }
 
@@ -669,12 +677,12 @@ class _InsightScreenState extends State<InsightScreen> {
       _brightPalette[index % _brightPalette.length];
 
   static const _brightPalette = [
-    Color(0xFF2E9BFF), // biru cerah
-    Color(0xFF27AE60), // hijau
-    Color(0xFF9B51E0), // ungu
-    Color(0xFFF2C94C), // kuning
-    Color(0xFFEB5757), // merah coral
-    Color(0xFFBDBDBD), // abu terang (Lainnya)
+    Color(0xFF64B5F6), // biru soft
+    Color(0xFF81C784), // hijau soft
+    Color(0xFFBA68C8), // ungu soft
+    Color(0xFFFFD54F), // kuning soft
+    Color(0xFFE57373), // merah coral soft
+    Color(0xFFE0E0E0), // abu terang (Lainnya)
   ];
 
   /// Agregasi nominal per kategori untuk satu tipe transaksi.
@@ -816,13 +824,17 @@ class _InsightMascotCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final pctStr = pct == null ? '—' : '${pct!.abs()}%';
     final naik = (pct ?? 0) >= 0;
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F2FF),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            const MascotImage.tips(size: 84),
-            const SizedBox(width: 12),
+            const MascotImage.chart(size: 96),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,16 +842,18 @@ class _InsightMascotCard extends StatelessWidget {
                   Text(
                     t.insightExpenseChange(pctStr, naik),
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
+                      height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     t.insightExpenseDetail(topCategory ?? '—'),
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       color: scheme.onSurfaceVariant,
+                      height: 1.4,
                     ),
                   ),
                 ],
@@ -861,12 +875,15 @@ class _MiniTotalCard extends StatelessWidget {
   final bool isExpense;
   final Color pctColor;
 
+  final VoidCallback? onTap;
+
   const _MiniTotalCard({
     required this.label,
     required this.total,
     required this.pct,
     required this.isExpense,
     required this.pctColor,
+    this.onTap,
   });
 
   @override
@@ -874,47 +891,50 @@ class _MiniTotalCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final up = (pct ?? 0) >= 0;
-    return Card(
+    final card = Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: pctColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                    size: 16,
+                    up
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded,
+                    size: 20,
                     color: pctColor,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               formatRupiah(total),
-              style: DuitQuTheme.amountStyle(context, 18),
+              style: DuitQuTheme.amountStyle(context, 20),
             ),
             if (pct != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 t.pctFromLastMonth('${pct!.abs()}%', up),
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: pctColor,
                 ),
@@ -923,6 +943,12 @@ class _MiniTotalCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+    if (onTap == null) return card;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: card,
     );
   }
 }
@@ -934,17 +960,20 @@ class _LegendDot extends StatelessWidget {
   final int total;
   final Color color;
 
+  final VoidCallback? onTap;
+
   const _LegendDot({
     required this.name,
     required this.amount,
     required this.total,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final pct = total <= 0 ? 0 : (amount / total * 100).round();
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
@@ -976,6 +1005,12 @@ class _LegendDot extends StatelessWidget {
         ],
       ),
     );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: row,
+    );
   }
 }
 
@@ -995,14 +1030,18 @@ class _TipCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Card(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F2FF),
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              const MascotImage.idea(size: 72),
-              const SizedBox(width: 12),
+              const MascotImage.idea(size: 84),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
