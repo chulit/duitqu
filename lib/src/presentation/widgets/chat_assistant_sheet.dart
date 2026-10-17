@@ -53,15 +53,6 @@ class ChatAssistantSheet extends StatefulWidget {
   State<ChatAssistantSheet> createState() => _ChatAssistantSheetState();
 }
 
-/// Chip saran: (emoji, teks yang dikirim sebagai pesan).
-const _suggestionChips = [
-  ('\u2615', 'Beli kopi 28 ribu'),
-  ('\u{1F6CD}\uFE0F', 'Makan siang 35k'),
-  ('\u{1F697}', 'Isi bensin 200 ribu'),
-  ('\u{1F3E0}', 'Bayar listrik 125k'),
-  ('\u{1F45B}', 'Terima gaji 5 juta'),
-];
-
 class _ChatAssistantSheetState extends State<ChatAssistantSheet>
     with SingleTickerProviderStateMixin {
   final _ctrl = TextEditingController();
@@ -591,6 +582,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   /// Chip saran: pill biru muda, grid 3 kolom x 2 baris.
   Widget _suggestionChipsRow(AppLocalizations t) {
     final scheme = Theme.of(context).colorScheme;
+    final chips = t.chatChips;
     Widget row(List<Widget> chips) => Row(
           children: [
             for (int i = 0; i < chips.length; i++) ...[
@@ -600,12 +592,12 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           ],
         );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           row([
-            for (final (emoji, text) in _suggestionChips.take(3))
+            for (final (emoji, text) in chips.take(3))
               _compactChip(
                 scheme: scheme,
                 label: '$emoji $text',
@@ -614,7 +606,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           ]),
           const SizedBox(height: 8),
           row([
-            for (final (emoji, text) in _suggestionChips.skip(3))
+            for (final (emoji, text) in chips.skip(3))
               _compactChip(
                 scheme: scheme,
                 label: '$emoji $text',
@@ -704,20 +696,14 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: MascotImage.avatar(size: 40),
-            ),
-            const SizedBox(width: 4),
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: IconButton(
+              child: _circleButton(
+                scheme: scheme,
+                isLight: isLight,
                 tooltip: t.attachScan,
-                onPressed: () => _showAttachMenu(t),
-                icon: Icon(
-                  Icons.add_rounded,
-                  color: scheme.onSurfaceVariant,
-                ),
+                onTap: () => _showAttachMenu(t),
+                icon: Icons.add_rounded,
               ),
             ),
             const SizedBox(width: 4),
@@ -761,33 +747,53 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
   }
 
   /// Tombol mic: lingkaran putih dengan border halus.
-  Widget _micButton(ColorScheme scheme, bool isLight) {
-    return InkWell(
-      onTap: _startListening,
-      borderRadius: BorderRadius.circular(28),
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: isLight ? Colors.white : Colors.transparent,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+  /// Tombol lingkaran outline (untuk + dan mic): gaya seragam 52px.
+  Widget _circleButton({
+    required ColorScheme scheme,
+    required bool isLight,
+    required String tooltip,
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : Colors.transparent,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
             ),
-          ],
-        ),
-        child: Icon(
-          Icons.mic_rounded,
-          color: scheme.onSurfaceVariant,
-          size: 22,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: scheme.onSurfaceVariant,
+            size: 24,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _micButton(ColorScheme scheme, bool isLight) {
+    return _circleButton(
+      scheme: scheme,
+      isLight: isLight,
+      tooltip: '',
+      onTap: _startListening,
+      icon: Icons.mic_rounded,
     );
   }
 
@@ -797,8 +803,8 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
       onTap: _submit,
       borderRadius: BorderRadius.circular(32),
       child: Container(
-        width: 58,
-        height: 58,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           color: const Color(0xFF347AFF),
           shape: BoxShape.circle,

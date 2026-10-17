@@ -9,6 +9,7 @@ import 'src/data/repositories/drift_category_repository.dart';
 import 'src/data/repositories/drift_transaction_repository.dart';
 import 'src/domain/services/transfer_service.dart';
 import 'src/presentation/l10n/app_localizations.dart';
+import 'src/presentation/locale_store.dart';
 import 'src/presentation/quick_add_defaults.dart';
 import 'src/presentation/screens/app_shell.dart';
 import 'src/presentation/theme.dart';
@@ -35,6 +36,7 @@ Future<void> main() async {
       transferService: transferService,
       backup: backup,
       themeStore: ThemeModeStore(),
+      localeStore: LocaleStore(),
     ),
   );
 }
@@ -47,6 +49,7 @@ class DuitQuApp extends StatefulWidget {
   final TransferService transferService;
   final BackupService backup;
   final ThemeModeStore themeStore;
+  final LocaleStore localeStore;
 
   const DuitQuApp({
     super.key,
@@ -57,6 +60,7 @@ class DuitQuApp extends StatefulWidget {
     required this.transferService,
     required this.backup,
     required this.themeStore,
+    required this.localeStore,
   });
 
   @override
@@ -68,11 +72,14 @@ class _DuitQuAppState extends State<DuitQuApp> {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: widget.themeStore,
-      builder: (context, mode, _) => MaterialApp(
+      builder: (context, mode, _) => ValueListenableBuilder<Locale?>(
+        valueListenable: widget.localeStore,
+        builder: (context, locale, _) => MaterialApp(
         title: 'DuitQu',
         theme: DuitQuTheme.light(),
         darkTheme: DuitQuTheme.dark(),
         themeMode: mode,
+      locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -89,7 +96,9 @@ class _DuitQuAppState extends State<DuitQuApp> {
           backup: widget.backup,
           defaults: QuickAddDefaults(),
           themeStore: widget.themeStore,
+          localeStore: widget.localeStore,
         ),
+      ),
       ),
     );
   }

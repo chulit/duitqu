@@ -10,6 +10,7 @@ import 'package:duitqu/src/domain/entities/transaction.dart';
 import 'package:duitqu/src/domain/services/transfer_service.dart';
 import 'package:duitqu/src/presentation/l10n/app_localizations.dart';
 import 'package:duitqu/src/presentation/quick_add_defaults.dart';
+import 'package:duitqu/src/presentation/locale_store.dart';
 import 'package:duitqu/src/presentation/theme_mode_store.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:duitqu/src/presentation/screens/add_transaction_sheet.dart';
@@ -51,6 +52,7 @@ Future<Harness> pumpApp(WidgetTester tester) async {
         defaults: QuickAddDefaults(),
         backup: BackupService(db),
         themeStore: ThemeModeStore(),
+        localeStore: LocaleStore(),
       ),
     ),
   );

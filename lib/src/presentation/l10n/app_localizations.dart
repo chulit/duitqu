@@ -200,6 +200,10 @@ class AppLocalizations {
   String get themeLight => _id ? 'Terang' : 'Light';
   String get themeDark => _id ? 'Gelap' : 'Dark';
   String get themeSystem => _id ? 'Ikuti sistem' : 'System';
+  String get language => _id ? 'Bahasa' : 'Language';
+  String get languageIndonesian => 'Indonesia';
+  String get languageEnglish => 'English';
+  String get languageSystem => _id ? 'Ikuti sistem' : 'Follow system';
   String get notifSetupTitle =>
       _id ? 'Auto-Catat Notifikasi' : 'Notification Auto-Record';
   String get notifHowItWorks => _id ? 'Cara kerja' : 'How it works';
@@ -528,6 +532,21 @@ class AppLocalizations {
       ? 'Tulis transaksi, misalnya \u2018Beli kopi 28 ribu\u2019'
       : 'Type a transaction, e.g. \u2018Beli kopi 28 ribu\u2019';
   String get chatChipMore => _id ? 'Lainnya...' : 'More...';
+  List<(String, String)> get chatChips => _id
+      ? [
+          ('\u2615', 'Beli kopi 28 ribu'),
+          ('\u{1F6CD}\uFE0F', 'Makan siang 35k'),
+          ('\u{1F697}', 'Isi bensin 200 ribu'),
+          ('\u{1F3E0}', 'Bayar listrik 125k'),
+          ('\u{1F45B}', 'Terima gaji 5 juta'),
+        ]
+      : [
+          ('\u2615', 'Buy coffee 28 thousand'),
+          ('\u{1F6CD}\uFE0F', 'Lunch 35k'),
+          ('\u{1F697}', 'Fill gas 200 thousand'),
+          ('\u{1F3E0}', 'Pay electricity 125k'),
+          ('\u{1F45B}', 'Receive salary 5 million'),
+        ];
 
   // -- chat AI full page --
   String get aiTitle => 'DuitQu AI';
