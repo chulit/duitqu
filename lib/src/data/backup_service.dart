@@ -80,6 +80,8 @@ class BackupService {
     'icon',
     'color',
     'is_default',
+    'bank_name',
+    'account_number',
   ];
 
   static const _appTag = 'duitqu-backup-v1';
@@ -97,7 +99,8 @@ class BackupService {
     for (final a in accounts) {
       rows.add([
         'account', a.id, a.type, a.name, '', '', '', '', '', '', '', '', '',
-        '', a.initialBalance, a.icon, a.color, '',
+        '', a.initialBalance, a.icon, a.color, a.bankName ?? '',
+        a.accountNumber ?? '',
       ]);
     }
 
@@ -166,6 +169,8 @@ class BackupService {
                 initialBalance: p.initialBalance,
                 icon: Value(p.icon),
                 color: Value(p.color),
+                bankName: Value(p.bankName),
+                accountNumber: Value(p.accountNumber),
                 createdAt: DateTime.now().millisecondsSinceEpoch,
               ),
             );
@@ -338,23 +343,34 @@ class BackupService {
     switch (record) {
       case 'account':
         final type = _cell(cells, 2);
-        const valid = {'bank', 'cash', 'e_wallet', 'other'};
+        const valid = {
+          'bank', 'cash', 'ewallet', 'e_wallet', 'other',
+          'creditCard', 'credit_card',
+        };
         if (!valid.contains(type)) {
           throw _RowError('tipe akun tidak dikenal: "$type"',
               code: 'unknownAccountType', args: [type]);
         }
+        // Normalisasi nama lama ke nama enum saat ini.
+        final normalizedType = type == 'e_wallet'
+            ? 'ewallet'
+            : (type == 'credit_card' ? 'creditCard' : type);
         final name = _cell(cells, 3);
         if (name.isEmpty) {
           throw _RowError('nama akun kosong', code: 'emptyAccountName');
         }
+        final bankName = _cell(cells, 17);
+        final accountNumber = _cell(cells, 18);
         return _AccountRow(
           row: row,
           oldId: id,
-          type: type,
+          type: normalizedType,
           name: name,
           initialBalance: _int(_cell(cells, 14), 'initial_balance', row),
           icon: _cell(cells, 15),
           color: _int(_cell(cells, 16), 'color', row),
+          bankName: bankName.isEmpty ? null : bankName,
+          accountNumber: accountNumber.isEmpty ? null : accountNumber,
         );
       case 'category':
         final name = _cell(cells, 3);
@@ -444,6 +460,7 @@ sealed class _Row {
 class _AccountRow extends _Row {
   final String type, name, icon;
   final int initialBalance, color;
+  final String? bankName, accountNumber;
   _AccountRow({
     required super.row,
     required super.oldId,
@@ -452,6 +469,8 @@ class _AccountRow extends _Row {
     required this.initialBalance,
     required this.icon,
     required this.color,
+    this.bankName,
+    this.accountNumber,
   });
 }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
@@ -7,10 +6,12 @@ import '../../domain/repositories/transaction_repository.dart';
 import '../category_icons.dart';
 import '../l10n/app_localizations.dart';
 import '../format.dart';
-import '../theme.dart';
+import '../widgets/mascot_image.dart';
+import 'account_detail_screen.dart';
+import 'account_form_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-/// Daftar akun: kartu saldo + tambah/ubah/hapus.
+/// Daftar akun keuangan ala mockup: header + total saldo + list + tambah.
 class AccountsScreen extends StatefulWidget {
   final AccountRepository accountRepo;
   final TransactionRepository txRepo;
@@ -26,317 +27,356 @@ class AccountsScreen extends StatefulWidget {
 }
 
 class _AccountsScreenState extends State<AccountsScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(t.navAccounts)),
-      body: FutureBuilder<List<Account>>(
-        future: widget.accountRepo.list(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final accounts = snapshot.data ?? [];
-          if (accounts.isEmpty) {
-            return Center(child: Text(t.addAccount));
-          }
-          return RefreshIndicator(
-            onRefresh: () async => setState(() {}),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-              itemCount: accounts.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, i) => _AccountCard(
-                account: accounts[i],
-                accountRepo: widget.accountRepo,
-                onChanged: () => setState(() {}),
-              ),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditor(null).then((_) => setState(() {})),
-        icon: const Icon(LucideIcons.plus),
-        label: Text(AppLocalizations.of(context).addAccount),
-      ),
-    );
-  }
-
-  Future<void> _openEditor(Account? existing) async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) =>
-          _AccountEditor(accountRepo: widget.accountRepo, existing: existing),
-    );
-  }
-}
-
-class _AccountCard extends StatelessWidget {
-  final Account account;
-  final AccountRepository accountRepo;
-  final VoidCallback onChanged;
-
-  const _AccountCard({
-    required this.account,
-    required this.accountRepo,
-    required this.onChanged,
-  });
-
-  Future<void> _confirmDelete(BuildContext context) async {
-    final t = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.deleteAccountTitle),
-        content: Text(t.deleteAccountMessage(account.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t.delete),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return;
-    try {
-      await accountRepo.delete(account.id!);
-      onChanged();
-    } on StateError catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = Color(account.color);
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DuitQuTheme.radius),
-        onTap: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          builder: (_) =>
-              _AccountEditor(accountRepo: accountRepo, existing: account),
-        ).then((_) => onChanged()),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(accountIcon(account.type), color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      account.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _typeLabel(context, account.type),
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-              FutureBuilder<int>(
-                future: account.id == null
-                    ? Future.value(0)
-                    : accountRepo.balance(account.id!),
-                builder: (context, snapshot) {
-                  final balance = snapshot.data ?? 0;
-                  return Text(
-                    formatRupiah(balance),
-                    style: DuitQuTheme.amountStyle(
-                      context,
-                      17,
-                      color: balance >= 0
-                          ? DuitQuTheme.incomeColor(context)
-                          : DuitQuTheme.expenseColor(context),
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(LucideIcons.trash2),
-                color: scheme.onSurfaceVariant,
-                onPressed: () => _confirmDelete(context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _typeLabel(BuildContext context, AccountType type) {
-    // Label jenis akun mengikuti bahasa perangkat.
-    const id = {
-      AccountType.bank: 'Bank',
-      AccountType.cash: 'Tunai',
-      AccountType.ewallet: 'E-wallet',
-      AccountType.other: 'Lainnya',
-    };
-    const en = {
-      AccountType.bank: 'Bank',
-      AccountType.cash: 'Cash',
-      AccountType.ewallet: 'E-wallet',
-      AccountType.other: 'Other',
-    };
-    final isId = AppLocalizations.of(context).locale.languageCode == 'id';
-    return (isId ? id : en)[type]!;
-  }
-}
-
-/// Editor tambah/ubah akun (bottom sheet).
-class _AccountEditor extends StatefulWidget {
-  final AccountRepository accountRepo;
-  final Account? existing;
-
-  const _AccountEditor({required this.accountRepo, this.existing});
-
-  @override
-  State<_AccountEditor> createState() => _AccountEditorState();
-}
-
-class _AccountEditorState extends State<_AccountEditor> {
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _balanceCtrl;
-  late AccountType _type;
-  String? _error;
+  bool _hideBalance = false;
+  List<Account> _accounts = [];
+  Map<int, int> _balances = {};
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    final ex = widget.existing;
-    _nameCtrl = TextEditingController(text: ex?.name ?? '');
-    _balanceCtrl = TextEditingController(
-      text: ex == null ? '' : ex.initialBalance.toString(),
-    );
-    _type = ex?.type ?? AccountType.bank;
+    _load();
   }
 
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _balanceCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final t = AppLocalizations.of(context);
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = t.accountName);
-      return;
+  Future<void> _load() async {
+    final accounts = await widget.accountRepo.list();
+    final balances = <int, int>{};
+    for (final a in accounts) {
+      if (a.id != null) {
+        balances[a.id!] = await widget.accountRepo.balance(a.id!);
+      }
     }
-    final balance = int.tryParse(_balanceCtrl.text.trim()) ?? 0;
-    final ex = widget.existing;
-    await widget.accountRepo.save(
-      Account(
-        id: ex?.id,
-        name: name,
-        type: _type,
-        initialBalance: balance,
-        icon: ex?.icon ?? 'wallet',
-        color: ex?.color ?? 0xFF0E7C5B,
+    if (!mounted) return;
+    setState(() {
+      _accounts = accounts;
+      _balances = balances;
+      _loading = false;
+    });
+  }
+
+  int get _total => _balances.values.fold(0, (a, b) => a + b);
+
+  String _balanceText(int v) => _hideBalance ? 'Rp ••••••' : formatRupiah(v);
+
+  Future<void> _openForm(Account? existing) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AccountFormScreen(
+          accountRepo: widget.accountRepo,
+          existing: existing,
+        ),
       ),
     );
-    if (mounted) Navigator.pop(context);
+    if (saved == true) _load();
+  }
+
+  Future<void> _openDetail(Account account) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AccountDetailScreen(
+          account: account,
+          accountRepo: widget.accountRepo,
+        ),
+      ),
+    );
+    if (changed == true) _load();
   }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.existing == null ? t.addAccount : t.editAccount,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nameCtrl,
-            autofocus: widget.existing == null,
-            decoration: InputDecoration(labelText: t.accountName),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<AccountType>(
-            initialValue: _type,
-            decoration: InputDecoration(labelText: t.navAccounts),
-            items: AccountType.values
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Row(
+    return Scaffold(
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _load,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  children: [
+                    // Header: back + title + subtitle + tambah.
+                    Row(
                       children: [
-                        Icon(accountIcon(e), size: 20),
-                        const SizedBox(width: 8),
-                        Text(e.name),
+                        IconButton(
+                          icon: const Icon(LucideIcons.arrowLeft),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                t.accountsTitle,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                t.accountsSubtitle,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(LucideIcons.plus),
+                          onPressed: () => _openForm(null),
+                        ),
                       ],
                     ),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => _type = v ?? _type),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _balanceCtrl,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: t.initialBalance,
-              prefixText: 'Rp ',
-            ),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ],
-          const SizedBox(height: 20),
-          FilledButton(onPressed: _save, child: Text(t.save)),
-        ],
+                    const SizedBox(height: 12),
+                    // Kartu total saldo.
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F2FF),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      t.totalBalance,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    GestureDetector(
+                                      onTap: () => setState(
+                                        () => _hideBalance = !_hideBalance,
+                                      ),
+                                      child: Icon(
+                                        _hideBalance
+                                            ? LucideIcons.eyeOff
+                                            : LucideIcons.eye,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _balanceText(_total),
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const MascotImage.coin(size: 84),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // List akun.
+                    ..._accounts.map(
+                      (a) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _AccountRow(
+                          account: a,
+                          balance: _balances[a.id] ?? 0,
+                          hideBalance: _hideBalance,
+                          onTap: () => _openDetail(a),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Tombol tambah akun.
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: () => _openForm(null),
+                        icon: const Icon(LucideIcons.plus, size: 20),
+                        label: Text(
+                          t.addAccountBtn,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
 }
+
+/// Satu baris akun: ikon warna + nama + jenis + saldo + "...".
+class _AccountRow extends StatelessWidget {
+  final Account account;
+  final int balance;
+  final bool hideBalance;
+  final VoidCallback onTap;
+
+  const _AccountRow({
+    required this.account,
+    required this.balance,
+    required this.hideBalance,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final color = Color(account.color);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                accountIcon(account.type),
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    account.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    accountTypeLabel(account.type, t),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color:
+                          Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hideBalance ? 'Rp ••••••' : formatRupiah(balance),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(
+                LucideIcons.ellipsis,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              onPressed: onTap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Label jenis akun mengikuti bahasa.
+String accountTypeLabel(AccountType type, AppLocalizations t) {
+  switch (type) {
+    case AccountType.bank:
+      return t.accountTypeBank;
+    case AccountType.ewallet:
+      return t.accountTypeEwallet;
+    case AccountType.creditCard:
+      return t.accountTypeCreditCard;
+    case AccountType.cash:
+      return t.accountTypeCash;
+    case AccountType.other:
+      return t.accountTypeOther;
+  }
+}
+
+/// Metadata jenis akun untuk form: ikon + warna default.
+class AccountTypeMeta {
+  final AccountType type;
+  final IconData icon;
+  final int defaultColor;
+
+  const AccountTypeMeta(this.type, this.icon, this.defaultColor);
+}
+
+/// 4 jenis akun ala mockup (other disembunyikan, tetap didukung).
+List<AccountTypeMeta> accountTypeOptions(AppLocalizations t) => const [
+      AccountTypeMeta(AccountType.bank, LucideIcons.landmark, 0xFF2E9BFF),
+      AccountTypeMeta(AccountType.ewallet, LucideIcons.wallet, 0xFF14B8A6),
+      AccountTypeMeta(
+          AccountType.creditCard, LucideIcons.creditCard, 0xFF9B51E0),
+      AccountTypeMeta(AccountType.cash, LucideIcons.banknote, 0xFF27AE60),
+    ];
+
+/// Pilihan warna ala mockup.
+List<ColorOption> accountColorOptions(AppLocalizations t) => [
+      ColorOption(0xFF2E9BFF, t.colorBlue),
+      ColorOption(0xFF27AE60, t.colorGreen),
+      ColorOption(0xFF9B51E0, t.colorPurple),
+      ColorOption(0xFFEB5757, t.colorRed),
+      ColorOption(0xFFF2994A, t.colorOrange),
+      ColorOption(0xFFBDBDBD, t.colorGray),
+    ];
+
+class ColorOption {
+  final int value;
+  final String label;
+  const ColorOption(this.value, this.label);
+}
+
+/// Daftar bank umum Indonesia untuk dropdown.
+const List<String> commonBanks = [
+  'BCA (Bank Central Asia)',
+  'BRI (Bank Rakyat Indonesia)',
+  'Mandiri',
+  'BNI (Bank Negara Indonesia)',
+  'CIMB Niaga',
+  'Danamon',
+  'BTN (Bank Tabungan Negara)',
+  'Permata',
+  'OCBC',
+  'Maybank',
+];

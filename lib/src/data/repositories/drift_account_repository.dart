@@ -23,6 +23,8 @@ class DriftAccountRepository implements AccountRepository {
               initialBalance: account.initialBalance,
               icon: Value(account.icon),
               color: Value(account.color),
+              bankName: Value(account.bankName),
+              accountNumber: Value(account.accountNumber),
               createdAt: DateTime.now().millisecondsSinceEpoch,
             ),
           );
@@ -36,6 +38,8 @@ class DriftAccountRepository implements AccountRepository {
         initialBalance: Value(account.initialBalance),
         icon: Value(account.icon),
         color: Value(account.color),
+        bankName: Value(account.bankName),
+        accountNumber: Value(account.accountNumber),
       ),
     );
     return account.id!;
@@ -106,5 +110,7 @@ class DriftAccountRepository implements AccountRepository {
         initialBalance: row.initialBalance,
         icon: row.icon,
         color: row.color,
+        bankName: row.bankName,
+        accountNumber: row.accountNumber,
       );
 }

@@ -46,6 +46,8 @@ IconData accountIcon(AccountType type) {
       return LucideIcons.wallet;
     case AccountType.ewallet:
       return LucideIcons.smartphone;
+    case AccountType.creditCard:
+      return LucideIcons.creditCard;
     case AccountType.other:
       return LucideIcons.contact;
   }

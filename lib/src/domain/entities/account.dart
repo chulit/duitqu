@@ -1,5 +1,5 @@
 /// Jenis akun. Lihat GLOSSARY.md: Akun.
-enum AccountType { bank, cash, ewallet, other }
+enum AccountType { bank, cash, ewallet, other, creditCard }
 
 /// Wadah uang. Pure Dart — tanpa dependensi framework/database.
 class Account {
@@ -10,6 +10,10 @@ class Account {
   final int initialBalance;
   final String icon;
   final int color;
+  /// Nama bank (opsional, mis. "BCA (Bank Central Asia)").
+  final String? bankName;
+  /// Nomor rekening (opsional).
+  final String? accountNumber;
 
   const Account({
     this.id,
@@ -18,5 +22,7 @@ class Account {
     this.initialBalance = 0,
     this.icon = 'wallet',
     this.color = 0xFF0E7C5B,
+    this.bankName,
+    this.accountNumber,
   });
 }
