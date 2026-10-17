@@ -407,7 +407,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
                     child: Row(
                       children: [
                         Expanded(
