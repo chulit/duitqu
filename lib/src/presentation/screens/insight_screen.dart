@@ -231,6 +231,7 @@ class _InsightScreenState extends State<InsightScreen> {
     required int? expensePct,
     required int? incomePct,
     required String? topExpenseCat,
+    required int? topExpenseCatId,
   }) {
     return [
       // Kartu insight maskot (tanpa chevron, sesuai keputusan).
@@ -351,10 +352,12 @@ class _InsightScreenState extends State<InsightScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        // Kartu tips: tap -> pindah ke tab Kategori.
+        // Kartu tips: tap -> detail kategori terbesar.
         _TipCard(
           categoryName: topExpenseCat,
-          onTap: () => _setTab(_Tab.kategori),
+          onTap: topExpenseCatId == null
+              ? () {}
+              : () => _openCategory(context, topExpenseCatId),
         ),
       ],
     ];
@@ -369,6 +372,7 @@ class _InsightScreenState extends State<InsightScreen> {
     required List<MapEntry<int, int>> entries,
     required int total,
     required String? topCategoryName,
+    required int? topCategoryId,
   }) {
 
 
@@ -418,7 +422,9 @@ class _InsightScreenState extends State<InsightScreen> {
         const SizedBox(height: 12),
         _TipCard(
           categoryName: topCategoryName,
-          onTap: () {},
+          onTap: topCategoryId == null
+              ? () {}
+              : () => _openCategory(context, topCategoryId),
         ),
       ],
     );
@@ -588,6 +594,9 @@ class _InsightScreenState extends State<InsightScreen> {
                 final topExpenseCat = expenseEntries.isEmpty
                     ? null
                     : _categories[expenseEntries.first.key]?.name;
+                final topExpenseCatId = expenseEntries.isEmpty
+                    ? null
+                    : expenseEntries.first.key;
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
@@ -648,6 +657,7 @@ class _InsightScreenState extends State<InsightScreen> {
                         expensePct: expensePct,
                         incomePct: incomePct,
                         topExpenseCat: topExpenseCat,
+                        topExpenseCatId: topExpenseCatId,
                       ),
                     if (_tab == _Tab.kategori)
                       _buildKategori(
@@ -657,6 +667,7 @@ class _InsightScreenState extends State<InsightScreen> {
                         entries: expenseEntries,
                         total: expenseTotal,
                         topCategoryName: topExpenseCat,
+                        topCategoryId: topExpenseCatId,
                       ),
                     if (_tab == _Tab.tren)
                       ..._buildTren(
@@ -1051,7 +1062,7 @@ class _TipCard extends StatelessWidget {
                         children: [
                           TextSpan(text: t.tipBiggestCategoryPrefix),
                           TextSpan(
-                            text: categoryName ?? '—',
+                            text: '\n${categoryName ?? '—'}',
                             style: const TextStyle(
                               fontWeight: FontWeight.w800,
                               color: DuitQuTheme.primaryBlue,
@@ -1059,7 +1070,7 @@ class _TipCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, height: 1.4),
                     ),
                     const SizedBox(height: 4),
                     Text(
