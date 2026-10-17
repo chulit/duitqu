@@ -600,7 +600,7 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
           ],
         );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -704,11 +704,6 @@ class _ChatAssistantSheetState extends State<ChatAssistantSheet>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: MascotImage.avatar(size: 40),
-            ),
-            const SizedBox(width: 4),
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: IconButton(
