@@ -376,9 +376,13 @@ class _GoalCard extends StatelessWidget {
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      goal.category.emoji,
-                      style: const TextStyle(fontSize: 28),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Image.asset(
+                        goal.category.iconAsset,
+                        width: 32,
+                        height: 32,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

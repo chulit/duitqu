@@ -154,9 +154,10 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        c.emoji,
-                        style: const TextStyle(fontSize: 32),
+                      Image.asset(
+                        c.iconAsset,
+                        width: 40,
+                        height: 40,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -312,9 +313,10 @@ class _GoalFormScreenState extends State<GoalFormScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text(
-                      _category.emoji,
-                      style: const TextStyle(fontSize: 36),
+                    Image.asset(
+                      _category.iconAsset,
+                      width: 44,
+                      height: 44,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
